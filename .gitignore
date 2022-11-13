@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 .idea/*
+/it/thexivn/random_maps_together/migrations/

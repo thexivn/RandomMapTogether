@@ -8,6 +8,9 @@ from pyplanet.contrib.command import Command
 from it.thexivn.random_maps_together.MapHandler import MapHandler
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 
+from it.thexivn.random_maps_together.views import RandomMapsTogetherView
+from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
+
 
 class GameStatus(Enum):
     HUB = 0,
@@ -24,8 +27,7 @@ class RandomMapsTogetherApp(AppConfig):
         logging.info(self.instance.storage.driver.base_dir)
         self.map_handler = MapHandler(self.instance.map_manager)
         self.game_status = GameStatus.HUB
-
-        # self.context.signals.listen(tm_callbacks.finish, self.on_map_finsh)
+        self.widget = None
 
     async def on_init(self):
         await super().on_init()
@@ -36,6 +38,10 @@ class RandomMapsTogetherApp(AppConfig):
             Command(command="stop_rmt", target=self.stop_rmt, description="return to lobby"),
             Command(command="skip", target=self.skip, description="return to lobby")
         )
+
+        self.widget = RandomMapsTogetherView(self)
+        await self.widget.display()
+        mania_callback.player.player_connect.register(self.player_connect)
 
     async def on_start(self):
         await super().on_start()
@@ -69,3 +75,7 @@ class RandomMapsTogetherApp(AppConfig):
             logging.info("player: %s, done: %d", player.nickname, lap_time)
             if lap_time < self.map_handler.AT:
                 await self.map_handler.load_next_map()
+
+    async def player_connect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
+        if not is_spectator:
+            await self.widget.display(player)
