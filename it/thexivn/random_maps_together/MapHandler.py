@@ -5,7 +5,6 @@ from pyplanet.apps.core.maniaplanet.models import Map
 from pyplanet.contrib.map import MapManager
 
 from it.thexivn.random_maps_together.RestClient.TMNXRestClient import TMNXRestClient
-from pyplanet.apps.core.maniaplanet import callbacks as mania_callbacks
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +16,7 @@ class MapHandler:
         self.hub_id = '63710'
         self.map_manager = map_manager
         self.loaded_map = None
-        self.AT = 0
-
-    async def on_init(self):
-        logger.info("MapHandler loaded")
-        await self.load_hub()
-        mania_callbacks.map.map_begin.register(self.map_begin)
+        self.event_map: Map = None
 
     async def load_next_map(self):
         logger.info("Trying to load next map ...")
@@ -49,7 +43,22 @@ class MapHandler:
 
         logger.info("hub map loaded")
 
-    def map_begin(self, map: Map, *args, **kwargs):
-        logging.info("Map Loaded: %s -- AT %d", map.name, map.time_author)
-        self.AT = map.time_bronze
+    async def remove_loaded_map(self):
+        try:
+            await self.map_manager.remove_map(f'{self.loaded_map.get("uuid")}.Map.Gbx', True)
+            self.loaded_map = None
+        except:
+            logger.warning("Impossible to remove map %s", self.loaded_map.get("uuid"))
+            pass
 
+    @property
+    def gold_time(self) -> int:
+        if self.event_map:
+            return self.event_map.time_bronze
+        return 0
+
+    @property
+    def at_time(self) -> int:
+        if self.event_map:
+            return self.event_map.time_silver
+        return 0
