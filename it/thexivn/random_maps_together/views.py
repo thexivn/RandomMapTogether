@@ -25,5 +25,5 @@ class RandomMapsTogetherView(TimesWidgetView):
     async def get_context_data(self):
         logger.info("Context Data")
         data = await super().get_context_data()
-        data["time_left"] = "1:00:00"
+        data["milliseconds"] = 3600 * 1000
         return data

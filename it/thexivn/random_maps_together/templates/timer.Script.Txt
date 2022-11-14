@@ -1,0 +1,19 @@
+{% include 'core.views/libs/TimeUtils.Script.Txt' %}
+
+main() {
+	declare CMlLabel LabelTime <=> (Page.GetFirstChild("time_lbl") as CMlLabel);
+	declare CMlLabel DBGLbl <=> (Page.GetFirstChild("dbg") as CMlLabel);
+	declare Integer Timer = {{milliseconds}};
+	declare Integer PrevTime = Now;
+	while (True) {
+	    PrevTime = Now;
+        if (!PageIsVisible || InputPlayer == Null) {
+            continue;
+        }
+	    //PrevTime = CurrentLocalDate;
+  		yield;
+  		Timer = Timer - (Now - PrevTime);
+        LabelTime.Value = TimeToText(Timer);
+        //DBGLbl.Value = Now;
+	}
+}

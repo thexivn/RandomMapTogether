@@ -4,6 +4,11 @@
     <frame pos="0 0" size="{{size_x}} {{size_y}}">
         <quad pos="0 0" size="{{size_x}} {{size_y}}" z-index="0" bgcolor="10101070"/>
         <label pos="0 0" size="{{size_x}} 10" z-index="1" text="Time Left:" textsize="2.5" textfont="RajdhaniMono" />
-        <label pos="35 -4" z-index="1" text="{{ time_left }}" textsize="7.5" textfont="RajdhaniMono" halign="center" />
+        <label pos="35 -4" z-index="1" id="time_lbl" textsize="7.5" textfont="RajdhaniMono" halign="center" />
+        <label pos="35 -8" z-index="1" id="dbg" textsize="7.5" textfont="RajdhaniMono" halign="center" />
     </frame>
+{% endblock %}
+
+{% block maniascript %}
+  <script><!--{% include 'random_maps_together/timer.Script.Txt' %}--></script>
 {% endblock %}

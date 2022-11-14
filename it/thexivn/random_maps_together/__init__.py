@@ -36,7 +36,8 @@ class RandomMapsTogetherApp(AppConfig):
         await self.instance.command_manager.register(
             Command(command="start_rmt", target=self.rmt_game.command_start_rmt, description="load the game"),
             Command(command="stop_rmt", target=self.rmt_game.command_stop_rmt, description="return to lobby"),
-            Command(command="skip_gold", target=self.rmt_game.command_skip_gold, description="return to lobby")
+            Command(command="skip_gold", target=self.rmt_game.command_skip_gold, description="return to lobby"),
+            Command(command="ref", target=self.ref, description="return to lobby")
         )
 
         self.widget = RandomMapsTogetherView(self)
@@ -59,3 +60,6 @@ class RandomMapsTogetherApp(AppConfig):
     async def player_connect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
         if not is_spectator:
             await self.widget.display(player)
+
+    async def ref(self, player: Player, *args, **kwargs):
+        await self.widget.display(player)
