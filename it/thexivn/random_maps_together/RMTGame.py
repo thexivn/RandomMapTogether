@@ -1,10 +1,17 @@
+import asyncio
 import logging
+import time
 from enum import Enum
 
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
+from pyplanet.contrib.mode import ModeManager
 
 from it.thexivn.random_maps_together import MapHandler
+
+from it.thexivn.random_maps_together.views import RandomMapsTogetherView
+
+S_TIME_LIMIT = 'S_TimeLimit'
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +21,7 @@ class RMTGame:
         HUB = 0,
         RMT = 1
 
-    def __init__(self, map_handler: MapHandler, chat: ChatManager):
+    def __init__(self, map_handler: MapHandler, chat: ChatManager, mode_manager: ModeManager, timer_ui: RandomMapsTogetherView):
         self.game_status = RMTGame.GameStatus.HUB
         self.rmt_starter_player: Player = None
         self.skipable_for_gold: bool = False
@@ -22,22 +29,34 @@ class RMTGame:
         self.number_gold = 0
         self.map_handler = map_handler
         self.chat = chat
+        self.mode_manager = mode_manager
+        self._mode_settings = None
+        self._map_start_time = time.time()
+        self._time_left = 3600
+        self.timer_ui = timer_ui
         logger.info("RMT Game initialized")
 
     async def on_init(self):
         await self.map_handler.load_hub()
         logger.info("RMT Game loaded")
+        self._mode_settings = None
+        self._mode_settings = await self.mode_manager.get_settings()
+        await self.timer_ui.display()
 
     async def command_start_rmt(self, player: Player, *args, **kwargs):
         if self.game_status == RMTGame.GameStatus.HUB:
             self.change_game_state()
             await self.chat(f'{player.nickname} started new RMT, loading next map ...')
             self.rmt_starter_player = player
+            self._time_left = 3600
+            self._mode_settings[S_TIME_LIMIT] = self._time_left
             if await self.load_with_retry():
                 logger.info("RMT started")
             else:
                 self.change_game_state()
+                self._mode_settings[S_TIME_LIMIT] = 0
                 await self.chat("RMT failed to start")
+            await self.mode_manager.update_settings(self._mode_settings)
         else:
             await self.chat("RMT already started", player)
 
@@ -70,6 +89,8 @@ class RMTGame:
     async def back_to_hub(self):
         await self.map_handler.remove_loaded_map()
         await self.map_handler.load_hub()
+        self._mode_settings[S_TIME_LIMIT] = 0
+        await self.mode_manager.update_settings(self._mode_settings)
         self.number_AT = 0
         self.number_gold = 0
         self.skipable_for_gold = False
@@ -78,18 +99,31 @@ class RMTGame:
     def change_game_state(self):
         self.game_status = RMTGame.GameStatus.HUB if self.game_status == RMTGame.GameStatus.RMT else RMTGame.GameStatus.RMT
 
-    def map_begin_event(self, map, *args, **kwargs):
+    async def map_begin_event(self, map, *args, **kwargs):
         logger.info("MAP Begin")
         if self.game_status == RMTGame.GameStatus.RMT:
-            self.timer_continue()
             self.map_handler.event_map = map
             self.skipable_for_gold = False
+            self._map_start_time = time.time()
 
-    def map_end_event(self, map, *args, **kwargs):
+    async def map_end_event(self, map, *args, **kwargs):
         logger.info("MAP end")
         if self.game_status == RMTGame.GameStatus.RMT:
-            self.timer_pause()
             self.skipable_for_gold = False
+            self.timer_ui.AT = self.number_AT
+            self.timer_ui.gold = self.number_gold
+            await self.timer_ui.display()
+            self._time_left -= int(time.time() - self._map_start_time)
+            logger.info("Continue with %d time left", self._time_left)
+            if self._time_left <= 0:
+                logger.info("RMT finished successfully")
+                await self.chat(f'Challenge completed AT:{self.number_AT} Gold:{self.number_gold}. peepoClap')
+                await self.back_to_hub()
+                self.change_game_state()
+            else:
+                self._mode_settings[S_TIME_LIMIT] = self._time_left
+                await self.mode_manager.update_settings(self._mode_settings)
+
 
     async def on_map_finsh(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow,
                            is_end_race: bool, is_end_lap, raw, *args, **kwargs):
@@ -106,14 +140,6 @@ class RMTGame:
                     self.skipable_for_gold = True
                     await self.chat(f'GOLD TIME now {player.nickname} can /skip_gold to load next map')
 
-    def timer_pause(self):
-        logger.info("TIMER PAUSE")
-        return
-
-    def timer_continue(self):
-        logger.info("TIMER CONTINUE")
-        return
-
     async def command_skip_gold(self, player: Player, *args, **kwargs):
         if self.game_status == RMTGame.GameStatus.RMT:
             if self.skipable_for_gold:
@@ -129,4 +155,3 @@ class RMTGame:
                 await self.chat("Gold skip is not available", player)
         else:
             await self.chat("You are not allowed to skip", player)
-

@@ -21,9 +21,13 @@ class RandomMapsTogetherView(TimesWidgetView):
         self.app = app
         self.manager = app.context.ui
         self.id = "it_thexivn_RandomMapsTogether_widget"
+        self.AT = 0
+        self.gold = 0
 
     async def get_context_data(self):
         logger.info("Context Data")
         data = await super().get_context_data()
-        data["milliseconds"] = 3600 * 1000
+        data["AT"] = self.AT
+        data["GOLD"] = self.gold
+
         return data
