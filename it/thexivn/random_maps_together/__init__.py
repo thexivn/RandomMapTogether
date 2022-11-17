@@ -32,7 +32,7 @@ class RandomMapsTogetherApp(AppConfig):
         await self.rmt_game.on_init()
         tm_callbacks.finish.register(self.rmt_game.on_map_finsh)
         mania_callback.map.map_begin.register(self.rmt_game.map_begin_event)
-        mania_callback.map.map_end.register(self.rmt_game.map_end_event)
+        mania_callback.flow.round_end.register(self.rmt_game.map_end_event)
         await self.instance.command_manager.register(
             Command(command="start_rmt", target=self.rmt_game.command_start_rmt, description="load the game"),
             Command(command="stop_rmt", target=self.rmt_game.command_stop_rmt, description="return to lobby"),
@@ -50,7 +50,7 @@ class RandomMapsTogetherApp(AppConfig):
         await super().on_stop()
         tm_callbacks.finish.unregister(self.rmt_game.on_map_finsh)
         mania_callback.map.map_begin.unregister(self.rmt_game.map_begin_event)
-        mania_callback.map.map_end.unregister(self.rmt_game.map_end_event)
+        mania_callback.flow.round_end.unregister(self.rmt_game.map_end_event)
 
     async def on_destroy(self):
         await super().on_destroy()
