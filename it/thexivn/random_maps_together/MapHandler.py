@@ -47,8 +47,8 @@ class MapHandler:
         logger.info("hub map loaded")
 
     async def remove_loaded_map(self):
-        uuid = self.loaded_map.get("uuid")
-        if uuid:
+        if self.loaded_map:
+            uuid = self.loaded_map.get("uuid")
             try:
                 await self.map_manager.remove_map(f'{uuid}.Map.Gbx', True)
                 self.loaded_map = None
