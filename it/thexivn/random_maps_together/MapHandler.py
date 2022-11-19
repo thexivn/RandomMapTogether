@@ -44,12 +44,16 @@ class MapHandler:
         logger.info("hub map loaded")
 
     async def remove_loaded_map(self):
-        try:
-            await self.map_manager.remove_map(f'{self.loaded_map.get("uuid")}.Map.Gbx', True)
-            self.loaded_map = None
-        except:
-            logger.warning("Impossible to remove map %s", self.loaded_map.get("uuid"))
-            pass
+        uuid = self.loaded_map.get("uuid")
+        if uuid:
+            try:
+                await self.map_manager.remove_map(f'{uuid}.Map.Gbx', True)
+                self.loaded_map = None
+            except:
+                logger.warning("Impossible to remove map %s", self.loaded_map.get("uuid"))
+                pass
+        else:
+            logger.warning("impossible to remove map without UUID")
 
     @property
     def gold_time(self) -> int:
