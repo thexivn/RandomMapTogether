@@ -82,9 +82,9 @@ class RMTGame:
     async def command_stop_rmt(self, player: Player, *args, **kwargs):
         if self.game_status == RMTGame.GameStatus.RMT:
             if player == self.rmt_starter_player:
+                self.change_game_state()
                 await self.chat(f'{player.nickname} stopped new RMT')
                 await self.back_to_hub()
-                self.change_game_state()
             else:
                 await self.chat("you can't stop the RMT", player)
         else:
