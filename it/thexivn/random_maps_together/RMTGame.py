@@ -52,7 +52,7 @@ class RMTGame:
             self.change_game_state()
             await self.chat(f'{player.nickname} started new RMT, loading next map ...')
             self.rmt_starter_player = player
-            self._time_left = 600
+            self._time_left = 3600
             self._mode_settings[S_TIME_LIMIT] = self._time_left
             if await self.load_with_retry():
                 logger.info("RMT started")
