@@ -20,7 +20,7 @@ class RandomMapsTogetherApp(AppConfig):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.map_handler = MapHandler(self.instance.map_manager)
+        self.map_handler = MapHandler(self.instance.map_manager, self.instance.storage)
         self.instance.chat()
         self.widget = RandomMapsTogetherView(self)
         self.rmt_game = RMTGame(self.map_handler, self.instance.chat_manager, self.instance.mode_manager, self.widget)
