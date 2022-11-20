@@ -156,6 +156,9 @@ class RMTGame:
                     self.skipable_for_gold = True
                     _lock.release()
                     await self.chat(f'GOLD TIME now {player.nickname} can /skip_gold to load next map')
+                else:
+                    logger.info(f'[on_map_finish] Normal Time acquired')
+                    _lock.release()
             else:
                 _lock.release()
 
