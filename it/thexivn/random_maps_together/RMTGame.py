@@ -134,11 +134,14 @@ class RMTGame:
         if self.game_status == RMTGame.GameStatus.RMT:
             await _lock.acquire()  # lock to avoid multiple AT before next map is loaded
             if self._map_completed:
+                logger.info(f'[on_map_finish] Map was already completed')
                 _lock.release()
                 return
 
             if is_end_race:
+                logger.info(f'[on_map_finish] Final time check for AT')
                 if race_time <= self.map_handler.at_time:
+                    logger.info(f'[on_map_finish] AT Time acquired')
                     self._update_time_left()
                     self._map_completed = True
                     await self.hide_timer()
@@ -149,6 +152,7 @@ class RMTGame:
                     else:
                         await self.back_to_hub()
                 elif race_time <= self.map_handler.gold_time:
+                    logger.info(f'[on_map_finish] GOLD Time acquired')
                     self.skipable_for_gold = True
                     _lock.release()
                     await self.chat(f'GOLD TIME now {player.nickname} can /skip_gold to load next map')
