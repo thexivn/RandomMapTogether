@@ -7,18 +7,21 @@ from pyplanet.contrib.map import MapManager
 from pyplanet.contrib.map.exceptions import MapNotFound
 from pyplanet.core.storage.storage import Storage
 
+from it.thexivn.random_maps_together import AT, GOLD, SILVER, BRONZE
+from it.thexivn.random_maps_together.Data import Configurations
 from it.thexivn.random_maps_together.RestClient.TMNXRestClient import TMNXRestClient
 
 logger = logging.getLogger(__name__)
 
 
 class MapHandler:
-    def __init__(self, map_manager: MapManager, storage: Storage):
+    def __init__(self, map_manager: MapManager, storage: Storage, configs: Configurations):
         self._tmnx_rest_client = TMNXRestClient()
         self._hub_map = '7E1heauBgOUsqlhliGDY8DoOZbm'
         self._hub_id = '63710'
         self._map_manager = map_manager
         self._storage = storage
+        self._configs: Configurations = configs
         self.active_map: Map = None
 
     async def load_next_map(self):
@@ -67,13 +70,26 @@ class MapHandler:
     @property
     def gold_time(self) -> int:
         if self.active_map:
-            return self.active_map.time_bronze
+            difficulty = self._configs.GOLD_time
+            if difficulty == GOLD:
+                return self.active_map.time_gold
+            elif difficulty == SILVER:
+                return self.active_map.time_silver
+            elif difficulty == BRONZE:
+                return self.active_map.time_bronze
         return 0
 
     @property
     def at_time(self) -> int:
         if self.active_map:
-            return self.active_map.time_silver
+            difficulty = self._configs.AT_time
+            if difficulty == AT:
+                return self.active_map.time_author
+            elif difficulty == GOLD:
+                return self.active_map.time_gold
+            elif difficulty == SILVER:
+                return self.active_map.time_silver
+
         return 0
 
     async def _map_exists(self, uuid: str) -> bool:
