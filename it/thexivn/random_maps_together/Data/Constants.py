@@ -1,0 +1,4 @@
+AT = 'AT'
+GOLD = 'GOLD'
+SILVER = 'SILVER'
+BRONZE = 'BRONZE'

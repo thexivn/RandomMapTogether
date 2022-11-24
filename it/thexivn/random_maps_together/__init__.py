@@ -3,7 +3,10 @@ import logging
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.command import Command
+from pyplanet.contrib.setting import Setting
 
+from it.thexivn.random_maps_together.Data.Configurations import Configurations
+from it.thexivn.random_maps_together.Data.Constants import *
 from it.thexivn.random_maps_together.RMTGame import RMTGame
 from it.thexivn.random_maps_together.MapHandler import MapHandler
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
@@ -20,10 +23,12 @@ class RandomMapsTogetherApp(AppConfig):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.map_handler = MapHandler(self.instance.map_manager, self.instance.storage)
+        self.app_settings: Configurations = Configurations()
+        self.map_handler = MapHandler(self.instance.map_manager, self.instance.storage, self.app_settings)
         self.instance.chat()
         self.widget = RandomMapsTogetherView(self)
-        self.rmt_game = RMTGame(self.map_handler, self.instance.chat_manager, self.instance.mode_manager, self.widget)
+        self.rmt_game = RMTGame(self.map_handler, self.instance.chat_manager, self.instance.mode_manager,
+                                self.widget, self.app_settings)
 
         logger.info("application loaded correctly")
 
@@ -40,8 +45,32 @@ class RandomMapsTogetherApp(AppConfig):
             Command(command="ref", target=self.ref, description="return to lobby")
         )
 
+        await self.settings()
+
         mania_callback.player.player_connect.register(self.player_connect)
         logger.info("application initialized correctly")
+
+    async def settings(self):
+        game_time: Setting = Setting('it.thexivn.RMT.game_time', 'game_time', Setting.CAT_BEHAVIOUR, int,
+                                     'time of the session', default=3600,
+                                     change_target=self.app_settings.set_game_time)
+
+        at_time: Setting = Setting('it.thexivn.RMT.AT_time', 'AT_time', Setting.CAT_BEHAVIOUR, str,
+                                   'time to complete the map', default=AT, choices=[AT, GOLD, SILVER],
+                                   change_target=self.app_settings.set_at_time)
+
+        gold_time: Setting = Setting('it.thexivn.RMT.GOLD_time', 'GOLD_time', Setting.CAT_BEHAVIOUR, str,
+                                     'set the time that allow you to skip the map', default=GOLD,
+                                     choices=[GOLD, SILVER, BRONZE], change_target=self.app_settings.set_gold_time)
+
+        await self.context.setting.register(
+            game_time,
+            at_time,
+            gold_time
+        )
+        self.app_settings.set_game_time(3600, await game_time.get_value())
+        self.app_settings.set_at_time(AT, await at_time.get_value())
+        self.app_settings.set_gold_time(GOLD, await gold_time.get_value())
 
     async def on_start(self):
         await super().on_start()
