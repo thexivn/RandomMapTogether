@@ -8,13 +8,13 @@ from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 
 from it.thexivn.random_maps_together import MapHandler
+from it.thexivn.random_maps_together.Data.Configurations import Configurations
 from it.thexivn.random_maps_together.Data.GameScore import GameScore
 
 from it.thexivn.random_maps_together.views import RandomMapsTogetherView
 
 S_TIME_LIMIT = 'S_TimeLimit'
 _lock = asyncio.Lock()
-TIME = 600
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class RMTGame:
         RMT = 1
 
     def __init__(self, map_handler: MapHandler, chat: ChatManager, mode_manager: ModeManager,
-                 timer_ui: RandomMapsTogetherView):
+                 timer_ui: RandomMapsTogetherView, config: Configurations):
         self.game_status = RMTGame.GameStatus.HUB
         self.rmt_starter_player: Player = None
         self.skipable_for_gold: bool = False
@@ -35,7 +35,8 @@ class RMTGame:
         self.mode_manager = mode_manager
         self._mode_settings = None
         self._map_start_time = py_time.time()
-        self._time_left = TIME
+        self._config = config
+        self._time_left = config.game_time_seconds
         self.timer_ui = timer_ui
         self.timer_ui.set_score(self._score)
         self._map_completed = True
@@ -54,7 +55,7 @@ class RMTGame:
             self.game_status = RMTGame.GameStatus.RMT
             await self.chat(f'{player.nickname} started new RMT, loading next map ...')
             self.rmt_starter_player = player
-            self._time_left = TIME
+            self._time_left = self._config.game_time_seconds
             self._mode_settings[S_TIME_LIMIT] = self._time_left
             if await self.load_with_retry():
                 logger.info("RMT started")
