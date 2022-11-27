@@ -3,7 +3,29 @@
 {% block content %}
     <frame pos="0 0" size="{{size_x}} {{size_y}}">
         <quad pos="0 0" size="{{size_x}} {{size_y}}" z-index="0" bgcolor="10101070"/>
-        <label pos="35 0" z-index="1" text="ATs {{AT}}" textsize="7.5" textfont="RajdhaniMono" halign="center" />
-        <label pos="35 -12" z-index="1" text="Golds {{GOLD}}" textsize="7.5" textfont="RajdhaniMono" halign="center" />
+        {% if game_started %}
+            <label pos="35 0" z-index="1" text="ATs {{AT}}" textsize="3.5" textfont="RajdhaniMono" halign="center" />
+            <label pos="35 -5" z-index="1" text="Golds {{GOLD}}" textsize="3.5" textfont="RajdhaniMono" halign="center" />
+        {% else %}
+            <label pos="35 -2" z-index="1" text="Welcome to RMT HUB" textsize="5.5" textfont="RajdhaniMono" halign="center" />
+        {% endif %}
     </frame>
+    {% if ui_tools_enabled %}
+        <frame pos="0 -{{size_y}}" size="{{size_x}} 5">
+            <quad pos="0 0" size="{{size_x}} 5" z-index="0" bgcolor="44664770"/>
+            {% if game_started %}
+                <label pos="0 -2.5" size="34 5" z-index="1" text="Stop RMT" textsize="3" textfont="RajdhaniMono"
+                       halign="left" valign="center"  style="CardButtonSmall"
+                       id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_stop_rmt" />
+                <label pos="35 -2.5" size="34 5" z-index="1" text="Take GOLD" textsize="3" textfont="RajdhaniMono"
+                       halign="left" valign="center"  style="CardButtonSmall"
+                       id="rmt_gold_btn" scriptevents="1" action="{{ id }}__ui_gold_skips" />
+            {% else %}
+                <label pos="0 -2.5" size="34 5" z-index="1" text="Start RMT" textsize="3" textfont="RajdhaniMono"
+                       halign="left" valign="center"  style="CardButtonSmall"
+                       id="rmt_stop_btn" scriptevents="1" action="{{ id }}__ui_start_rmt" />
+            {% endif %}
+
+        </frame>
+    {% endif %}
 {% endblock %}

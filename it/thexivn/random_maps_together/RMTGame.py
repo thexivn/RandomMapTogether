@@ -25,7 +25,7 @@ class RMTGame:
         RMT = 1
 
     def __init__(self, map_handler: MapHandler, chat: ChatManager, mode_manager: ModeManager,
-                 timer_ui: RandomMapsTogetherView, config: Configurations):
+                 score_ui: RandomMapsTogetherView, config: Configurations):
         self.game_status = RMTGame.GameStatus.HUB
         self.rmt_starter_player: Player = None
         self.skipable_for_gold: bool = False
@@ -37,8 +37,8 @@ class RMTGame:
         self._map_start_time = py_time.time()
         self._config = config
         self._time_left = config.game_time_seconds
-        self.timer_ui = timer_ui
-        self.timer_ui.set_score(self._score)
+        self.score_ui = score_ui
+        self.score_ui.set_score(self._score)
         self._map_completed = True
         logger.info("RMT Game initialized")
 
@@ -47,7 +47,10 @@ class RMTGame:
         logger.info("RMT Game loaded")
         self._mode_settings = await self.mode_manager.get_settings()
         await self.hide_timer()
-        await self.timer_ui.display()
+        await self.score_ui.display()
+        self.score_ui.subscribe("ui_gold_skips", self.command_skip_gold)
+        self.score_ui.subscribe("ui_start_rmt", self.command_start_rmt)
+        self.score_ui.subscribe("ui_stop_rmt", self.command_stop_rmt)
 
     async def command_start_rmt(self, player: Player, *args, **kwargs):
         if self.game_status == RMTGame.GameStatus.HUB:
@@ -59,6 +62,7 @@ class RMTGame:
             self._mode_settings[S_TIME_LIMIT] = self._time_left
             if await self.load_with_retry():
                 logger.info("RMT started")
+                self.score_ui.game_started = True
             else:
                 self.game_status = RMTGame.GameStatus.HUB
                 self._mode_settings[S_TIME_LIMIT] = 0
@@ -95,7 +99,9 @@ class RMTGame:
         if self.game_status == RMTGame.GameStatus.RMT:
             logger.info("Back to HUB ...")
             await self.hide_timer()
+            self.score_ui.game_started = False
             self._score.rest()
+            await self.score_ui.display()
             await self.map_handler.remove_loaded_map()
             await self.map_handler.load_hub()
             self.skipable_for_gold = False
@@ -106,18 +112,24 @@ class RMTGame:
     async def map_begin_event(self, map, *args, **kwargs):
         logger.info("MAP Begin")
         self.map_handler.active_map = map
+        self.score_ui.ui_tools_enabled = True
         if self.game_status == RMTGame.GameStatus.RMT:
             self._map_completed = False
             self.skipable_for_gold = False
+            self.score_ui.game_started = True
             self._map_start_time = py_time.time()
         elif self.game_status == RMTGame.GameStatus.HUB:
             await self.hide_timer()
             self._map_completed = True
+            self.score_ui.game_started = False
+
+        await self.score_ui.display()
 
     async def map_end_event(self, time, count, *args, **kwargs):
         logger.info("MAP end")
         if self.game_status == RMTGame.GameStatus.RMT:
             self.skipable_for_gold = False
+            self.score_ui.ui_tools_enabled = False
             if not self._map_completed:
                 logger.info("RMT finished successfully")
                 await self.chat(f'Challenge completed AT:{self._score.total_at} Gold:{self._score.total_gold}. peepoClap')
@@ -127,7 +139,7 @@ class RMTGame:
                 logger.info("Continue with %d time left", self._time_left)
                 await self.mode_manager.update_settings(self._mode_settings)
 
-        await self.timer_ui.display()
+        await self.score_ui.display()
 
     async def on_map_finsh(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow,
                            is_end_race: bool, is_end_lap, raw, *args, **kwargs):
