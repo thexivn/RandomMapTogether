@@ -14,12 +14,19 @@
         <frame pos="0 -{{size_y}}" size="{{size_x}} 5">
             <quad pos="0 0" size="{{size_x}} 5" z-index="0" bgcolor="44664770"/>
             {% if game_started %}
-                <label pos="0 -2.5" size="34 5" z-index="1" text="Stop RMT" textsize="3" textfont="RajdhaniMono"
+                <label pos="0 -2.5" size="20 5" z-index="1" text="Stop RMT" textsize="3" textfont="RajdhaniMono"
                        halign="left" valign="center"  style="CardButtonSmall"
                        id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_stop_rmt" />
-                <label pos="35 -2.5" size="34 5" z-index="1" text="Take GOLD" textsize="3" textfont="RajdhaniMono"
-                       halign="left" valign="center"  style="CardButtonSmall"
-                       id="rmt_gold_btn" scriptevents="1" action="{{ id }}__ui_gold_skips" />
+                {% if gold_skip_visible %}
+                    <label pos="20 -2.5" size="20 5" z-index="1" text="Take GOLD" textsize="3" textfont="RajdhaniMono"
+                           halign="left" valign="center"  style="CardButtonSmall"
+                           id="rmt_gold_btn" scriptevents="1" action="{{ id }}__ui_gold_skips" />
+                {% endif %}
+                {% if free_skip_visible %}
+                    <label pos="40 -2.5" size="20 5" z-index="1" text="Free skip" textsize="3" textfont="RajdhaniMono"
+                           halign="left" valign="center"  style="CardButtonSmall"
+                           id="rmt_skip_btn" scriptevents="1" action="{{ id }}__ui_free_skip" />
+                {% endif %}
             {% else %}
                 <label pos="0 -2.5" size="34 5" z-index="1" text="Start RMT" textsize="3" textfont="RajdhaniMono"
                        halign="left" valign="center"  style="CardButtonSmall"

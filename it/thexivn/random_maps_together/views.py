@@ -3,6 +3,7 @@ import logging
 from pyplanet.views.generics.widget import TimesWidgetView
 
 from it.thexivn.random_maps_together.Data.GameScore import GameScore
+from it.thexivn.random_maps_together.Data.GameState import GameState
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ class RandomMapsTogetherView(TimesWidgetView):
     widget_x = -140
     widget_y = 85
     z_index = 5
-    size_x = 70
+    size_x = 60
     size_y = 10
     title = "Random Maps Together"
 
@@ -23,12 +24,15 @@ class RandomMapsTogetherView(TimesWidgetView):
         self.app = app
         self.manager = app.context.ui
         self.id = "it_thexivn_RandomMapsTogether_widget"
-        self._score = None
-        self.ui_tools_enabled = True
-        self.game_started = False
+        self._score: GameScore = None
+        self.ui_controls_visible = True
+        self._game_state: GameState = None
 
     def set_score(self, score: GameScore):
         self._score = score
+
+    def set_game_state(self, state: GameState):
+        self._game_state = state
 
     async def get_context_data(self):
         logger.info("Context Data")
@@ -40,7 +44,12 @@ class RandomMapsTogetherView(TimesWidgetView):
             data["AT"] = 0
             data["GOLD"] = 0
 
-        data["ui_tools_enabled"] = self.ui_tools_enabled
-        data["game_started"] = self.game_started
+        data["ui_tools_enabled"] = self.ui_controls_visible
+        if self._game_state:
+            data["game_started"] = self._game_state.game_is_in_progress
+            data["gold_skip_visible"] = self._game_state.gold_skip_available
+            data["free_skip_visible"] = self._game_state.free_skip_available
+        else:
+            data["game_started"] = False
 
         return data
