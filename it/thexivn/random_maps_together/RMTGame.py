@@ -34,6 +34,7 @@ class RMTGame:
         self._score_ui = score_ui
         self._game_state = GameState()
         self._score_ui.set_score(self._score)
+        self._score_ui.set_game_state(self._game_state)
 
         logger.info("RMT Game initialized")
 
@@ -46,6 +47,7 @@ class RMTGame:
         self._score_ui.subscribe("ui_gold_skips", self.command_skip_gold)
         self._score_ui.subscribe("ui_start_rmt", self.command_start_rmt)
         self._score_ui.subscribe("ui_stop_rmt", self.command_stop_rmt)
+        self._score_ui.subscribe("ui_free_skip", self.command_free_skip)
 
     async def command_start_rmt(self, player: Player, *args, **kwargs):
         if self._game_state.is_hub_stage():
@@ -69,6 +71,7 @@ class RMTGame:
         retry = 0
         load_succeeded = False
         self._game_state.map_is_loading = True
+        await self._score_ui.display()
         while not load_succeeded and retry < max_retry:
             retry += 1
             try:
@@ -79,6 +82,7 @@ class RMTGame:
                 await self._map_handler.remove_loaded_map()
 
         self._game_state.map_is_loading = False
+        await self._score_ui.display()
         return retry < max_retry
 
     async def command_stop_rmt(self, player: Player, *args, **kwargs):
@@ -110,6 +114,7 @@ class RMTGame:
         if self._game_state.is_game_stage():
             self._game_state.set_new_map_in_game_state()
             self._map_start_time = py_time.time()
+            self._map_handler.pre_load_next_map()
         else:
             await self.hide_timer()
             self._game_state.current_map_completed = True
@@ -160,6 +165,7 @@ class RMTGame:
                     logger.info(f'[on_map_finish] GOLD Time acquired')
                     self._game_state.gold_skip_available = True
                     _lock.release()
+                    await self._score_ui.display()
                     await self._chat(f'GOLD TIME now {player.nickname} can /skip_gold to load next map')
                 else:
                     logger.info(f'[on_map_finish] Normal Time acquired')
@@ -181,6 +187,22 @@ class RMTGame:
                         await self.back_to_hub()
             else:
                 await self._chat("Gold skip is not available", player)
+        else:
+            await self._chat("You are not allowed to skip", player)
+
+    async def command_free_skip(self, player: Player, *args, **kwargs):
+        if self._game_state.skip_command_allowed():
+            if self._game_state.free_skip_available:
+                if self._rmt_starter_player == player:
+                    self._update_time_left()
+                    self._game_state.set_map_completed_state()
+                    self._game_state.free_skip_available = False
+                    await self._chat(f'{player.nickname} decided to skip the map')
+                    await self.hide_timer()
+                    if not await self.load_with_retry():
+                        await self.back_to_hub()
+            else:
+                await self._chat("Free skip is not available", player)
         else:
             await self._chat("You are not allowed to skip", player)
 

@@ -49,6 +49,7 @@ class RandomMapsTogetherView(TimesWidgetView):
             data["game_started"] = self._game_state.game_is_in_progress
             data["gold_skip_visible"] = self._game_state.gold_skip_available
             data["free_skip_visible"] = self._game_state.free_skip_available
+            data["map_loading"] = self._game_state.map_is_loading
         else:
             data["game_started"] = False
 

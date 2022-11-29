@@ -41,8 +41,10 @@ class RandomMapsTogetherApp(AppConfig):
         await self.instance.command_manager.register(
             Command(command="start_rmt", target=self.rmt_game.command_start_rmt, description="load the game"),
             Command(command="stop_rmt", target=self.rmt_game.command_stop_rmt, description="return to lobby"),
-            Command(command="skip_gold", target=self.rmt_game.command_skip_gold, description="return to lobby"),
-            Command(command="ref", target=self.ref, description="return to lobby")
+            Command(command="skip_gold", target=self.rmt_game.command_skip_gold,
+                    description="skip current map is GOLD time is reached"),
+            Command(command="skip", target=self.rmt_game.command_free_skip,
+                    description="skip current map once per game"),
         )
 
         await self.settings()

@@ -1,3 +1,4 @@
+import asyncio
 import io
 import logging
 from typing import Optional
@@ -9,6 +10,7 @@ from pyplanet.core.storage.storage import Storage
 
 from it.thexivn.random_maps_together import AT, GOLD, SILVER, BRONZE
 from it.thexivn.random_maps_together.Data import Configurations
+from it.thexivn.random_maps_together.Data.APIMapInfo import APIMapInfo
 from it.thexivn.random_maps_together.RestClient.TMNXRestClient import TMNXRestClient
 
 logger = logging.getLogger(__name__)
@@ -23,10 +25,12 @@ class MapHandler:
         self._storage = storage
         self._configs: Configurations = configs
         self.active_map: Map = None
+        self._nex_map: Optional[APIMapInfo] = None
 
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
-        random_map = self._tmnx_rest_client.get_random_map()
+        random_map = self._nex_map if self._nex_map else self._tmnx_rest_client.get_random_map()
+        self._nex_map = None
         map_to_remove = self._map_manager.current_map
         logger.info(f'uploading {random_map.uuid}.Map.Gbx to the server...')
         await self._map_manager.upload_map(io.BytesIO(random_map.content),
@@ -36,6 +40,13 @@ class MapHandler:
         await self._map_manager.set_current_map(random_map.uuid)
         await self._map_manager.remove_map(map_to_remove, True)
         logger.info('map loaded')
+
+    def pre_load_next_map(self):
+        try:
+            self._nex_map = self._tmnx_rest_client.get_random_map()
+        except:
+            self._nex_map = None
+            logger.warning('Preload failed')
 
     async def load_hub(self):
         logger.info('loading HUB map ...')
@@ -95,7 +106,6 @@ class MapHandler:
     async def _map_exists(self, uuid: str) -> bool:
         try:
             db_map = await self._map_manager.get_map(uuid)
-            logger.info(f'{db_map.file}')
             return await self._storage.driver.exists(db_map.file)
         except MapNotFound as not_found:
             logger.exception('Failed to get MAP %s', uuid, exc_info=not_found)
