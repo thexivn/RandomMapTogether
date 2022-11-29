@@ -13,7 +13,7 @@ class Configurations:
         if int(seconds) < 300:
             self.game_time_seconds = 300
         else:
-            self.game_time_seconds = seconds
+            self.game_time_seconds = int(seconds)
 
     def set_at_time(self, old_value: str, value: str):
         self.AT_time = value
