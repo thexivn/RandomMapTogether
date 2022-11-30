@@ -65,14 +65,20 @@ class RandomMapsTogetherApp(AppConfig):
                                      'set the time that allow you to skip the map', default=GOLD,
                                      choices=[GOLD, SILVER, BRONZE], change_target=self.app_settings.set_gold_time)
 
+        perm: Setting = Setting('it.thexivn.RMT.min_perm_start', 'min_perm_start', Setting.CAT_BEHAVIOUR, int,
+                                'permission level to start the RMT', default=2,
+                                change_target=self.app_settings.set_min_level_to_start)
+
         await self.context.setting.register(
             game_time,
             at_time,
-            gold_time
+            gold_time,
+            perm
         )
         self.app_settings.set_game_time(3600, await game_time.get_value())
         self.app_settings.set_at_time(AT, await at_time.get_value())
         self.app_settings.set_gold_time(GOLD, await gold_time.get_value())
+        self.app_settings.set_min_level_to_start(2, await perm.get_value())
 
     async def on_start(self):
         await super().on_start()
@@ -82,6 +88,7 @@ class RandomMapsTogetherApp(AppConfig):
         tm_callbacks.finish.unregister(self.rmt_game.on_map_finsh)
         mania_callback.map.map_begin.unregister(self.rmt_game.map_begin_event)
         mania_callback.flow.round_end.unregister(self.rmt_game.map_end_event)
+        await self.widget.destroy()
 
     async def on_destroy(self):
         await super().on_destroy()

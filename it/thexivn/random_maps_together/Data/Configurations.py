@@ -8,6 +8,7 @@ class Configurations:
     game_time_seconds = 3600
     AT_time = SILVER
     GOLD_time = BRONZE
+    min_level_to_start = 1
 
     def set_game_time(self, old_value: str, seconds: str):
         if int(seconds) < 300:
@@ -20,3 +21,12 @@ class Configurations:
 
     def set_gold_time(self, old_value: str, value: str):
         self.GOLD_time = value
+
+    def set_min_level_to_start(self, old_value: str, value: str):
+        level = int(value)
+        if level < 0:
+            level = 0
+        elif level > 3:
+            level = 3
+
+        self.min_level_to_start = level

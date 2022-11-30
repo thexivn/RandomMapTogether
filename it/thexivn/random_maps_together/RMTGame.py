@@ -50,6 +50,10 @@ class RMTGame:
         self._score_ui.subscribe("ui_free_skip", self.command_free_skip)
 
     async def command_start_rmt(self, player: Player, *args, **kwargs):
+        if player.level <= self._config.min_level_to_start:
+            await self._chat("you are not allowed to start the game", player)
+            return
+
         if self._game_state.is_hub_stage():
             self._game_state.set_start_new_state()
             await self._chat(f'{player.nickname} started new RMT, loading next map ...')
