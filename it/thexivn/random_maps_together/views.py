@@ -1,5 +1,6 @@
 import logging
 
+from pyplanet.views import TemplateView
 from pyplanet.views.generics.widget import TimesWidgetView
 
 from it.thexivn.random_maps_together.Data.GameScore import GameScore
@@ -52,5 +53,26 @@ class RandomMapsTogetherView(TimesWidgetView):
             data["map_loading"] = self._game_state.map_is_loading
         else:
             data["game_started"] = False
+
+        return data
+
+
+class RMTScoreBoard(TemplateView):
+    template_name = "random_maps_together/score_board.xml"
+
+    def __init__(self, app, score: GameScore):
+        super().__init__(self)
+        logger.info("Loading VIEW")
+        self.app = app
+        self.manager = app.context.ui
+        self.id = "it_thexivn_RandomMapsTogether_score_board"
+        self._score: GameScore = score
+
+    async def get_context_data(self):
+        data = await super().get_context_data()
+        data["AT"] = self._score.total_at
+        data["GOLD"] = self._score.total_gold
+
+        data["players"] = self._score.get_top_10()
 
         return data

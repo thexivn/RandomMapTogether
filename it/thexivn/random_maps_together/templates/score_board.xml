@@ -1,0 +1,26 @@
+<frame pos="-80 80" size="160 160" z-idex="100">
+    <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
+    <frame pos="20 -5" size="120 50" z-idex="101">
+        <label pos="60 -5" size="60 10" text="RMT SCORE" textsize="10"
+               halign="center" valign="center" style="ManiaPlanetLogos" />
+
+        <quad pos="5 -15"   size="20 20" image="https://imgur.com/s9qP3Pr.png" autoscale="1" keepratio="Fit"/>
+        <label pos="40 -25" size="30 20"  text="{{AT}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
+        <quad pos="70 -15"  size="20 20" image="https://i.imgur.com/0z7NmIr.png" autoscale="1" keepratio="Fit"/>
+        <label pos="100 -25" size="30 20" text="{{GOLD}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
+    </frame>
+
+    <frame pos="20 -50" size="120 100" z-idex="101">
+    {% for player_score in players %}
+        <frame pos="0 {{ (-10 * loop.index0)}}" size="120 10">
+            <quad pos="0 0" size="120 10" bgcolor="eeeeeeFF"/>
+            <quad pos="1 -0.5" size="99 9" bgcolor="513877FF"/>
+            <quad pos="100 -0.5" size="19 9" bgcolor="333333FF"/>
+            <label pos="55 -4.5" size="55 9" text="{{player_score.player.nickname}}" textsize="3.5" textfont="RajdhaniMono"
+                               halign="center" valign="center" />
+            <label pos="110 -4.5" size="10 9" text="{{player_score.player_AT}}" textsize="3.5" textfont="RajdhaniMono"
+                               halign="left" valign="center" />
+        </frame>
+    {% endfor %}
+    </frame>
+</frame>

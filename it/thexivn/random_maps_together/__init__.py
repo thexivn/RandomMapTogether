@@ -28,16 +28,18 @@ class RandomMapsTogetherApp(AppConfig):
         self.instance.chat()
         self.widget = RandomMapsTogetherView(self)
         self.rmt_game = RMTGame(self.map_handler, self.instance.chat_manager, self.instance.mode_manager,
-                                self.widget, self.app_settings)
+                                self.widget, self.app_settings, self.instance.ui_manager)
 
         logger.info("application loaded correctly")
 
     async def on_init(self):
         await super().on_init()
+
         await self.rmt_game.on_init()
         tm_callbacks.finish.register(self.rmt_game.on_map_finsh)
         mania_callback.map.map_begin.register(self.rmt_game.map_begin_event)
         mania_callback.flow.round_end.register(self.rmt_game.map_end_event)
+        mania_callback.flow.match_end__end.register(self.rmt_game.hide_custom_scoreboard)
         await self.instance.command_manager.register(
             Command(command="start_rmt", target=self.rmt_game.command_start_rmt, description="load the game"),
             Command(command="stop_rmt", target=self.rmt_game.command_stop_rmt, description="return to lobby"),
@@ -88,7 +90,11 @@ class RandomMapsTogetherApp(AppConfig):
         tm_callbacks.finish.unregister(self.rmt_game.on_map_finsh)
         mania_callback.map.map_begin.unregister(self.rmt_game.map_begin_event)
         mania_callback.flow.round_end.unregister(self.rmt_game.map_end_event)
+        mania_callback.flow.match_end__end.unregister(self.rmt_game.hide_custom_scoreboard)
         await self.widget.destroy()
+        self.instance.ui_manager.properties.set_visibility('Race_ScoresTable', True)
+        self.instance.ui_manager.properties.set_visibility('Race_BigMessage', True)
+        await self.instance.ui_manager.properties.send_properties()
 
     async def on_destroy(self):
         await super().on_destroy()
