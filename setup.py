@@ -9,7 +9,7 @@ PKG = 'random_maps_together'
 ######
 setup(
     name=PKG,
-    version='0.0.1',
+    version='0.0.2',
     description='Simple pyplanet application to add RMC mode online',
     long_description='',
     keywords='maniaplanet, pyplanet, RMC, trackmania',
