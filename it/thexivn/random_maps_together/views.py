@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class RandomMapsTogetherView(TimesWidgetView):
-    widget_x = -140
-    widget_y = 85
+    widget_x = -100
+    widget_y = 89
     z_index = 5
     size_x = 60
     size_y = 10
