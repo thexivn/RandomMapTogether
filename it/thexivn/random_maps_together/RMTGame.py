@@ -93,7 +93,7 @@ class RMTGame:
                 await self._map_handler.remove_loaded_map()
 
         self._game_state.map_is_loading = False
-        await self._score_ui.display()
+        await self._score_ui.hide()
         return retry < max_retry
 
     async def command_stop_rmt(self, player: Player, *args, **kwargs):
@@ -110,10 +110,11 @@ class RMTGame:
         if self._game_state.is_game_stage():
             logger.info("Back to HUB ...")
             await self.hide_timer()
+            self._scoreboard_ui.set_time_left(0)
             self._game_state.set_hub_state()
             await self._scoreboard_ui.display()
             self._score.rest()
-            await self._score_ui.display()
+            await self._score_ui.hide()
             await self._map_handler.remove_loaded_map()
             await self._map_handler.load_hub()
             self._rmt_starter_player = None
@@ -125,7 +126,6 @@ class RMTGame:
         self._score_ui.ui_controls_visible = True
         if self._game_state.is_game_stage():
             self._game_state.set_new_map_in_game_state()
-            self._map_start_time = py_time.time()
             self._map_handler.pre_load_next_map()
         else:
             await self.hide_timer()
@@ -172,6 +172,7 @@ class RMTGame:
                     if await self.load_with_retry():
                         self._score.inc_at(player)
                         await self._scoreboard_ui.display()
+                        await self._score_ui.hide()
                     else:
                         await self.back_to_hub()
                 elif race_time <= self._map_handler.gold_time and not self._game_state.gold_skip_available:
@@ -197,6 +198,7 @@ class RMTGame:
                     if await self.load_with_retry():
                         self._score.inc_gold()
                         await self._scoreboard_ui.display()
+                        await self._score_ui.hide()
                     else:
                         await self.back_to_hub()
             else:
@@ -214,6 +216,7 @@ class RMTGame:
                     await self._chat(f'{player.nickname} decided to skip the map')
                     await self.hide_timer()
                     await self._scoreboard_ui.display()
+                    await self._score_ui.hide()
                     if not await self.load_with_retry():
                         await self.back_to_hub()
             else:
@@ -227,6 +230,7 @@ class RMTGame:
 
     def _update_time_left(self):
         self._time_left -= int(py_time.time() - self._map_start_time)
+        self._scoreboard_ui.set_time_left(self._time_left)
 
     def _is_player_allowed(self, player: Player) -> bool:
         return player.level == Player.LEVEL_MASTER or player == self._rmt_starter_player
