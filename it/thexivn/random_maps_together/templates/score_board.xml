@@ -1,6 +1,6 @@
-<frame pos="-80 80" size="160 160" z-idex="100">
+<frame pos="-80 80" size="160 160" z-idex="3">
     <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
-    <frame pos="20 -5" size="120 50" z-idex="101">
+    <frame pos="20 -5" size="120 50" z-idex="4">
         <label pos="60 -5" size="60 10" text="RMT SCORE" textsize="10"
                halign="center" valign="center" style="ManiaPlanetLogos" />
 
@@ -8,9 +8,12 @@
         <label pos="40 -25" size="30 20"  text="{{AT}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
         <quad pos="70 -15"  size="20 20" image="https://i.imgur.com/0z7NmIr.png" autoscale="1" keepratio="Fit"/>
         <label pos="100 -25" size="30 20" text="{{GOLD}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
+        {% if time_left %}
+            <label pos="5 -40" text="TIME LEFT: {{time_left}}" textsize="5" textfont="RajdhaniMono" />
+        {% endif %}
     </frame>
 
-    <frame pos="20 -50" size="120 100" z-idex="101">
+    <frame pos="20 -50" size="120 100" z-idex="4">
     {% for player_score in players %}
         <frame pos="0 {{ (-10 * loop.index0)}}" size="120 10">
             <quad pos="0 0" size="120 10" bgcolor="eeeeeeFF"/>

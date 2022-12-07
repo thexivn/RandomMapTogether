@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from pyplanet.views import TemplateView
 from pyplanet.views.generics.widget import TimesWidgetView
@@ -67,6 +68,17 @@ class RMTScoreBoard(TemplateView):
         self.manager = app.context.ui
         self.id = "it_thexivn_RandomMapsTogether_score_board"
         self._score: GameScore = score
+        self._time_left: Optional[str] = None
+
+    def set_time_left(self, time_left_seconds: int):
+        if time_left_seconds <= 0:
+            self._time_left = None
+        elif time_left_seconds < 60:
+            self._time_left = f'00:{time_left_seconds:02d}'
+        else:
+            minutes_left = int(time_left_seconds / 60)
+            seconds_left = time_left_seconds - minutes_left * 60
+            self._time_left = f'{minutes_left:02d}:{seconds_left:02d}'
 
     async def get_context_data(self):
         data = await super().get_context_data()
@@ -74,5 +86,6 @@ class RMTScoreBoard(TemplateView):
         data["GOLD"] = self._score.total_gold
 
         data["players"] = self._score.get_top_10()
+        data["time_left"] = self._time_left
 
         return data
