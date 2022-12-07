@@ -40,6 +40,8 @@ class RandomMapsTogetherApp(AppConfig):
         mania_callback.map.map_begin.register(self.rmt_game.map_begin_event)
         mania_callback.flow.round_end.register(self.rmt_game.map_end_event)
         mania_callback.flow.match_end__end.register(self.rmt_game.hide_custom_scoreboard)
+        mania_callback.flow.round_start__end.register(self.rmt_game.set_time_left)
+
         await self.instance.command_manager.register(
             Command(command="start_rmt", target=self.rmt_game.command_start_rmt, description="load the game"),
             Command(command="stop_rmt", target=self.rmt_game.command_stop_rmt, description="return to lobby"),
@@ -91,6 +93,7 @@ class RandomMapsTogetherApp(AppConfig):
         mania_callback.map.map_begin.unregister(self.rmt_game.map_begin_event)
         mania_callback.flow.round_end.unregister(self.rmt_game.map_end_event)
         mania_callback.flow.match_end__end.unregister(self.rmt_game.hide_custom_scoreboard)
+        mania_callback.flow.round_start__end.unregister(self.rmt_game.set_time_left)
         await self.widget.destroy()
         self.instance.ui_manager.properties.set_visibility('Race_ScoresTable', True)
         self.instance.ui_manager.properties.set_visibility('Race_BigMessage', True)

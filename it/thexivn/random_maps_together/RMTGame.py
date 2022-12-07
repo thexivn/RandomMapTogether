@@ -149,7 +149,6 @@ class RMTGame:
                 logger.info("Continue with %d time left", self._time_left)
                 await self._mode_manager.update_settings(self._mode_settings)
 
-        await self._score_ui.display()
 
     async def on_map_finsh(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow,
                            is_end_race: bool, is_end_lap, raw, *args, **kwargs):
@@ -240,3 +239,8 @@ class RMTGame:
         self._tm_ui.properties.set_visibility(RACE_SCORES_TABLE, visible)
         self._tm_ui.properties.set_visibility(BIG_MESSAGE, visible)
         await self._tm_ui.properties.send_properties()
+
+    async def set_time_left(self, count, time, *args, **kwargs):
+        if self._game_state.is_game_stage():
+            logger.info(f'ROUND_START {time} -- {count}')
+            self._map_start_time = py_time.time()
