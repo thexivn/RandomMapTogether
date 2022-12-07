@@ -98,7 +98,7 @@ class RMTGame:
 
     async def command_stop_rmt(self, player: Player, *args, **kwargs):
         if self._game_state.is_game_stage():
-            if player == self._rmt_starter_player:
+            if self._is_player_allowed(player):
                 await self._chat(f'{player.nickname} stopped the current session')
                 await self.back_to_hub()
             else:
@@ -190,7 +190,7 @@ class RMTGame:
     async def command_skip_gold(self, player: Player, *args, **kwargs):
         if self._game_state.skip_command_allowed():
             if self._game_state.gold_skip_available:
-                if self._rmt_starter_player == player:
+                if self._is_player_allowed(player):
                     self._update_time_left()
                     self._game_state.set_map_completed_state()
                     await self._chat(f'{player.nickname} decided to GOLD skip')
@@ -208,7 +208,7 @@ class RMTGame:
     async def command_free_skip(self, player: Player, *args, **kwargs):
         if self._game_state.skip_command_allowed():
             if self._game_state.free_skip_available:
-                if self._rmt_starter_player == player:
+                if self._is_player_allowed(player):
                     self._update_time_left()
                     self._game_state.set_map_completed_state()
                     self._game_state.free_skip_available = False
@@ -228,6 +228,9 @@ class RMTGame:
 
     def _update_time_left(self):
         self._time_left -= int(py_time.time() - self._map_start_time)
+
+    def _is_player_allowed(self, player: Player) -> bool:
+        return player.level == Player.LEVEL_MASTER or player == self._rmt_starter_player
 
     async def hide_custom_scoreboard(self, count, time, *args, **kwargs):
         await self._scoreboard_ui.hide()
