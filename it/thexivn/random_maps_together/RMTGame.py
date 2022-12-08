@@ -1,6 +1,8 @@
 import asyncio
 import logging
+import threading
 import time as py_time
+from threading import Thread
 
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
@@ -22,6 +24,12 @@ S_TIME_LIMIT = 'S_TimeLimit'
 _lock = asyncio.Lock()
 
 logger = logging.getLogger(__name__)
+
+
+def background_loading_map(map_handler: MapHandler):
+    logger.info("[background_loading_map] STARTED")
+    map_handler.pre_load_next_map()
+    logger.info("[background_loading_map] COMPLETED")
 
 
 class RMTGame:
@@ -121,17 +129,18 @@ class RMTGame:
             logger.info("Back to HUB completed")
 
     async def map_begin_event(self, map, *args, **kwargs):
-        logger.info("MAP Begin")
+        logger.info("[map_begin_event] STARTED")
         self._map_handler.active_map = map
         self._score_ui.ui_controls_visible = True
         if self._game_state.is_game_stage():
             self._game_state.set_new_map_in_game_state()
-            self._map_handler.pre_load_next_map()
+            Thread(target=background_loading_map, args=[self._map_handler]).start()
         else:
             await self.hide_timer()
             self._game_state.current_map_completed = True
 
         await self._score_ui.display()
+        logger.info("[map_begin_event] ENDED")
 
     async def map_end_event(self, time, count, *args, **kwargs):
         logger.info("MAP end")
