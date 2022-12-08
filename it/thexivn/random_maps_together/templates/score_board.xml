@@ -9,7 +9,7 @@
         <quad pos="70 -15"  size="20 20" image="https://i.imgur.com/0z7NmIr.png" autoscale="1" keepratio="Fit"/>
         <label pos="100 -25" size="30 20" text="{{GOLD}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
         {% if time_left %}
-            <label pos="5 -40" text="TIME LEFT: {{time_left}}" textsize="5" textfont="RajdhaniMono" />
+            <label pos="5 -38" text="TIME LEFT: {{time_left}}" textsize="5" textfont="RajdhaniMono" />
         {% endif %}
     </frame>
 
