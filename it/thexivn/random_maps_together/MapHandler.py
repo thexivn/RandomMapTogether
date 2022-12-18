@@ -8,7 +8,7 @@ from pyplanet.contrib.map import MapManager
 from pyplanet.contrib.map.exceptions import MapNotFound
 from pyplanet.core.storage.storage import Storage
 
-from it.thexivn.random_maps_together import AT, GOLD, SILVER, BRONZE
+from it.thexivn.random_maps_together import AT, GOLD, SILVER, BRONZE, TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
 from it.thexivn.random_maps_together.Data import Configurations
 from it.thexivn.random_maps_together.Data.APIMapInfo import APIMapInfo
 from it.thexivn.random_maps_together.RestClient.TMNXRestClient import TMNXRestClient
@@ -25,6 +25,7 @@ class MapHandler:
         self._storage = storage
         self._configs: Configurations = configs
         self.active_map: Map = None
+        self.current_map_is_skipable = False
         self._nex_map: Optional[APIMapInfo] = None
 
     async def load_next_map(self):
@@ -32,6 +33,8 @@ class MapHandler:
         random_map = self._nex_map if self._nex_map else self._tmnx_rest_client.get_random_map()
         self._nex_map = None
         map_to_remove = self._map_manager.current_map
+        self.current_map_is_skipable = (TAG_BOBSLEIGH in random_map.tags or TAG_ICE in random_map.tags) and random_map.last_update < ICE_CHANGE_DATE
+        logger.info(f'TAGS: {random_map.tags} UPDATE: {random_map.last_update}')
         logger.info(f'uploading {random_map.uuid}.Map.Gbx to the server...')
         await self._map_manager.upload_map(io.BytesIO(random_map.content),
                                            f'{random_map.uuid}.Map.Gbx', overwrite=True)

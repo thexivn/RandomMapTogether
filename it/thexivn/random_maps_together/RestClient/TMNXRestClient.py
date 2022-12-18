@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import List
 
 import requests
@@ -17,6 +18,18 @@ SEARCH_PARAMS = {
 }
 
 
+def _get_tags(tags_str: str) -> List[int]:
+    return [int(tag) for tag in tags_str.split(',')]
+
+
+def _fix_datetime(dtime: str) -> datetime:
+    count = len(dtime.split('.')[-1])
+    if count < 3:
+        dtime += '0' * (3 - count)
+
+    return datetime.fromisoformat(dtime)
+
+
 class TMNXRestClient:
     def __init__(self):
         self.base_url = "https://trackmania.exchange/mapsearch2/"
@@ -28,8 +41,12 @@ class TMNXRestClient:
                                           params=SEARCH_PARAMS)
 
         first_map = response.json().get("results")[0]
-        return APIMapInfo(first_map.get("TrackUID"), int(first_map.get('AuthorTime')),
-                          self.map_map_content(first_map.get("TrackID")))
+        return APIMapInfo(
+            first_map.get("TrackUID"),
+            int(first_map.get('AuthorTime')),
+            _fix_datetime(first_map.get("UpdatedAt")).date(),
+            self.map_map_content(first_map.get("TrackID")),
+            _get_tags(first_map.get("Tags")))
 
     def map_map_content(self, map_id) -> bytes:
         logger.info("downloading %s%s", self.download_url, map_id)

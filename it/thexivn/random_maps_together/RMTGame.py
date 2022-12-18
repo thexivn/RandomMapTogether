@@ -133,8 +133,12 @@ class RMTGame:
         self._map_handler.active_map = map
         self._score_ui.ui_controls_visible = True
         if self._game_state.is_game_stage():
+            if self._map_handler.current_map_is_skipable:
+                await self._chat("$o$FB0 this track was created before the ICE physics change $z"
+                                 , self._rmt_starter_player)
             self._game_state.set_new_map_in_game_state()
             Thread(target=background_loading_map, args=[self._map_handler]).start()
+            self._score_ui.set_skippable_map(self._map_handler.current_map_is_skipable)
         else:
             await self.hide_timer()
             self._game_state.current_map_completed = True
@@ -217,11 +221,12 @@ class RMTGame:
 
     async def command_free_skip(self, player: Player, *args, **kwargs):
         if self._game_state.skip_command_allowed():
-            if self._game_state.free_skip_available:
+            if self._game_state.free_skip_available or self._map_handler.current_map_is_skipable:
                 if self._is_player_allowed(player):
                     self._update_time_left()
                     self._game_state.set_map_completed_state()
-                    self._game_state.free_skip_available = False
+                    if not self._map_handler.current_map_is_skipable:
+                        self._game_state.free_skip_available = False
                     await self._chat(f'{player.nickname} decided to skip the map')
                     await self.hide_timer()
                     await self._scoreboard_ui.display()

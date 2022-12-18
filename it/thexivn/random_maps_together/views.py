@@ -29,12 +29,16 @@ class RandomMapsTogetherView(TimesWidgetView):
         self._score: GameScore = None
         self.ui_controls_visible = True
         self._game_state: GameState = None
+        self._skippable_map = False
 
     def set_score(self, score: GameScore):
         self._score = score
 
     def set_game_state(self, state: GameState):
         self._game_state = state
+
+    def set_skippable_map(self, skip: bool):
+        self._skippable_map = skip
 
     async def get_context_data(self):
         logger.info("Context Data")
@@ -50,7 +54,7 @@ class RandomMapsTogetherView(TimesWidgetView):
         if self._game_state:
             data["game_started"] = self._game_state.game_is_in_progress
             data["gold_skip_visible"] = self._game_state.gold_skip_available
-            data["free_skip_visible"] = self._game_state.free_skip_available
+            data["free_skip_visible"] = self._game_state.free_skip_available or self._skippable_map
             data["map_loading"] = self._game_state.map_is_loading
         else:
             data["game_started"] = False
