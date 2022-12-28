@@ -18,7 +18,9 @@ setup(
     extras_require={},
     include_package_data=True,
     long_description_content_type='text/markdown',
-
+    package_data={
+        'templates': ['*.xml', '*.Script.Txt']
+    },
     author='thexivn',
     author_email='thexivn@proton.me',
     url='https://github.com/thexivn/RandomMapTogether',
