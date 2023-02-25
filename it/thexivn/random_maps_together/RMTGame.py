@@ -138,7 +138,7 @@ class RMTGame:
                                  , self._rmt_starter_player)
             self._game_state.set_new_map_in_game_state()
             Thread(target=background_loading_map, args=[self._map_handler]).start()
-            self._score_ui.set_skippable_map(self._map_handler.current_map_is_skipable)
+            self._score_ui.set_skippable_map(self._can_skip_map())
         else:
             await self.hide_timer()
             self._game_state.current_map_completed = True
@@ -221,7 +221,7 @@ class RMTGame:
 
     async def command_free_skip(self, player: Player, *args, **kwargs):
         if self._game_state.skip_command_allowed():
-            if self._game_state.free_skip_available or self._map_handler.current_map_is_skipable:
+            if self._can_skip_map():
                 if self._is_player_allowed(player):
                     self._update_time_left()
                     self._game_state.set_map_completed_state()
@@ -262,3 +262,8 @@ class RMTGame:
         if self._game_state.is_game_stage():
             logger.info(f'ROUND_START {time} -- {count}')
             self._map_start_time = py_time.time()
+
+    def _can_skip_map(self) -> bool:
+        return self._game_state.free_skip_available or \
+            self._config.infinite_free_skips or \
+            self._map_handler.current_map_is_skipable

@@ -9,6 +9,7 @@ class Configurations:
     AT_time = SILVER
     GOLD_time = BRONZE
     min_level_to_start = 1
+    infinite_free_skips = False
 
     def set_game_time(self, old_value: str, seconds: str):
         if int(seconds) < 300:
@@ -30,3 +31,6 @@ class Configurations:
             level = 3
 
         self.min_level_to_start = level
+
+    def set_infinite_free_skips(self, old_value: bool, value: bool):
+        self.infinite_free_skips = value
