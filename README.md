@@ -28,12 +28,13 @@ pip install -e .
 inside the pyplanet settings folder
 
 ## configurations
-| ***setting***  | ***values***         | ***description***                                                                                                      |
-|----------------|----------------------|------------------------------------------------------------------------------------------------------------------------|
-| game_time      | int                  | time in `seconds`. Default 1h (3600s)                                                                                  |
-| AT_time        | AT, GOLD, SILVER     | time to beat to advance to next map                                                                                    |
-| GOLD_time      | GOLD, SILVER, BRONZE | time to beat that allow you to `take GOLD` and skip to next map                                                        |
-| min_perm_start | 0,1,2,3              | level required to start the game <br/>LEVEL_PLAYER = 0<br/>LEVEL_OPERATOR = 1<br/>LEVEL_ADMIN = 2<br/>LEVEL_MASTER = 3 |
+| ***setting***       | ***values***         | ***description***                                                                                                      |
+|---------------------|----------------------|------------------------------------------------------------------------------------------------------------------------|
+| game_time           | int                  | time in `seconds`. Default 1h (3600s)                                                                                  |
+| AT_time             | AT, GOLD, SILVER     | time to beat to advance to next map                                                                                    |
+| GOLD_time           | GOLD, SILVER, BRONZE | time to beat that allow you to `take GOLD` and skip to next map                                                        |
+| min_perm_start      | 0,1,2,3              | level required to start the game <br/>LEVEL_PLAYER = 0<br/>LEVEL_OPERATOR = 1<br/>LEVEL_ADMIN = 2<br/>LEVEL_MASTER = 3 |
+| infinite_free_skips | bool                 | if enabled allow to always skips                                                                                       |
 
-Also set `S_ForceLapsNb` to `-1`, this will use the validation laps for those 
-maps that have multi-laps
+~~Also set `S_ForceLapsNb` to `-1`, this will use the validation laps for those 
+maps that have multi-laps~~ When the RMT game start automatically set `S_ForceLapsNb` to `-1`

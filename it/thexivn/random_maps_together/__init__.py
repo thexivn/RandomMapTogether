@@ -52,6 +52,9 @@ class RandomMapsTogetherApp(AppConfig):
         )
 
         await self.settings()
+        await self.instance.gbx.multicall(
+            self.instance.gbx.prepare('SetCallVoteRatios', [-1])
+        )
 
         mania_callback.player.player_connect.register(self.player_connect)
         logger.info("application initialized correctly")
@@ -73,16 +76,22 @@ class RandomMapsTogetherApp(AppConfig):
                                 'permission level to start the RMT', default=2,
                                 change_target=self.app_settings.set_min_level_to_start)
 
+        inf_skips: Setting = Setting('it.thexivn.RMT.infinite_free_skips', 'infinite_free_skips', Setting.CAT_BEHAVIOUR, bool,
+                                'if enabled allows to free skips always', default=False,
+                                change_target=self.app_settings.set_infinite_free_skips)
+
         await self.context.setting.register(
             game_time,
             at_time,
             gold_time,
-            perm
+            perm,
+            inf_skips
         )
         self.app_settings.set_game_time(3600, await game_time.get_value())
         self.app_settings.set_at_time(AT, await at_time.get_value())
         self.app_settings.set_gold_time(GOLD, await gold_time.get_value())
         self.app_settings.set_min_level_to_start(2, await perm.get_value())
+        self.app_settings.set_infinite_free_skips(False, await inf_skips.get_value())
 
     async def on_start(self):
         await super().on_start()
