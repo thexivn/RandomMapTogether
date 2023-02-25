@@ -58,7 +58,7 @@ class RMTGame:
         await self._map_handler.load_hub()
         logger.info("RMT Game loaded")
         self._mode_settings = await self._mode_manager.get_settings()
-        self._mode_settings[S_FORCE_LAPS_NB] = '-1'
+        self._mode_settings[S_FORCE_LAPS_NB] = -1
         await self.hide_timer()
         await self._score_ui.display()
         self._score_ui.subscribe("ui_gold_skips", self.command_skip_gold)
