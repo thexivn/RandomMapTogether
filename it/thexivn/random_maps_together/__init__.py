@@ -76,8 +76,8 @@ class RandomMapsTogetherApp(AppConfig):
                                 'permission level to start the RMT', default=2,
                                 change_target=self.app_settings.set_min_level_to_start)
 
-        inf_skips: Setting = Setting('it.thexivn.RMT.infinite_free_skips', 'min_perm_start', Setting.CAT_BEHAVIOUR, bool,
-                                'if enabled allows to free skips always', default=2,
+        inf_skips: Setting = Setting('it.thexivn.RMT.infinite_free_skips', 'infinite_free_skips', Setting.CAT_BEHAVIOUR, bool,
+                                'if enabled allows to free skips always', default=False,
                                 change_target=self.app_settings.set_infinite_free_skips)
 
         await self.context.setting.register(
@@ -91,7 +91,7 @@ class RandomMapsTogetherApp(AppConfig):
         self.app_settings.set_at_time(AT, await at_time.get_value())
         self.app_settings.set_gold_time(GOLD, await gold_time.get_value())
         self.app_settings.set_min_level_to_start(2, await perm.get_value())
-        self.app_settings.set_infinite_free_skips(2, await inf_skips.get_value())
+        self.app_settings.set_infinite_free_skips(False, await inf_skips.get_value())
 
     async def on_start(self):
         await super().on_start()
