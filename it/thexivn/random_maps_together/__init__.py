@@ -52,6 +52,9 @@ class RandomMapsTogetherApp(AppConfig):
         )
 
         await self.settings()
+        await self.instance.gbx.multicall(
+            self.instance.gbx.prepare('SetCallVoteRatios', [-1])
+        )
 
         mania_callback.player.player_connect.register(self.player_connect)
         logger.info("application initialized correctly")
