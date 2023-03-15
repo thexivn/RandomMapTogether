@@ -5,13 +5,13 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.command import Command
 from pyplanet.contrib.setting import Setting
 
-from it.thexivn.random_maps_together.Data.Configurations import Configurations
-from it.thexivn.random_maps_together.Data.Constants import *
-from it.thexivn.random_maps_together.RMTGame import RMTGame
-from it.thexivn.random_maps_together.MapHandler import MapHandler
+from .Data.Configurations import Configurations
+from .Data.Constants import *
+from .RMTGame import RMTGame
+from .MapHandler import MapHandler
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 
-from it.thexivn.random_maps_together.views import RandomMapsTogetherView
+from .views import RandomMapsTogetherView
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
 
 logger = logging.getLogger(__name__)

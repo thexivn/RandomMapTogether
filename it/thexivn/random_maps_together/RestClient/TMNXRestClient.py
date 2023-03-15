@@ -5,7 +5,7 @@ from typing import List
 import requests
 from requests import Response
 
-from it.thexivn.random_maps_together.Data.APIMapInfo import APIMapInfo
+from ..Data.APIMapInfo import APIMapInfo
 
 logger = logging.getLogger(__name__)
 

@@ -8,10 +8,10 @@ from pyplanet.contrib.map import MapManager
 from pyplanet.contrib.map.exceptions import MapNotFound
 from pyplanet.core.storage.storage import Storage
 
-from it.thexivn.random_maps_together import AT, GOLD, SILVER, BRONZE, TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
-from it.thexivn.random_maps_together.Data import Configurations
-from it.thexivn.random_maps_together.Data.APIMapInfo import APIMapInfo
-from it.thexivn.random_maps_together.RestClient.TMNXRestClient import TMNXRestClient
+from . import AT, GOLD, SILVER, BRONZE, TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
+from .Data import Configurations
+from .Data.APIMapInfo import APIMapInfo
+from .RestClient.TMNXRestClient import TMNXRestClient
 
 logger = logging.getLogger(__name__)
 

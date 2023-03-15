@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from it.thexivn.random_maps_together.Data.Constants import SILVER, BRONZE
+from .Constants import SILVER, BRONZE
 
 
 @dataclass

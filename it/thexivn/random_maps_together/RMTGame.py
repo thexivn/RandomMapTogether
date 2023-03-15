@@ -9,12 +9,12 @@ from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
 
-from it.thexivn.random_maps_together import MapHandler
-from it.thexivn.random_maps_together.Data.Configurations import Configurations
-from it.thexivn.random_maps_together.Data.GameScore import GameScore
-from it.thexivn.random_maps_together.Data.GameState import GameState
+from . import MapHandler
+from .Data.Configurations import Configurations
+from .Data.GameScore import GameScore
+from .Data.GameState import GameState
 
-from it.thexivn.random_maps_together.views import RandomMapsTogetherView, RMTScoreBoard
+from .views import RandomMapsTogetherView, RMTScoreBoard
 
 BIG_MESSAGE = 'Race_BigMessage'
 

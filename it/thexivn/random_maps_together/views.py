@@ -4,8 +4,8 @@ from typing import Optional
 from pyplanet.views import TemplateView
 from pyplanet.views.generics.widget import TimesWidgetView
 
-from it.thexivn.random_maps_together.Data.GameScore import GameScore
-from it.thexivn.random_maps_together.Data.GameState import GameState
+from .Data.GameScore import GameScore
+from .Data.GameState import GameState
 
 logger = logging.getLogger(__name__)
 
