@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
-from .Constants import SILVER, BRONZE
+from .Medals import Medals
 
 
 @dataclass
 class Configurations:
     game_time_seconds = 3600
-    AT_time = SILVER
-    GOLD_time = BRONZE
+    goal_medal = Medals.AUTHOR
+    skip_medal = Medals.GOLD
     min_level_to_start = 1
     infinite_free_skips = False
 
@@ -17,11 +17,11 @@ class Configurations:
         else:
             self.game_time_seconds = int(seconds)
 
-    def set_at_time(self, old_value: str, value: str):
-        self.AT_time = value
+    def set_goal_medal(self, old_value: str, value: str):
+        self.goal_medal = Medals(value)
 
-    def set_gold_time(self, old_value: str, value: str):
-        self.GOLD_time = value
+    def set_skip_medal(self, old_value: str, value: str):
+        self.skip_medal = Medals(value)
 
     def set_min_level_to_start(self, old_value: str, value: str):
         level = int(value)

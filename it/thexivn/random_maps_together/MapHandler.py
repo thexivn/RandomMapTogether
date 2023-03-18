@@ -8,7 +8,8 @@ from pyplanet.contrib.map import MapManager
 from pyplanet.contrib.map.exceptions import MapNotFound
 from pyplanet.core.storage.storage import Storage
 
-from . import AT, GOLD, SILVER, BRONZE, TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
+from .Data.Constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
+from .Data.Medals import Medals
 from .Data import Configurations
 from .Data.APIMapInfo import APIMapInfo
 from .RestClient.TMNXRestClient import TMNXRestClient
@@ -25,15 +26,15 @@ class MapHandler:
         self._storage = storage
         self._configs: Configurations = configs
         self.active_map: Map = None
-        self.current_map_is_skipable = False
-        self._nex_map: Optional[APIMapInfo] = None
+        self.pre_patch_ice = False
+        self._next_map: Optional[APIMapInfo] = None
 
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
-        random_map = self._nex_map if self._nex_map else self._tmnx_rest_client.get_random_map()
-        self._nex_map = None
+        random_map = self._next_map if self._next_map else self._tmnx_rest_client.get_random_map()
+        self._next_map = None
         map_to_remove = self._map_manager.current_map
-        self.current_map_is_skipable = (TAG_BOBSLEIGH in random_map.tags or TAG_ICE in random_map.tags) and random_map.last_update < ICE_CHANGE_DATE
+        self.pre_patch_ice = (TAG_BOBSLEIGH in random_map.tags or TAG_ICE in random_map.tags) and random_map.last_update < ICE_CHANGE_DATE
         logger.info(f'TAGS: {random_map.tags} UPDATE: {random_map.last_update}')
         logger.info(f'uploading {random_map.uuid}.Map.Gbx to the server...')
         await self._map_manager.upload_map(io.BytesIO(random_map.content),
@@ -46,9 +47,9 @@ class MapHandler:
 
     def pre_load_next_map(self):
         try:
-            self._nex_map = self._tmnx_rest_client.get_random_map()
+            self._next_map = self._tmnx_rest_client.get_random_map()
         except:
-            self._nex_map = None
+            self._next_map = None
             logger.warning('Preload failed')
 
     async def load_hub(self):
@@ -58,7 +59,7 @@ class MapHandler:
             await self._map_manager.set_current_map(self._hub_map)
             return
 
-        content = self._tmnx_rest_client.map_map_content(self._hub_id)
+        content = self._tmnx_rest_client.get_map_content(self._hub_id)
         try:
             await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_id}.Map.Gbx', overwrite=True)
             await self._map_manager.update_list(True, True)
@@ -82,26 +83,26 @@ class MapHandler:
             logger.warning('impossible to remove map without UUID')
 
     @property
-    def gold_time(self) -> int:
+    def skip_medal(self) -> int:
         if self.active_map:
-            difficulty = self._configs.GOLD_time
-            if difficulty == GOLD:
+            difficulty = self._configs.skip_medal
+            if difficulty == Medals.GOLD:
                 return self.active_map.time_gold
-            elif difficulty == SILVER:
+            elif difficulty == Medals.SILVER:
                 return self.active_map.time_silver
-            elif difficulty == BRONZE:
+            elif difficulty == Medals.BRONZE:
                 return self.active_map.time_bronze
         return 0
 
     @property
-    def at_time(self) -> int:
+    def goal_medal(self) -> int:
         if self.active_map:
-            difficulty = self._configs.AT_time
-            if difficulty == AT:
+            difficulty = self._configs.goal_medal
+            if difficulty == Medals.AUTHOR:
                 return self.active_map.time_author
-            elif difficulty == GOLD:
+            elif difficulty == Medals.GOLD:
                 return self.active_map.time_gold
-            elif difficulty == SILVER:
+            elif difficulty == Medals.SILVER:
                 return self.active_map.time_silver
 
         return 0

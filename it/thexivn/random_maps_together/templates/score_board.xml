@@ -4,12 +4,12 @@
         <label pos="60 -5" size="60 10" text="RMT SCORE" textsize="10"
                halign="center" valign="center" style="ManiaPlanetLogos" />
 
-        <quad pos="5 -15"   size="20 20" image="https://imgur.com/s9qP3Pr.png" autoscale="1" keepratio="Fit"/>
-        <label pos="40 -25" size="30 20"  text="{{AT}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
-        <quad pos="70 -15"  size="20 20" image="https://i.imgur.com/0z7NmIr.png" autoscale="1" keepratio="Fit"/>
-        <label pos="100 -25" size="30 20" text="{{GOLD}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
+        <quad pos="5 -15"   size="20 20" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
+        <label pos="40 -25" size="30 20"  text="{{ total_goal_medals }}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
+        <quad pos="70 -15"  size="20 20" image="{{ skip_medal_url }}" autoscale="1" keepratio="Fit"/>
+        <label pos="100 -25" size="30 20" text="{{ total_skip_medals }}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
         {% if time_left %}
-            <label pos="5 -38" text="TIME LEFT: {{time_left}}" textsize="5" textfont="RajdhaniMono" />
+            <label pos="5 -38" text="TIME LEFT: {{ time_left }}" textsize="5" textfont="RajdhaniMono" />
         {% endif %}
     </frame>
 
@@ -21,7 +21,7 @@
             <quad pos="100 -0.5" size="19 9" bgcolor="333333FF"/>
             <label pos="55 -4.5" size="55 9" text="{{player_score.player.nickname}}" textsize="3.5" textfont="RajdhaniMono"
                                halign="center" valign="center" />
-            <label pos="110 -4.5" size="10 9" text="{{player_score.player_AT}}" textsize="3.5" textfont="RajdhaniMono"
+            <label pos="110 -4.5" size="10 9" text="{{player_score.player_goal_medals}}" textsize="3.5" textfont="RajdhaniMono"
                                halign="left" valign="center" />
         </frame>
     {% endfor %}

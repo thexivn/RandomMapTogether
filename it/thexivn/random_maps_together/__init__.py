@@ -2,17 +2,15 @@ import logging
 
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.maniaplanet.models import Player
+from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
+from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 from pyplanet.contrib.command import Command
 from pyplanet.contrib.setting import Setting
 
 from .Data.Configurations import Configurations
-from .Data.Constants import *
 from .RMTGame import RMTGame
 from .MapHandler import MapHandler
-from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
-
 from .views import RandomMapsTogetherView
-from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
 
 logger = logging.getLogger(__name__)
 
@@ -60,38 +58,14 @@ class RandomMapsTogetherApp(AppConfig):
         logger.info("application initialized correctly")
 
     async def settings(self):
-        game_time: Setting = Setting('it.thexivn.RMT.game_time', 'game_time', Setting.CAT_BEHAVIOUR, int,
-                                     'time of the session', default=3600,
-                                     change_target=self.app_settings.set_game_time)
-
-        at_time: Setting = Setting('it.thexivn.RMT.AT_time', 'AT_time', Setting.CAT_BEHAVIOUR, str,
-                                   'time to complete the map', default=AT, choices=[AT, GOLD, SILVER],
-                                   change_target=self.app_settings.set_at_time)
-
-        gold_time: Setting = Setting('it.thexivn.RMT.GOLD_time', 'GOLD_time', Setting.CAT_BEHAVIOUR, str,
-                                     'set the time that allow you to skip the map', default=GOLD,
-                                     choices=[GOLD, SILVER, BRONZE], change_target=self.app_settings.set_gold_time)
-
         perm: Setting = Setting('it.thexivn.RMT.min_perm_start', 'min_perm_start', Setting.CAT_BEHAVIOUR, int,
                                 'permission level to start the RMT', default=2,
                                 change_target=self.app_settings.set_min_level_to_start)
 
-        inf_skips: Setting = Setting('it.thexivn.RMT.infinite_free_skips', 'infinite_free_skips', Setting.CAT_BEHAVIOUR, bool,
-                                'if enabled allows to free skips always', default=False,
-                                change_target=self.app_settings.set_infinite_free_skips)
-
         await self.context.setting.register(
-            game_time,
-            at_time,
-            gold_time,
-            perm,
-            inf_skips
+            perm
         )
-        self.app_settings.set_game_time(3600, await game_time.get_value())
-        self.app_settings.set_at_time(AT, await at_time.get_value())
-        self.app_settings.set_gold_time(GOLD, await gold_time.get_value())
         self.app_settings.set_min_level_to_start(2, await perm.get_value())
-        self.app_settings.set_infinite_free_skips(False, await inf_skips.get_value())
 
     async def on_start(self):
         await super().on_start()

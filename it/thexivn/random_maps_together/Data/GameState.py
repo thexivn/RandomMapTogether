@@ -13,7 +13,7 @@ class GameState:
     current_map_completed: bool = False
     map_is_loading: bool = False
     free_skip_available: bool = False
-    gold_skip_available: bool = False
+    skip_medal_available: bool = False
     game_is_in_progress: bool = False
 
     def is_hub_stage(self) -> bool:
@@ -29,7 +29,7 @@ class GameState:
         self.current_map_completed = True
         self.stage = GameStage.RMT
         self.free_skip_available = True
-        self.gold_skip_available = False
+        self.skip_medal_available = False
         self.map_is_loading = False
 
     def set_new_map_in_game_state(self):
@@ -39,14 +39,10 @@ class GameState:
 
     def set_map_completed_state(self):
         self.current_map_completed = True
-        self.gold_skip_available = False
+        self.skip_medal_available = False
 
     def set_hub_state(self):
         self.stage = GameStage.HUB
         self.game_is_in_progress = False
-        self.set_all_skip(False)
-
-    def set_all_skip(self, available: bool):
-        self.free_skip_available = available
-        self.gold_skip_available = available
-
+        self.free_skip_available = False
+        self.skip_medal_available = False

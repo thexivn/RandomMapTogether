@@ -45,10 +45,10 @@ class TMNXRestClient:
             first_map.get("TrackUID"),
             int(first_map.get('AuthorTime')),
             _fix_datetime(first_map.get("UpdatedAt")).date(),
-            self.map_map_content(first_map.get("TrackID")),
+            self.get_map_content(first_map.get("TrackID")),
             _get_tags(first_map.get("Tags")))
 
-    def map_map_content(self, map_id) -> bytes:
+    def get_map_content(self, map_id) -> bytes:
         logger.info("downloading %s%s", self.download_url, map_id)
         content = requests.get(f'{self.download_url}{map_id}').content
         logger.info("download completed for mapID %s", map_id)
