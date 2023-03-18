@@ -82,7 +82,7 @@ class RMTGame:
 
     async def command_start_rmt(self, player: Player, _, values, *args, **kwargs):
         if player.level < self._config.min_level_to_start:
-            await self._chat("you are not allowed to start the game", player)
+            await self._chat("You are not allowed to start the game", player)
             return
 
         if self._game_state.is_hub_stage():
@@ -123,7 +123,7 @@ class RMTGame:
 
     async def command_stop_rmt(self, player: Player, *args, **kwargs):
         if self._game_state.is_game_stage():
-            if self._is_player_allowed(player):
+            if self._is_player_allowed_to_manage_running_game(player):
                 await self._chat(f'{player.nickname} stopped the current session')
                 await self.back_to_hub()
             else:
@@ -219,7 +219,7 @@ class RMTGame:
     async def command_skip_gold(self, player: Player, *args, **kwargs):
         if self._game_state.skip_command_allowed():
             if self._game_state.gold_skip_available:
-                if self._is_player_allowed(player):
+                if self._is_player_allowed_to_manage_running_game(player):
                     self._update_time_left()
                     self._game_state.set_map_completed_state()
                     await self._chat(f'{player.nickname} decided to GOLD skip')
@@ -238,7 +238,7 @@ class RMTGame:
     async def command_free_skip(self, player: Player, *args, **kwargs):
         if self._game_state.skip_command_allowed():
             if self._can_skip_map():
-                if self._is_player_allowed(player):
+                if self._is_player_allowed_to_manage_running_game(player):
                     self._update_time_left()
                     self._game_state.set_map_completed_state()
                     if not self._map_handler.pre_patch_ice:
@@ -255,44 +255,54 @@ class RMTGame:
             await self._chat("You are not allowed to skip", player)
 
     async def set_game_time_30m(self, player: Player, *args, **kwargs):
-        self._config.game_time_seconds = 1800
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.game_time_seconds = 1800
+            await self._score_ui.display()
 
     async def set_game_time_1h(self, player: Player, *args, **kwargs):
-        self._config.game_time_seconds = 3600
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.game_time_seconds = 3600
+            await self._score_ui.display()
 
     async def set_game_time_2h(self, player: Player, *args, **kwargs):
-        self._config.game_time_seconds = 7200
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.game_time_seconds = 7200
+            await self._score_ui.display()
 
     async def set_goal_medal_author(self, player: Player, *args, **kwargs):
-        self._config.goal_medal = Medals.AUTHOR
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.goal_medal = Medals.AUTHOR
+            await self._score_ui.display()
 
     async def set_goal_medal_gold(self, player: Player, *args, **kwargs):
-        self._config.goal_medal = Medals.GOLD
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.goal_medal = Medals.GOLD
+            await self._score_ui.display()
 
     async def set_goal_medal_silver(self, player: Player, *args, **kwargs):
-        self._config.goal_medal = Medals.SILVER
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.goal_medal = Medals.SILVER
+            await self._score_ui.display()
 
     async def set_skip_medal_gold(self, player: Player, *args, **kwargs):
-        self._config.skip_medal = Medals.GOLD
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.skip_medal = Medals.GOLD
+            await self._score_ui.display()
 
     async def set_skip_medal_silver(self, player: Player, *args, **kwargs):
-        self._config.skip_medal = Medals.SILVER
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.skip_medal = Medals.SILVER
+            await self._score_ui.display()
 
     async def set_skip_medal_bronze(self, player: Player, *args, **kwargs):
-        self._config.skip_medal = Medals.BRONZE
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.skip_medal = Medals.BRONZE
+            await self._score_ui.display()
 
     async def toggle_infinite_skips(self, player: Player, *args, **kwargs):
-        self._config.infinite_free_skips = not self._config.infinite_free_skips
-        await self._score_ui.display()
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self._config.infinite_free_skips = not self._config.infinite_free_skips
+            await self._score_ui.display()
 
     async def hide_timer(self):
         self._mode_settings[S_TIME_LIMIT] = 0
@@ -302,8 +312,14 @@ class RMTGame:
         self._time_left -= int(py_time.time() - self._map_start_time)
         self._scoreboard_ui.set_time_left(self._time_left)
 
-    def _is_player_allowed(self, player: Player) -> bool:
+    def _is_player_allowed_to_manage_running_game(self, player: Player) -> bool:
         return player.level == Player.LEVEL_MASTER or player == self._rmt_starter_player
+
+    async def _check_player_allowed_to_change_game_settings(self, player: Player) -> bool:
+        if player.level < self._config.min_level_to_start:
+            await self._chat("You are not allowed to change game settings", player)
+            return False
+        return True
 
     async def hide_custom_scoreboard(self, count, time, *args, **kwargs):
         await self._scoreboard_ui.hide()
