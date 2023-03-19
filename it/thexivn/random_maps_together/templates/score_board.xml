@@ -1,7 +1,7 @@
 <frame pos="-80 80" size="160 160" z-idex="3">
     <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
     <frame pos="20 -5" size="120 50" z-idex="4">
-        <label pos="60 -5" size="80 10" text="{{settings.game_mode.value}} SCORE" textsize="10"
+        <label pos="60 -5" size="90 10" text="{{settings.game_mode.value}}" textsize="10"
                halign="center" valign="center" style="ManiaPlanetLogos" />
 
         <quad pos="5 -15"   size="20 20" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>

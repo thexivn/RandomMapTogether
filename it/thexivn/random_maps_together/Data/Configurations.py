@@ -33,11 +33,11 @@ class RMCConfig(Configurations):
         rmt_game._scoreboard_ui.set_time_left(rmt_game._time_left)
 
     def can_skip_map(self, rmt_game):
-        return any(
+        return any([
             rmt_game._game_state.free_skip_available,
             rmt_game._map_handler.pre_patch_ice,
             rmt_game.app.app_settings.infinite_free_skips,
-        )
+        ])
 
 @dataclass
 class RMSConfig(Configurations):
@@ -48,10 +48,8 @@ class RMSConfig(Configurations):
 
     def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
         if free_skip:
-            if rmt_game._map_handler.pre_patch_ice:
+            if rmt_game._map_handler.pre_patch_ice or rmt_game._game_state.free_skip_available:
                 pass
-            elif rmt_game._game_state.free_skip_available:
-                rmt_game._game_state.free_skip_available = False
             else:
                 rmt_game._time_left -= self.skip_penalty_seconds
         elif goal_medal:

@@ -62,7 +62,7 @@
                     <label pos="0 -17.4" size="11 5" z-index="1" text="Skip Medal:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <label pos="15 -17.4" z-index="1" text="{% if settings.skip_medal.value == 'GOLD' %}$000{% endif %}Gold" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_gold"/>
                     <label pos="27 -17.4" z-index="1" text="{% if settings.skip_medal.value == 'SILVER' %}$000{% endif %}Silver" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_silver"/>
-                    <label pos="339 -17.4" z-index="1" text="{% if settings.skip_medal.value == 'BRONZE' %}$000{% endif %}Bronze" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_bronze"/>
+                    <label pos="39 -17.4" z-index="1" text="{% if settings.skip_medal.value == 'BRONZE' %}$000{% endif %}Bronze" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_bronze"/>
 
                     <label pos="0 -24.8" size="13 5" z-index="1" text="Infinite Skips:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <quad pos="15 -24.8" z-index="1" size="5 5" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.infinite_free_skips | int }}" scriptevents="1" action="{{ id }}__ui_toggle_infinite_skips"/>
