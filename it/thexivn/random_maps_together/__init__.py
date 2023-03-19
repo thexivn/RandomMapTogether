@@ -7,7 +7,7 @@ from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 from pyplanet.contrib.command import Command
 from pyplanet.contrib.setting import Setting
 
-from .Data.Configurations import Configurations
+from .Data.Configurations import Configurations, RMCConfig
 from .RMTGame import RMTGame
 from .MapHandler import MapHandler
 from .views import RandomMapsTogetherView
@@ -21,12 +21,12 @@ class RandomMapsTogetherApp(AppConfig):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.app_settings: Configurations = Configurations()
-        self.map_handler = MapHandler(self.instance.map_manager, self.instance.storage, self.app_settings)
+        self.app_settings: Configurations = RMCConfig()
+        self.map_handler = MapHandler(self, self.instance.map_manager, self.instance.storage)
         self.instance.chat()
         self.widget = RandomMapsTogetherView(self)
-        self.rmt_game = RMTGame(self.map_handler, self.instance.chat_manager, self.instance.mode_manager,
-                                self.widget, self.app_settings, self.instance.ui_manager)
+        self.rmt_game = RMTGame(self, self.map_handler, self.instance.chat_manager, self.instance.mode_manager,
+                                self.widget, self.instance.ui_manager)
 
         logger.info("application loaded correctly")
 
@@ -43,7 +43,7 @@ class RandomMapsTogetherApp(AppConfig):
         await self.instance.command_manager.register(
             Command(command="start_rmt", target=self.rmt_game.command_start_rmt, description="load the game"),
             Command(command="stop_rmt", target=self.rmt_game.command_stop_rmt, description="return to lobby"),
-            Command(command="skip_gold", target=self.rmt_game.command_skip_gold,
+            Command(command="skip_medal", target=self.rmt_game.command_skip_medal,
                     description="skip current map is GOLD time is reached"),
             Command(command="skip", target=self.rmt_game.command_free_skip,
                     description="skip current map once per game"),

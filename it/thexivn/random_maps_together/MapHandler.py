@@ -10,7 +10,6 @@ from pyplanet.core.storage.storage import Storage
 
 from .Data.Constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
 from .Data.Medals import Medals
-from .Data import Configurations
 from .Data.APIMapInfo import APIMapInfo
 from .RestClient.TMNXRestClient import TMNXRestClient
 
@@ -18,13 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class MapHandler:
-    def __init__(self, map_manager: MapManager, storage: Storage, configs: Configurations):
+    def __init__(self, app, map_manager: MapManager, storage: Storage):
         self._tmnx_rest_client = TMNXRestClient()
         self._hub_map = '7E1heauBgOUsqlhliGDY8DoOZbm'
         self._hub_id = '63710'
         self._map_manager = map_manager
         self._storage = storage
-        self._configs: Configurations = configs
+        self.app = app
         self.active_map: Map = None
         self.pre_patch_ice = False
         self._next_map: Optional[APIMapInfo] = None
@@ -85,7 +84,7 @@ class MapHandler:
     @property
     def skip_medal(self) -> int:
         if self.active_map:
-            difficulty = self._configs.skip_medal
+            difficulty = self.app.app_settings.skip_medal
             if difficulty == Medals.GOLD:
                 return self.active_map.time_gold
             elif difficulty == Medals.SILVER:
@@ -97,7 +96,7 @@ class MapHandler:
     @property
     def goal_medal(self) -> int:
         if self.active_map:
-            difficulty = self._configs.goal_medal
+            difficulty = self.app.app_settings.goal_medal
             if difficulty == Medals.AUTHOR:
                 return self.active_map.time_author
             elif difficulty == Medals.GOLD:

@@ -1,7 +1,7 @@
 <frame pos="-80 80" size="160 160" z-idex="3">
     <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
     <frame pos="20 -5" size="120 50" z-idex="4">
-        <label pos="60 -5" size="60 10" text="RMT SCORE" textsize="10"
+        <label pos="60 -5" size="80 10" text="{{settings.game_mode.value}} SCORE" textsize="10"
                halign="center" valign="center" style="ManiaPlanetLogos" />
 
         <quad pos="5 -15"   size="20 20" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
@@ -11,17 +11,25 @@
         {% if time_left %}
             <label pos="5 -38" text="TIME LEFT: {{ time_left }}" textsize="5" textfont="RajdhaniMono" />
         {% endif %}
+        {% if settings.game_mode.value == "Random Map Survival" %}
+            <label pos="5 -45" text="SURVIVED TIME: {{ total_played_time }}" textsize="5" textfont="RajdhaniMono" />
+        {% endif %}
     </frame>
 
-    <frame pos="20 -50" size="120 100" z-idex="4">
+    <frame pos="20 -57" size="120 100" z-idex="4">
     {% for player_score in players %}
         <frame pos="0 {{ (-10 * loop.index0)}}" size="120 10">
             <quad pos="0 0" size="120 10" bgcolor="eeeeeeFF"/>
             <quad pos="1 -0.5" size="99 9" bgcolor="513877FF"/>
-            <quad pos="100 -0.5" size="19 9" bgcolor="333333FF"/>
+            <quad pos="85 -0.5" size="34 9" bgcolor="333333FF"/>
             <label pos="55 -4.5" size="55 9" text="{{player_score.player.nickname}}" textsize="3.5" textfont="RajdhaniMono"
                                halign="center" valign="center" />
-            <label pos="110 -4.5" size="10 9" text="{{player_score.player_goal_medals}}" textsize="3.5" textfont="RajdhaniMono"
+
+            <quad pos="90 -0.5"   size="9 9" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
+            <label pos="100 -4.5" size="10 9" text="{{player_score.player_goal_medals}}" textsize="3.5" textfont="RajdhaniMono"
+                               halign="left" valign="center" />
+            <quad pos="105 -0.5"  size="9 9" image="{{ skip_medal_url }}" autoscale="1" keepratio="Fit"/>
+            <label pos="115 -4.5" size="10 9" text="{{player_score.player_skip_medals}}" textsize="3.5" textfont="RajdhaniMono"
                                halign="left" valign="center" />
         </frame>
     {% endfor %}

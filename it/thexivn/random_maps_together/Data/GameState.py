@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+import time as py_time
 
 
 class GameStage(Enum):
@@ -9,12 +10,14 @@ class GameStage(Enum):
 
 @dataclass
 class GameState:
+    start_time = None
     stage: GameStage = GameStage.HUB
     current_map_completed: bool = False
     map_is_loading: bool = False
     free_skip_available: bool = False
-    skip_medal_available: bool = False
     game_is_in_progress: bool = False
+    skip_medal_available: bool = False
+    skip_medal_player = None
 
     def is_hub_stage(self) -> bool:
         return GameStage.HUB == self.stage
@@ -26,6 +29,7 @@ class GameState:
         return self.is_game_stage() and not self.current_map_completed
 
     def set_start_new_state(self):
+        self.start_time = py_time.time()
         self.current_map_completed = True
         self.stage = GameStage.RMT
         self.free_skip_available = True
