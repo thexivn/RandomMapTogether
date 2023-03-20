@@ -14,6 +14,11 @@
         {% if settings.game_mode.value == "Random Map Survival" %}
             <label pos="5 -45" text="SURVIVED TIME: {{ total_played_time }}" textsize="5" textfont="RajdhaniMono" />
         {% endif %}
+
+        {% if settings.admin_fins_only %}
+            <label pos="5 -45" text="Only counting finishes by: {{ fins_count_from_name }}" textsize="5" textfont="RajdhaniMono" />
+        {% endif %}
+
     </frame>
 
     <frame pos="20 -57" size="120 100" z-idex="4">

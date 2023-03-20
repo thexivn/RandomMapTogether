@@ -60,6 +60,7 @@ class RandomMapsTogetherView(TimesWidgetView):
             data["skip_medal_visible"] = self._game_state.skip_medal_available
             if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE:
                 data["free_skip_visible"] = self._game_state.free_skip_available or self.app.app_settings.infinite_free_skips
+                data["fins_count_from_name"] = self._game_state.fins_count_from_name
             if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_SURVIVAL:
                 data["free_skip_visible"] = True
             data["skip_pre_patch_ice_visible"] = self.app.map_handler.pre_patch_ice
@@ -73,7 +74,7 @@ class RandomMapsTogetherView(TimesWidgetView):
 class RMTScoreBoard(TemplateView):
     template_name = "random_maps_together/score_board.xml"
 
-    def __init__(self, app, score: GameScore, game_state):
+    def __init__(self, app, score: GameScore, game_state: GameState):
         super().__init__(self)
         logger.info("Loading VIEW")
         self.app = app
@@ -97,5 +98,6 @@ class RMTScoreBoard(TemplateView):
         data["players"] = self._score.get_top_10()
         data["time_left"] = self._time_left
         data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(py_time.time() - self._game_state.start_time))
+        data["fins_count_from_name"] = self._game_state.fins_count_from_name
 
         return data

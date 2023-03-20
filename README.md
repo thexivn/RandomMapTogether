@@ -1,5 +1,5 @@
 # RandomMapTogether
-Simple pyplanet application to add RMC mode online 
+Simple pyplanet application to add RMC mode online
 
 ## Installation
 ### docker
@@ -9,9 +9,9 @@ docker compose [RMT-Docker-server](https://github.com/thexivn/RMT-Docker-server)
 - TM2020
 - pyplanet
 ### RMT
-1. clone the following repository 
-```bash 
-git clone https://github.com/thexivn/RandomMapTogether 
+1. clone the following repository
+```bash
+git clone https://github.com/thexivn/RandomMapTogether
 cd RandomMapTogether
 ```
 2. activate the `pyenv` in which `pyplanet` was installed
@@ -35,6 +35,7 @@ inside the pyplanet settings folder
 | GOLD_time           | GOLD, SILVER, BRONZE | time to beat that allow you to `take GOLD` and skip to next map                                                        |
 | min_perm_start      | 0,1,2,3              | level required to start the game <br/>LEVEL_PLAYER = 0<br/>LEVEL_OPERATOR = 1<br/>LEVEL_ADMIN = 2<br/>LEVEL_MASTER = 3 |
 | infinite_free_skips | bool                 | if enabled allow to always skips                                                                                       |
+| admin_fins_only     | bool                 | if enabled, only finishes of the player who starts the RMT will count                                                  |
 
-~~Also set `S_ForceLapsNb` to `-1`, this will use the validation laps for those 
+~~Also set `S_ForceLapsNb` to `-1`, this will use the validation laps for those
 maps that have multi-laps~~ When the RMT game start automatically set `S_ForceLapsNb` to `-1`

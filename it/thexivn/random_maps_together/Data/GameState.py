@@ -18,6 +18,8 @@ class GameState:
     game_is_in_progress: bool = False
     skip_medal_available: bool = False
     skip_medal_player = None
+    fins_count_from = "*"  # "*" for anyone, otherwise players login
+    fins_count_from_name = "Anyone"
 
     def is_hub_stage(self) -> bool:
         return GameStage.HUB == self.stage
@@ -35,6 +37,8 @@ class GameState:
         self.free_skip_available = True
         self.skip_medal_available = False
         self.map_is_loading = False
+        self.fins_count_from = "*"
+        self.fins_count_from_name = "Anyone"
 
     def set_new_map_in_game_state(self):
         self.current_map_completed = False
@@ -50,3 +54,9 @@ class GameState:
         self.game_is_in_progress = False
         self.free_skip_available = False
         self.skip_medal_available = False
+        self.fins_count_from = "*"
+        self.fins_count_from_name = "Anyone"
+
+    def set_finishes_player_filter(self, login: str, name: str):
+        self.fins_count_from = login
+        self.fins_count_from_name = name
