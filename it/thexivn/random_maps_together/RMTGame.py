@@ -141,6 +141,7 @@ class RMTGame:
                 await self._map_handler.remove_loaded_map()
 
         self._game_state.map_is_loading = False
+
         await self._score_ui.hide()
         return retry < max_retry
 
@@ -226,9 +227,11 @@ class RMTGame:
                         _lock.release()  # with loading True don't need to lock
                         await self._chat(f'{self.app.app_settings.goal_medal.value}, congratulations to {player.nickname}')
                         if await self.load_with_retry():
+                            logging.info(f"Loading next map success")
                             self._score.inc_goal_medal_count(player, self._map_handler.active_map, True)
                             await self._scoreboard_ui.display()
                             await self._score_ui.hide()
+                            logging.info(f"Loading next map: UI Updated")
                         else:
                             await self.back_to_hub()
                     elif race_time <= self._map_handler.skip_medal and not self._game_state.skip_medal_available:
@@ -260,8 +263,10 @@ class RMTGame:
                     await self._chat(f'{player.nickname} decided to {self.app.app_settings.skip_medal.value} skip')
                     await self.hide_timer()
                     if await self.load_with_retry():
+                        logging.info(f"Loading next map success")
                         await self._scoreboard_ui.display()
                         await self._score_ui.hide()
+                        logging.info(f"Loading next map UI updated")
                     else:
                         await self.back_to_hub()
             else:
@@ -284,6 +289,8 @@ class RMTGame:
                     await self._score_ui.hide()
                     if not await self.load_with_retry():
                         await self.back_to_hub()
+                    else:
+                        logging.info(f"Skipping map success")
             else:
                 await self._chat("Free skip is not available", player)
         else:

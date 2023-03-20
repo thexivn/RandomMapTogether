@@ -54,8 +54,6 @@ class GameState:
         self.game_is_in_progress = False
         self.free_skip_available = False
         self.skip_medal_available = False
-        self.fins_count_from = "*"
-        self.fins_count_from_name = "Anyone"
 
     def set_finishes_player_filter(self, login: str, name: str):
         self.fins_count_from = login

@@ -30,6 +30,7 @@ class MapHandler:
 
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
+        if self._next_map: logger.info('Map preloaded!')
         random_map = self._next_map if self._next_map else self._tmnx_rest_client.get_random_map()
         self._next_map = None
         map_to_remove = self._map_manager.current_map
