@@ -7,6 +7,7 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
+import pyplanet.conf
 
 from . import MapHandler
 from .Data.Configurations import RMCConfig, RMSConfig
@@ -24,6 +25,8 @@ RACE_SCORES_TABLE = 'Race_ScoresTable'
 S_TIME_LIMIT = 'S_TimeLimit'
 S_FORCE_LAPS_NB = 'S_ForceLapsNb'
 _lock = asyncio.Lock()
+
+pyplanet.conf.settings.DEBUG = True
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +93,7 @@ class RMTGame:
 
         self._score_ui.subscribe("ui_toggle_infinite_skips", self.toggle_infinite_skips)
         self._score_ui.subscribe("ui_toggle_admin_fins_only", self.toggle_admin_fins_only)
+        self._score_ui.subscribe("ui_toggle_allow_pausing", self.toggle_allow_pausing)
 
         self._score_ui.subscribe("ui_set_game_mode_rmc", self.set_game_mode_rmc)
         self._score_ui.subscribe("ui_set_game_mode_rms", self.set_game_mode_rms)
@@ -384,6 +388,11 @@ class RMTGame:
     async def toggle_admin_fins_only(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
             self.app.app_settings.admin_fins_only = not self.app.app_settings.admin_fins_only
+            await self._score_ui.display()
+
+    async def toggle_allow_pausing(self, player: Player, *args, **kwargs):
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self.app.app_settings.allow_pausing = not self.app.app_settings.allow_pausing
             await self._score_ui.display()
 
     async def set_game_mode_rmc(self, player: Player, *args, **kwargs):

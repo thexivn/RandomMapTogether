@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 import time as py_time
+from jinja2 import Template
 
 from pyplanet.views import TemplateView
 from pyplanet.views.generics.widget import TimesWidgetView
@@ -12,6 +13,14 @@ from .Data.GameModes import GameModes
 
 logger = logging.getLogger(__name__)
 
+
+cb_y_off = 0.7
+
+def cb_pos(n):
+    return f".2 {-23.8 - (5.4 * n) - cb_y_off:.2f}"
+
+def cbl_pos(n):
+    return f"7 {-23.3 - (5.4 * n) - cb_y_off:.2f}"
 
 class RandomMapsTogetherView(TimesWidgetView):
     widget_x = -100
@@ -67,6 +76,9 @@ class RandomMapsTogetherView(TimesWidgetView):
             data["map_loading"] = self._game_state.map_is_loading
         else:
             data["game_started"] = False
+
+        data['cb_pos'] = cb_pos
+        data['cbl_pos'] = cbl_pos
 
         return data
 
