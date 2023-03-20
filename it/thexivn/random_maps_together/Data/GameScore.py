@@ -16,6 +16,7 @@ class PlayerScoreInfo:
             return False
         self.goals_on_maps.add(uid)
         self.player_goal_medals += 1
+        return True
 
 
 @dataclass
