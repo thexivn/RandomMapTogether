@@ -5,8 +5,9 @@ from typing import Optional
 
 from pyplanet.apps.core.maniaplanet.models import Map
 from pyplanet.contrib.map import MapManager
-from pyplanet.contrib.map.exceptions import MapNotFound
+from pyplanet.contrib.map.exceptions import MapNotFound, MapException
 from pyplanet.core.storage.storage import Storage
+from pyplanet.core.instance import Instance
 
 from .Data.Constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
 from .Data.Medals import Medals
@@ -59,9 +60,12 @@ class MapHandler:
             await self._map_manager.set_current_map(self._hub_map)
             return
 
-        content = self._tmnx_rest_client.get_map_content(self._hub_id)
+        await self._map_manager.update_list(True, True)
+
         try:
-            await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_id}.Map.Gbx', overwrite=True)
+            if await self._map_manager.get_map(self._hub_map) not in self._map_manager.maps:
+                content = self._tmnx_rest_client.get_map_content(self._hub_id)
+                await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_id}.Map.Gbx', overwrite=True)
             await self._map_manager.update_list(True, True)
             await self._map_manager.set_current_map(self._hub_map)
             logger.info("Welcome to the HUB")
