@@ -54,7 +54,7 @@ class RMTGame:
         self._game_state = GameState()
         self._score_ui.set_score(self._score)
         self._score_ui.set_game_state(self._game_state)
-        self._scoreboard_ui = RMTScoreBoard(self._score_ui.app, self._score, self._game_state)
+        self._scoreboard_ui = RMTScoreBoard(self._score_ui.app, self._score, self._game_state, self)
         self._tm_ui = tm_ui_manager
         self._time_left_at_pause = 83
         self._time_at_pause = py_time.time()
@@ -104,6 +104,16 @@ class RMTGame:
 
         self._score_ui.subscribe("ui_set_game_mode_rmc", self.set_game_mode_rmc)
         self._score_ui.subscribe("ui_set_game_mode_rms", self.set_game_mode_rms)
+
+        asyncio.ensure_future(self.update_ui_loop())
+
+    async def update_ui_loop(self):
+        while True:
+            await asyncio.sleep(0.25)
+            if self._scoreboard_ui._is_global_shown:
+                await self._scoreboard_ui.display()
+            elif len(self._scoreboard_ui._is_player_shown) > 0:
+                await self._scoreboard_ui.display(self._scoreboard_ui._is_player_shown.keys())
 
     async def command_start_rmt(self, player: Player, _, values, *args, **kwargs):
         if player.level < self.app.app_settings.min_level_to_start:
@@ -190,8 +200,8 @@ class RMTGame:
         if self._game_state.is_game_stage():
             self._chat('Game over -- Returning to HUB')
             logger.info("Back to HUB ...")
+            # self._time_left = 0
             await self.hide_timer()
-            self._scoreboard_ui.set_time_left(0)
             self._game_state.set_hub_state()
             await self._scoreboard_ui.display()
             self._score.rest()
@@ -506,3 +516,14 @@ class RMTGame:
         if self._game_state.is_game_stage():
             logger.info(f'ROUND_START {time} -- {count}')
             self._map_start_time = py_time.time()
+
+    def time_left_str(self):
+        tl = self._time_left
+        if tl == 0:
+            return "00:00:00"
+        if self._game_state.is_paused:
+            pause_duration = int(py_time.time() - self._time_at_pause + .5)
+            tl = self._time_left_at_pause + pause_duration
+        if not self._game_state.map_is_loading and not self._game_state.current_map_completed:
+            tl -= int(py_time.time() - self._map_start_time + .5)
+        return py_time.strftime('%H:%M:%S', py_time.gmtime(tl))
