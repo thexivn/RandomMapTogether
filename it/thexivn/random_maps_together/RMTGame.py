@@ -32,9 +32,9 @@ _lock = asyncio.Lock()
 logger = logging.getLogger(__name__)
 
 
-def background_loading_map(map_handler: MapHandler):
+async def background_loading_map(map_handler: MapHandler):
     logger.info("[background_loading_map] STARTED")
-    map_handler.pre_load_next_map()
+    await map_handler.pre_load_next_map()
     logger.info("[background_loading_map] COMPLETED")
 
 
@@ -66,7 +66,8 @@ class RMTGame:
         logger.info("RMT Game loaded")
         self._mode_settings = await self._mode_manager.get_settings()
         self._mode_settings[S_FORCE_LAPS_NB] = int(-1)
-        self._mode_settings[S_CHAT_TIME] = int(1)
+        asyncio.create_task(background_loading_map(self._map_handler))
+        # self._mode_settings[S_CHAT_TIME] = int(1)
         await self.hide_timer()
         await self._score_ui.display()
         self._score_ui.subscribe("ui_start_rmt", self.command_start_rmt)
@@ -74,6 +75,7 @@ class RMTGame:
         self._score_ui.subscribe("ui_skip_medal", self.command_skip_medal)
         self._score_ui.subscribe("ui_free_skip", self.command_free_skip)
         self._score_ui.subscribe("ui_toggle_pause", self.command_toggle_pause)
+        self._score_ui.subscribe("ui_toggle_scoreboard", self.command_toggle_scoreboard)
 
         self._score_ui.subscribe("ui_set_game_time_15m", self.set_game_time_15m)
         self._score_ui.subscribe("ui_set_game_time_30m", self.set_game_time_30m)
@@ -111,6 +113,8 @@ class RMTGame:
         # if self._map_handler is None or self._map_handler.active_map is None or self._map_handler.active_map.uid != self._map_handler._hub_map:
         #     await self._chat("Please wait for the hub map to load", player)
         #     return
+        await self._score_ui.hide()
+        await self._scoreboard_ui.display()
 
         if self._game_state.is_hub_stage():
             self.app.app_settings.game_time_seconds = int(values["game_time_seconds"])
@@ -121,6 +125,7 @@ class RMTGame:
             self._game_state.set_start_new_state()
             self._game_state.map_is_loading = True
             self._game_state.game_is_in_progress = True
+            await self._score_ui.display()
             await self._chat(f'{player.nickname} started new RMT, loading next map ...')
             self._rmt_starter_player = player
             self._time_left = self.app.app_settings.game_time_seconds
@@ -130,8 +135,12 @@ class RMTGame:
                 if self.app.app_settings.admin_fins_only:
                     self._game_state.set_finishes_player_filter(player.login, player.nickname)
 
+            self._score.get_players_score(player)
+
+            await self._score_ui.display()
+            await self._scoreboard_ui.display()
+
             self._game_state.set_map_completed_state()
-            await self._score_ui.refresh()
 
             async def _load_init_map():
                 if await self.load_with_retry():
@@ -141,9 +150,12 @@ class RMTGame:
                     self._mode_settings[S_TIME_LIMIT] = 0
                     await self._chat("RMT failed to start")
                 await self._mode_manager.update_settings(self._mode_settings)
-            asyncio.create_task(_load_init_map())
+            await _load_init_map()
         else:
             await self._chat("RMT already started", player)
+
+        await self._scoreboard_ui.hide()
+        await self._score_ui.display()
 
     async def load_with_retry(self, max_retry=3) -> bool:
         retry = 0
@@ -176,6 +188,7 @@ class RMTGame:
 
     async def back_to_hub(self):
         if self._game_state.is_game_stage():
+            self._chat('Game over -- Returning to HUB')
             logger.info("Back to HUB ...")
             await self.hide_timer()
             self._scoreboard_ui.set_time_left(0)
@@ -197,7 +210,7 @@ class RMTGame:
                 await self._chat("$o$FB0 this track was created before the ICE physics change $z"
                                  , self._rmt_starter_player)
             self._game_state.set_new_map_in_game_state()
-            Thread(target=background_loading_map, args=[self._map_handler]).start()
+            asyncio.create_task(background_loading_map(self._map_handler))
         else:
             await self.hide_timer()
             self._game_state.current_map_completed = True
@@ -251,13 +264,10 @@ class RMTGame:
                         await self.hide_timer()
                         _lock.release()  # with loading True don't need to lock
                         await self._chat(f'{self.app.app_settings.goal_medal.value}, congratulations to {player.nickname}')
-                        if await self.load_with_retry():
-                            logging.info(f"Loading next map success")
-                            self._score.inc_goal_medal_count(player, self._map_handler.active_map, True)
-                            await self._scoreboard_ui.display()
-                            await self._score_ui.hide()
-                            logging.info(f"Loading next map: UI Updated")
-                        else:
+                        self._score.inc_goal_medal_count(player, self._map_handler.active_map, True)
+                        await self._scoreboard_ui.display()
+                        await self._score_ui.hide()
+                        if not await self.load_with_retry():
                             await self.back_to_hub()
                     elif race_time <= self._map_handler.skip_medal and not self._game_state.skip_medal_available:
                         logger.info(f'[on_map_finish] {self.app.app_settings.skip_medal.value} acquired')
@@ -271,9 +281,11 @@ class RMTGame:
                         _lock.release()
                 else:
                     if race_time <= self._map_handler.goal_medal:
-                        logger.info(f'[on_map_finish {self.app.app_settings.goal_medal.value} acquired by player but it doesn\'t count')
-                        await self._chat(f'{player.nickname} got {self.app.app_settings.goal_medal.value}. Gz but it doesn\'t count Sadge')
-                        self._score.inc_goal_medal_count(player, self._map_handler.active_map, False)
+                        logger.info(f'[on_map_finish] {self.app.app_settings.goal_medal.value} acquired by player but it doesn\'t count')
+                        if self._score.inc_goal_medal_count(player, self._map_handler.active_map, False):
+                            await self._chat(f'{player.nickname} got {self.app.app_settings.goal_medal.value}. Gz but it doesn\'t count Sadge')
+                    elif race_time <= self._map_handler.skip_medal:
+                        self._score.inc_skip_medal_count(player, self._map_handler.active_map, False)
                     _lock.release()
             else:
                 _lock.release()
@@ -285,7 +297,7 @@ class RMTGame:
             if self._game_state.skip_medal_available:
                 if await self._is_player_allowed_to_manage_running_game(player):
                     self.app.app_settings.update_time_left(self, skip_medal=True)
-                    self._score.inc_skip_medal_count(self._game_state.skip_medal_player)
+                    self._score.inc_skip_medal_count(self._game_state.skip_medal_player, self._map_handler.active_map, True)
                     self._game_state.set_map_completed_state()
                     await self._chat(f'{player.nickname} decided to {self.app.app_settings.skip_medal.value} skip')
                     await self.hide_timer()
@@ -333,22 +345,28 @@ class RMTGame:
         if self._game_state.is_paused:
             self._time_at_pause = py_time.time()
             self._time_left_at_pause = self._time_left
-            # self._time_left -= int(py_time.time() - self._map_start_time + .5)
             self._mode_settings[S_TIME_LIMIT] = -1
         else:
             pause_duration = int(py_time.time() - self._time_at_pause + .5)
             self._mode_settings[S_TIME_LIMIT] = self._time_left_at_pause + pause_duration
             self._time_left += pause_duration
-            await self._mode_manager._instance.gbx('ForceSpectator', player.login, 1)
-            await self._mode_manager._instance.gbx('ForceSpectator', player.login, 2)
-            # player.
+            # respawn the player, this means the unpausing player's next run always starts after unpausing.
+            await self.respawn_player(player)
         await self._mode_manager.update_settings(self._mode_settings)
-        await self._score_ui.refresh()
+        await self._score_ui.display()
+        # no need to extend b/c this is done by setting the time limit to whatever it was + pause duration
         # if pause_duration > 0:
         #     await self._map_handler._map_manager.extend_ta(pause_duration)
         logging.info(f"Set paused: " + str(self._game_state.is_paused))
 
+    async def command_toggle_scoreboard(self, player: Player, *args, **kw):
+        await self._scoreboard_ui.toggle_for(player.login)
 
+    async def respawn_player(self, player: Player):
+        # first, force mode 1 (spectator), then force mode 2 (player), then force mode 0 (user selectable)
+        await self._mode_manager._instance.gbx('ForceSpectator', player.login, 1)
+        await self._mode_manager._instance.gbx('ForceSpectator', player.login, 2)
+        await self._mode_manager._instance.gbx('ForceSpectator', player.login, 0)
 
     async def set_goal_bonus_1m(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):

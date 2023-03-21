@@ -46,5 +46,5 @@ setup(
         'Intended Audience :: Developers',
 
     ],
-    zip_safe=False, install_requires=['pyplanet', 'requests']
+    zip_safe=False, install_requires=['pyplanet', 'aiohttp']
 )

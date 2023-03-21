@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Dict, Optional
 import time as py_time
 from jinja2 import Template
 
@@ -40,7 +40,7 @@ class RandomMapsTogetherView(TimesWidgetView):
     z_index = 5
     size_x = 66
     size_y = 9
-    title = "   Random Maps Together++   "
+    title = "  Random Maps Together++  "
 
     template_name = "random_maps_together/widget.xml"
 
@@ -129,9 +129,18 @@ class RMTScoreBoard(TemplateView):
         data["goal_medal_url"] = MedalURLs[self.app.app_settings.goal_medal.value].value
         data["skip_medal_url"] = MedalURLs[self.app.app_settings.skip_medal.value].value
 
-        data["players"] = self._score.get_top_10()
+        data["players"] = self._score.get_top_10(20)
         data["time_left"] = self._time_left
         data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(py_time.time() - self._game_state.start_time))
         data["fins_count_from_name"] = self._game_state.fins_count_from_name
 
+        data["nb_players"] = len(data['players'])
+        data["scroll_max"] = max(0, len(data['players']) * 10 - 100)
+
         return data
+
+    async def toggle_for(self, login):
+        if login in self._is_player_shown or self._is_global_shown:
+            await self.hide([login])
+        else:
+            await self.display([login])

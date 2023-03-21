@@ -43,6 +43,11 @@
                         halign="left" valign="center" style="CardButtonSmallS"
                         id="rmt_pause_btn" scriptevents="1" action="{{ id }}__ui_toggle_pause" />
             {% endif %}
+            {% if not map_loading %}
+            <label pos="180.7 1" text="$sToggle Scoreboard" textsize="2.5" textfont="RajdhaniMono"
+                        halign="right" valign="top" style="CardButtonSmallS"
+                        id="rmt_scoreboard_btn" scriptevents="1" action="{{ id }}__ui_toggle_scoreboard" />
+            {% endif %}
         {% else %}
             <frame pos="0 -{{size_y}}" size="{{size_x}} {{size_y}}">
                 <quad pos="0 0" size="{{size_x}} {{size_y}}" z-index="0" bgcolor="10101010"/>
@@ -69,13 +74,13 @@
                     <label pos="27 -17.8" z-index="1" text="{% if settings.skip_medal.value == 'SILVER' %}$000{% endif %}Silver" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_silver"/>
                     <label pos="39 -17.8" z-index="1" text="{% if settings.skip_medal.value == 'BRONZE' %}$000{% endif %}Bronze" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_bronze"/>
 
-                    <label pos="{{cbl_pos(0)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sInfinite Skips" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    <label pos="{{cbl_pos(0)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sInfinite Skips" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_infinite_skips"/>
                     <quad pos="{{cb_pos(0)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.infinite_free_skips | int }}" scriptevents="1" action="{{ id }}__ui_toggle_infinite_skips"/>
 
-                    <label pos="{{cbl_pos(1)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sCount Admin finishes only" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    <label pos="{{cbl_pos(1)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sCount Admin finishes only" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_admin_fins_only"/>
                     <quad pos="{{cb_pos(1)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.admin_fins_only | int }}" scriptevents="1" action="{{ id }}__ui_toggle_admin_fins_only"/>
 
-                    <label pos="{{cbl_pos(2)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sAllow Pausing" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    <label pos="{{cbl_pos(2)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sAllow Pausing" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
                     <quad pos="{{cb_pos(2)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.allow_pausing | int }}" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
 
                     <label pos="1 -41.5" size="30 5" z-index="1" text="$sStart RMT" textsize="2.5" textfont="RajdhaniMono"

@@ -1,5 +1,5 @@
 <frame pos="-80 80" size="160 160" z-index="3">
-    <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
+    <quad pos="0 0" size="160 160"  bgcolor="101010EE" scriptevents="1"/>
     <frame pos="20 -5" size="120 50" z-index="4">
         <label pos="60 -5" size="85 10" text="{{settings.game_mode.value}} SCORE" textsize="10"
                halign="center" valign="center" style="ManiaPlanetLogos" />
@@ -21,13 +21,14 @@
 
     </frame>
 
-    <frame pos="20 -57" size="120 100" z-index="4">
+    <frame pos="20 -57" size="120 100" z-index="4" scroll="1" scrollmax="0 {{scroll_max}}">
+        <quad pos="0 0" size="120 {{nb_players * 10}}" z-index="10" scriptevents="1" bgcolor="ee000000" />
     {% for player_score in players %}
         <frame pos="0 {{ (-10 * loop.index0)}}" size="120 10">
             <quad pos="0 0" size="120 10" bgcolor="eeeeeeFF"/>
             <quad pos="1 -0.5" size="99 9" bgcolor="513877FF"/>
             <quad pos="85 -0.5" size="34 9" bgcolor="333333FF"/>
-            <label pos="55 -4.5" size="55 9" text="{{player_score.player.nickname}}" textsize="3.5" textfont="RajdhaniMono"
+            <label pos="42.5 -4.5" size="85 9" text="{{loop.index0 + 1}}. {{player_score.player.nickname}}" textsize="3.5" textfont="RajdhaniMono"
                                halign="center" valign="center" />
 
             <quad pos="90 -0.5"   size="9 9" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>

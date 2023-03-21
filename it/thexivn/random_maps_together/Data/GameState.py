@@ -10,7 +10,7 @@ class GameStage(Enum):
 
 @dataclass
 class GameState:
-    start_time = None
+    start_time = py_time.time()
     stage: GameStage = GameStage.HUB
     current_map_completed: bool = False
     map_is_loading: bool = False
