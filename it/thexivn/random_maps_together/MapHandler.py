@@ -5,8 +5,9 @@ from typing import Optional
 
 from pyplanet.apps.core.maniaplanet.models import Map
 from pyplanet.contrib.map import MapManager
-from pyplanet.contrib.map.exceptions import MapNotFound
+from pyplanet.contrib.map.exceptions import MapNotFound, MapException
 from pyplanet.core.storage.storage import Storage
+from pyplanet.core.instance import Instance
 
 from .Data.Constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
 from .Data.Medals import Medals
@@ -28,9 +29,20 @@ class MapHandler:
         self.pre_patch_ice = False
         self._next_map: Optional[APIMapInfo] = None
 
+    async def await_next_map(self):
+        while self._next_map is None:
+            await asyncio.sleep(0.05)
+        return self._next_map
+
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
-        random_map = self._next_map if self._next_map else self._tmnx_rest_client.get_random_map()
+        if self._next_map: logger.info('Map preloaded!')
+        random_map = self._next_map
+        if random_map is None:
+            results, pending = await asyncio.wait([
+                self.await_next_map(), self._tmnx_rest_client.get_random_map()
+            ], return_when=asyncio.FIRST_COMPLETED)
+            random_map = await results.pop()
         self._next_map = None
         map_to_remove = self._map_manager.current_map
         self.pre_patch_ice = (TAG_BOBSLEIGH in random_map.tags or TAG_ICE in random_map.tags) and random_map.last_update < ICE_CHANGE_DATE
@@ -44,9 +56,9 @@ class MapHandler:
         await self._map_manager.remove_map(map_to_remove, True)
         logger.info('map loaded')
 
-    def pre_load_next_map(self):
+    async def pre_load_next_map(self):
         try:
-            self._next_map = self._tmnx_rest_client.get_random_map()
+            self._next_map = await self._tmnx_rest_client.get_random_map()
         except:
             self._next_map = None
             logger.warning('Preload failed')
@@ -58,9 +70,12 @@ class MapHandler:
             await self._map_manager.set_current_map(self._hub_map)
             return
 
-        content = self._tmnx_rest_client.get_map_content(self._hub_id)
+        await self._map_manager.update_list(True, True)
+
         try:
-            await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_id}.Map.Gbx', overwrite=True)
+            if await self._map_manager.get_map(self._hub_map) not in self._map_manager.maps:
+                content = await self._tmnx_rest_client.get_map_content(self._hub_id)
+                await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_id}.Map.Gbx', overwrite=True)
             await self._map_manager.update_list(True, True)
             await self._map_manager.set_current_map(self._hub_map)
             logger.info("Welcome to the HUB")
