@@ -67,26 +67,26 @@ class RMTGame:
         self._score_ui.subscribe("ui_skip_medal", self.command_skip_medal)
         self._score_ui.subscribe("ui_free_skip", self.command_free_skip)
 
-        self._score_ui.subscribe("ui_set_game_time_15m", self.set_game_time_15m)
-        self._score_ui.subscribe("ui_set_game_time_30m", self.set_game_time_30m)
-        self._score_ui.subscribe("ui_set_game_time_1h", self.set_game_time_1h)
-        self._score_ui.subscribe("ui_set_game_time_2h", self.set_game_time_2h)
+        self._score_ui.subscribe("ui_set_game_time_900", self.set_game_time_seconds)
+        self._score_ui.subscribe("ui_set_game_time_1800", self.set_game_time_seconds)
+        self._score_ui.subscribe("ui_set_game_time_3600", self.set_game_time_seconds)
+        self._score_ui.subscribe("ui_set_game_time_7200", self.set_game_time_seconds)
 
-        self._score_ui.subscribe("ui_set_goal_bonus_1m", self.set_goal_bonus_1m)
-        self._score_ui.subscribe("ui_set_goal_bonus_3m", self.set_goal_bonus_3m)
-        self._score_ui.subscribe("ui_set_goal_bonus_5m", self.set_goal_bonus_5m)
+        self._score_ui.subscribe("ui_set_goal_bonus_60", self.set_goal_bonus_seconds)
+        self._score_ui.subscribe("ui_set_goal_bonus_180", self.set_goal_bonus_seconds)
+        self._score_ui.subscribe("ui_set_goal_bonus_300", self.set_goal_bonus_seconds)
 
-        self._score_ui.subscribe("ui_set_skip_penalty_30s", self.set_skip_penalty_30s)
-        self._score_ui.subscribe("ui_set_skip_penalty_1m", self.set_skip_penalty_1m)
-        self._score_ui.subscribe("ui_set_skip_penalty_2m", self.set_skip_penalty_2m)
+        self._score_ui.subscribe("ui_set_skip_penalty_30", self.set_skip_penalty_seconds)
+        self._score_ui.subscribe("ui_set_skip_penalty_60", self.set_skip_penalty_seconds)
+        self._score_ui.subscribe("ui_set_skip_penalty_120", self.set_skip_penalty_seconds)
 
-        self._score_ui.subscribe("ui_set_goal_medal_author", self.set_goal_medal_author)
-        self._score_ui.subscribe("ui_set_goal_medal_gold", self.set_goal_medal_gold)
-        self._score_ui.subscribe("ui_set_goal_medal_silver", self.set_goal_medal_silver)
+        self._score_ui.subscribe("ui_set_goal_medal_author", self.set_goal_medal)
+        self._score_ui.subscribe("ui_set_goal_medal_gold", self.set_goal_medal)
+        self._score_ui.subscribe("ui_set_goal_medal_silver", self.set_goal_medal)
 
-        self._score_ui.subscribe("ui_set_skip_medal_gold", self.set_skip_medal_gold)
-        self._score_ui.subscribe("ui_set_skip_medal_silver", self.set_skip_medal_silver)
-        self._score_ui.subscribe("ui_set_skip_medal_bronze", self.set_skip_medal_bronze)
+        self._score_ui.subscribe("ui_set_skip_medal_gold", self.set_skip_medal)
+        self._score_ui.subscribe("ui_set_skip_medal_silver", self.set_skip_medal)
+        self._score_ui.subscribe("ui_set_skip_medal_bronze", self.set_skip_medal)
 
         self._score_ui.subscribe("ui_toggle_infinite_skips", self.toggle_infinite_skips)
 
@@ -285,84 +285,29 @@ class RMTGame:
         else:
             await self._chat("You are not allowed to skip", player)
 
-    async def set_goal_bonus_1m(self, player: Player, *args, **kwargs):
+    async def set_goal_bonus_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_bonus_seconds = 60
+            self.app.app_settings.goal_bonus_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_bonus_")[1])
             await self._score_ui.display()
 
-    async def set_goal_bonus_3m(self, player: Player, *args, **kwargs):
+    async def set_skip_penalty_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_bonus_seconds = 180
+            self.app.app_settings.skip_penalty_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_penalty_")[1])
             await self._score_ui.display()
 
-    async def set_goal_bonus_5m(self, player: Player, *args, **kwargs):
+    async def set_game_time_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_bonus_seconds = 300
+            self.app.app_settings.game_time_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_game_time_")[1])
             await self._score_ui.display()
 
-    async def set_skip_penalty_30s(self, player: Player, *args, **kwargs):
+    async def set_goal_medal(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_penalty_seconds = 30
+            self.app.app_settings.goal_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_medal_")[1].upper()]
             await self._score_ui.display()
 
-    async def set_skip_penalty_1m(self, player: Player, *args, **kwargs):
+    async def set_skip_medal(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_penalty_seconds = 60
-            await self._score_ui.display()
-
-    async def set_skip_penalty_2m(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_penalty_seconds = 120
-            await self._score_ui.display()
-
-    async def set_game_time_15m(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = 900
-            await self._score_ui.display()
-
-    async def set_game_time_30m(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = 1800
-            await self._score_ui.display()
-
-    async def set_game_time_1h(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = 3600
-            await self._score_ui.display()
-
-    async def set_game_time_2h(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = 7200
-            await self._score_ui.display()
-
-    async def set_goal_medal_author(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_medal = Medals.AUTHOR
-            await self._score_ui.display()
-
-    async def set_goal_medal_gold(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_medal = Medals.GOLD
-            await self._score_ui.display()
-
-    async def set_goal_medal_silver(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_medal = Medals.SILVER
-            await self._score_ui.display()
-
-    async def set_skip_medal_gold(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_medal = Medals.GOLD
-            await self._score_ui.display()
-
-    async def set_skip_medal_silver(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_medal = Medals.SILVER
-            await self._score_ui.display()
-
-    async def set_skip_medal_bronze(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_medal = Medals.BRONZE
+            self.app.app_settings.skip_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_medal_")[1].upper()]
             await self._score_ui.display()
 
     async def toggle_infinite_skips(self, player: Player, *args, **kwargs):
