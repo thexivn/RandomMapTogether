@@ -3,12 +3,14 @@ import time as py_time
 
 from .Medals import Medals
 from .GameModes import GameModes
+from ..map_generator import MapGenerators
 
 @dataclass
 class Configurations:
     goal_medal = Medals.AUTHOR
     skip_medal = Medals.GOLD
     min_level_to_start = 1
+    map_generator = MapGenerators.RANDOM
 
     def set_min_level_to_start(self, old_value: str, value: str):
         level = int(value)

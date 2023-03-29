@@ -45,8 +45,8 @@
                 <label pos="48 -1.5" z-index="1" text="{% if settings.game_mode.value == 'Random Map Survival' %}$000{% endif %}Random Map Survival" textsize="2.5" textfont="RajdhaniMono" halign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_set_game_mode_rms"/>
             </frame>
             {% if settings.game_mode.value == "Random Map Challenge" %}
-                <frame pos="0 -{{size_y + size_y}}" size="{{size_x}} 37">
-                    <quad pos="0 0" size="{{size_x}} 37" z-index="0" bgcolor="44664770"/>
+                <frame pos="0 -{{size_y + size_y}}" size="{{size_x}} 43">
+                    <quad pos="0 0" size="{{size_x}} 43" z-index="0" bgcolor="44664770"/>
 
                     <label pos="0 -2.6" size="10 5" z-index="1" text="Time Limit:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <label pos="15 -2.6" z-index="1" text="{% if settings.game_time_seconds == 1800 %}$000{% endif %}30m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_1800"/>
@@ -67,13 +67,22 @@
                     <label pos="0 -24.8" size="13 5" z-index="1" text="Infinite Skips:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <quad pos="15 -24.8" z-index="1" size="5 5" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.infinite_free_skips | int }}" scriptevents="1" action="{{ id }}__ui_toggle_infinite_skips"/>
 
-                    <label pos="0 -34" size="30 5" z-index="1" text="Start RMT" textsize="2.5" textfont="RajdhaniMono"
+                    <label pos="0 -32.2" size="14 5" z-index="1" text="Map Generator:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    <label pos="15 -32.2" z-index="1" text="{% if settings.map_generator.value == 'RANDOM' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
+                    <label pos="27 -32.2" z-index="1" text="{% if settings.map_generator.value == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
+                    <label pos="39 -32.2" z-index="1" text="{% if settings.map_generator.value == 'MAP PACK' %}$000{% endif %}Map Pack" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
+                    {% if settings.map_generator.value == 'MAP PACK' %}
+                    <entry pos="51.7 -32.2" z-index="1" name="map_pack_id" selecttext="1" textsize="1" size="14 5.2" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    {% endif %}
+
+
+                    <label pos="0 -40" size="30 5" z-index="1" text="Start RMT" textsize="2.5" textfont="RajdhaniMono"
                         halign="left" valign="center" style="CardButtonSmall"
                         id="rmt_stop_btn" scriptevents="1" action="{{ id }}__ui_start_rmt" />
                 </frame>
             {% elif settings.game_mode.value == "Random Map Survival" %}
-                <frame pos="0 -{{size_y + size_y}}" size="{{size_x}} 43">
-                    <quad pos="0 0" size="{{size_x}} 43" z-index="0" bgcolor="44664770"/>
+                <frame pos="0 -{{size_y + size_y}}" size="{{size_x}} 50">
+                    <quad pos="0 0" size="{{size_x}} 50" z-index="0" bgcolor="44664770"/>
 
                     <label pos="0 -2.6" size="10 5" z-index="1" text="Time Limit:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <label pos="15 -2.6" z-index="1" text="{% if settings.game_time_seconds == 900 %}$000{% endif %}15m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_900"/>
@@ -103,7 +112,15 @@
                     <label pos="27 -32.2" z-index="1" text="{% if settings.skip_medal.name == 'SILVER' %}$000{% endif %}Silver" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_silver"/>
                     <label pos="39 -32.2" z-index="1" text="{% if settings.skip_medal.name == 'BRONZE' %}$000{% endif %}Bronze" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_bronze"/>
 
-                    <label pos="0 -40" size="30 5" z-index="1" text="Start RMT" textsize="2.5" textfont="RajdhaniMono"
+                    <label pos="0 -39.6" size="14 5" z-index="1" text="Map Generator:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    <label pos="15 -39.6" z-index="1" text="{% if settings.map_generator.value == 'RANDOM' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
+                    <label pos="27 -39.6" z-index="1" text="{% if settings.map_generator.value == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
+                    <label pos="39 -39.6" z-index="1" text="{% if settings.map_generator.value == 'MAP PACK' %}$000{% endif %}Map Pack" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
+                    {% if settings.map_generator.value == 'MAP PACK' %}
+                    <entry pos="51.7 -39.6" z-index="1" name="map_pack_id" selecttext="1" textsize="1" size="14 5.2" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    {% endif %}
+
+                    <label pos="0 -46" size="30 5" z-index="1" text="Start RMT" textsize="2.5" textfont="RajdhaniMono"
                         halign="left" valign="center" style="CardButtonSmall"
                         id="rmt_stop_btn" scriptevents="1" action="{{ id }}__ui_start_rmt" />
                 </frame>

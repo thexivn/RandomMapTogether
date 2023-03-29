@@ -14,6 +14,9 @@ from .Data.GameScore import GameScore
 from .Data.GameState import GameState
 from .Data.Medals import Medals
 from .Data.GameModes import GameModes
+from .map_generator import MapGenerator, MapGenerators
+from .map_generator.map_pack import MapPack
+from .map_generator.totd import TOTD
 
 from .views import RandomMapsTogetherView, RMTScoreBoard
 
@@ -88,6 +91,10 @@ class RMTGame:
         self._score_ui.subscribe("ui_set_skip_medal_silver", self.set_skip_medal)
         self._score_ui.subscribe("ui_set_skip_medal_bronze", self.set_skip_medal)
 
+        self._score_ui.subscribe("ui_set_map_generator_random", self.set_map_generator)
+        self._score_ui.subscribe("ui_set_map_generator_totd", self.set_map_generator)
+        self._score_ui.subscribe("ui_set_map_generator_map_pack", self.set_map_generator)
+
         self._score_ui.subscribe("ui_toggle_infinite_skips", self.toggle_infinite_skips)
 
         self._score_ui.subscribe("ui_set_game_mode_rmc", self.set_game_mode_rmc)
@@ -106,6 +113,17 @@ class RMTGame:
 
             self._score.goal_medal = self.app.app_settings.goal_medal
             self._score.skip_medal = self.app.app_settings.skip_medal
+
+            if self.app.app_settings.map_generator == MapGenerators.RANDOM:
+                self._map_handler.map_generator = MapGenerator()
+            elif self.app.app_settings.map_generator == MapGenerators.MAP_PACK:
+                if values.get("map_pack_id"):
+                    self._map_handler.map_generator = MapPack(int(values.get("map_pack_id")))
+                else:
+                    await self._chat(f"{self.app.app_settings.game_mode.value} RMT failed to start: Missing map pack ID")
+                    return
+            elif self.app.app_settings.map_generator == MapGenerators.TOTD:
+                self._map_handler.map_generator = TOTD()
 
             self._game_state.set_start_new_state()
             await self._chat(f'{player.nickname} started new {self.app.app_settings.game_mode.value}, loading next map ...')
@@ -323,6 +341,11 @@ class RMTGame:
     async def set_game_mode_rms(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
             self.app.app_settings = RMSConfig()
+            await self._score_ui.display()
+
+    async def set_map_generator(self, player, caller, values, **kwargs):
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self.app.app_settings.map_generator = MapGenerators[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1].upper()]
             await self._score_ui.display()
 
     async def hide_timer(self):
