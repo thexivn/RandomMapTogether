@@ -3,12 +3,14 @@ import time as py_time
 
 from .Medals import Medals
 from .GameModes import GameModes
+from ..map_generator import MapGenerators
 
 @dataclass
 class Configurations:
     goal_medal = Medals.AUTHOR
     skip_medal = Medals.GOLD
     min_level_to_start = 1
+    map_generator = MapGenerators.RANDOM
 
     def set_min_level_to_start(self, old_value: str, value: str):
         level = int(value)
@@ -53,10 +55,8 @@ class RMSConfig(Configurations):
 
     def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
         if free_skip:
-            if rmt_game._map_handler.pre_patch_ice:
+            if rmt_game._map_handler.pre_patch_ice or rmt_game._game_state.free_skip_available:
                 pass
-            elif rmt_game._game_state.free_skip_available:
-                rmt_game._game_state.free_skip_available = False
             else:
                 rmt_game._time_left -= self.skip_penalty_seconds
                 self.total_time_gained -= self.skip_penalty_seconds

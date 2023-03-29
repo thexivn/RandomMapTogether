@@ -15,6 +15,9 @@ from .Data.GameScore import GameScore
 from .Data.GameState import GameState
 from .Data.Medals import Medals, max_medal, min_medal
 from .Data.GameModes import GameModes
+from .map_generator import MapGenerator, MapGenerators
+from .map_generator.map_pack import MapPack
+from .map_generator.totd import TOTD
 
 from .views import RandomMapsTogetherView, RMTScoreBoard
 
@@ -77,26 +80,30 @@ class RMTGame:
         self._score_ui.subscribe("ui_toggle_pause", self.command_toggle_pause)
         self._score_ui.subscribe("ui_toggle_scoreboard", self.command_toggle_scoreboard)
 
-        self._score_ui.subscribe("ui_set_game_time_15m", self.set_game_time_15m)
-        self._score_ui.subscribe("ui_set_game_time_30m", self.set_game_time_30m)
-        self._score_ui.subscribe("ui_set_game_time_1h", self.set_game_time_1h)
-        self._score_ui.subscribe("ui_set_game_time_2h", self.set_game_time_2h)
+        self._score_ui.subscribe("ui_set_game_time_900", self.set_game_time_seconds)
+        self._score_ui.subscribe("ui_set_game_time_1800", self.set_game_time_seconds)
+        self._score_ui.subscribe("ui_set_game_time_3600", self.set_game_time_seconds)
+        self._score_ui.subscribe("ui_set_game_time_7200", self.set_game_time_seconds)
 
-        self._score_ui.subscribe("ui_set_goal_bonus_1m", self.set_goal_bonus_1m)
-        self._score_ui.subscribe("ui_set_goal_bonus_3m", self.set_goal_bonus_3m)
-        self._score_ui.subscribe("ui_set_goal_bonus_5m", self.set_goal_bonus_5m)
+        self._score_ui.subscribe("ui_set_goal_bonus_60", self.set_goal_bonus_seconds)
+        self._score_ui.subscribe("ui_set_goal_bonus_180", self.set_goal_bonus_seconds)
+        self._score_ui.subscribe("ui_set_goal_bonus_300", self.set_goal_bonus_seconds)
 
-        self._score_ui.subscribe("ui_set_skip_penalty_30s", self.set_skip_penalty_30s)
-        self._score_ui.subscribe("ui_set_skip_penalty_1m", self.set_skip_penalty_1m)
-        self._score_ui.subscribe("ui_set_skip_penalty_2m", self.set_skip_penalty_2m)
+        self._score_ui.subscribe("ui_set_skip_penalty_30", self.set_skip_penalty_seconds)
+        self._score_ui.subscribe("ui_set_skip_penalty_60", self.set_skip_penalty_seconds)
+        self._score_ui.subscribe("ui_set_skip_penalty_120", self.set_skip_penalty_seconds)
 
-        self._score_ui.subscribe("ui_set_goal_medal_author", self.set_goal_medal_author)
-        self._score_ui.subscribe("ui_set_goal_medal_gold", self.set_goal_medal_gold)
-        self._score_ui.subscribe("ui_set_goal_medal_silver", self.set_goal_medal_silver)
+        self._score_ui.subscribe("ui_set_goal_medal_author", self.set_goal_medal)
+        self._score_ui.subscribe("ui_set_goal_medal_gold", self.set_goal_medal)
+        self._score_ui.subscribe("ui_set_goal_medal_silver", self.set_goal_medal)
 
-        self._score_ui.subscribe("ui_set_skip_medal_gold", self.set_skip_medal_gold)
-        self._score_ui.subscribe("ui_set_skip_medal_silver", self.set_skip_medal_silver)
-        self._score_ui.subscribe("ui_set_skip_medal_bronze", self.set_skip_medal_bronze)
+        self._score_ui.subscribe("ui_set_skip_medal_gold", self.set_skip_medal)
+        self._score_ui.subscribe("ui_set_skip_medal_silver", self.set_skip_medal)
+        self._score_ui.subscribe("ui_set_skip_medal_bronze", self.set_skip_medal)
+
+        self._score_ui.subscribe("ui_set_map_generator_random", self.set_map_generator)
+        self._score_ui.subscribe("ui_set_map_generator_totd", self.set_map_generator)
+        self._score_ui.subscribe("ui_set_map_generator_map_pack", self.set_map_generator)
 
         self._score_ui.subscribe("ui_toggle_infinite_skips", self.toggle_infinite_skips)
         self._score_ui.subscribe("ui_toggle_admin_fins_only", self.toggle_admin_fins_only)
@@ -120,9 +127,6 @@ class RMTGame:
             await self._chat("You are not allowed to start the game", player)
             return
 
-        # if self._map_handler is None or self._map_handler.active_map is None or self._map_handler.active_map.uid != self._map_handler._hub_map:
-        #     await self._chat("Please wait for the hub map to load", player)
-        #     return
         await self._score_ui.hide()
         await self._scoreboard_ui.display()
 
@@ -132,40 +136,35 @@ class RMTGame:
                 self.app.app_settings.goal_bonus_seconds = int(values["goal_bonus_seconds"])
                 self.app.app_settings.skip_penalty_seconds = int(values["skip_penalty_seconds"])
 
+            self._score.goal_medal = self.app.app_settings.goal_medal
+            self._score.skip_medal = self.app.app_settings.skip_medal
+
+            if self.app.app_settings.map_generator == MapGenerators.RANDOM:
+                self._map_handler.map_generator = MapGenerator()
+            elif self.app.app_settings.map_generator == MapGenerators.MAP_PACK:
+                if values.get("map_pack_id"):
+                    self._map_handler.map_generator = MapPack(int(values.get("map_pack_id")))
+                else:
+                    await self._chat(f"{self.app.app_settings.game_mode.value} RMT failed to start: Missing map pack ID")
+                    return
+            elif self.app.app_settings.map_generator == MapGenerators.TOTD:
+                self._map_handler.map_generator = TOTD()
+
             self._game_state.set_start_new_state()
-            self._game_state.map_is_loading = True
-            self._game_state.game_is_in_progress = True
-            await self._score_ui.display()
-            await self._chat(f'{player.nickname} started new RMT, loading next map ...')
+            await self._chat(f'{player.nickname} started new {self.app.app_settings.game_mode.value}, loading next map ...')
             self._rmt_starter_player = player
             self._time_left = self.app.app_settings.game_time_seconds
             self._mode_settings[S_TIME_LIMIT] = self._time_left
-
-            if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE:
-                if self.app.app_settings.admin_fins_only:
-                    self._game_state.set_finishes_player_filter(player.login, player.nickname)
-
-            self._score.get_players_score(player)
-
-            await self._score_ui.display()
-            await self._scoreboard_ui.display()
-
-            self._game_state.set_map_completed_state()
-
-            async def _load_init_map():
-                if await self.load_with_retry():
-                    logger.info("RMT started")
-                else:
-                    self._game_state.set_hub_state()
-                    self._mode_settings[S_TIME_LIMIT] = 0
-                    await self._chat("RMT failed to start")
-                await self._mode_manager.update_settings(self._mode_settings)
-            await _load_init_map()
+            if await self.load_with_retry():
+                logger.info("RMT started")
+                self._game_state.game_is_in_progress = True
+            else:
+                self._game_state.set_hub_state()
+                self._mode_settings[S_TIME_LIMIT] = 0
+                await self._chat(f"{self.app.app_settings.game_mode.value} RMT failed to start")
+            await self._mode_manager.update_settings(self._mode_settings)
         else:
-            await self._chat("RMT already started", player)
-
-        await self._scoreboard_ui.hide()
-        await self._score_ui.display()
+            await self._chat(f"{self.app.app_settings.game_mode.value} already started", player)
 
     async def load_with_retry(self, max_retry=3) -> bool:
         retry = 0
@@ -192,9 +191,9 @@ class RMTGame:
                 await self._chat(f'{player.nickname} stopped the current session')
                 await self.back_to_hub()
             else:
-                await self._chat("you can't stop the RMT", player)
+                await self._chat(f"You can't stop the {self.app.app_settings.game_mode.value}", player)
         else:
-            await self._chat("RMT is not started yet", player)
+            await self._chat(f"{self.app.app_settings.game_mode.value} is not started yet", player)
 
     async def back_to_hub(self):
         if self._game_state.is_game_stage():
@@ -217,7 +216,7 @@ class RMTGame:
         self._score_ui.ui_controls_visible = True
         if self._game_state.is_game_stage():
             if self._map_handler.pre_patch_ice:
-                await self._chat("$o$FB0 this track was created before the ICE physics change $z"
+                await self._chat("$o$FB0 This track was created before the ICE physics change $z"
                                  , self._rmt_starter_player)
             self._game_state.set_new_map_in_game_state()
             asyncio.create_task(background_loading_map(self._map_handler))
@@ -234,11 +233,12 @@ class RMTGame:
         if self._game_state.is_game_stage():
             self._game_state.skip_medal_available = False
             self._game_state.skip_medal_player = None
+            self._game_state.skip_medal = None
             self._score_ui.ui_controls_visible = False
             if not self._game_state.current_map_completed:
-                logger.info("RMT finished successfully")
+                logger.info(f"{self.app.app_settings.game_mode.value} finished successfully")
                 await self._chat(
-                    f'Challenge completed {self.app.app_settings.goal_medal.value}: {self._score.total_goal_medals} {self.app.app_settings.skip_medal.value}: {self._score.total_skip_medals}')
+                    f'Challenge completed {self.app.app_settings.goal_medal.name}: {self._score.total_goal_medals} {self.app.app_settings.skip_medal.name}: {self._score.total_skip_medals}')
                 await self.back_to_hub()
             else:
                 self._mode_settings[S_TIME_LIMIT] = self._time_left
@@ -259,34 +259,39 @@ class RMTGame:
             if is_end_race:
                 logger.info(f'[on_map_finish] Final time check for {self.app.app_settings.goal_medal.value}')
 
-                time_counts = self._game_state.fins_count_from in ["*", player.login]
-                if time_counts:
-                    if self._game_state.is_paused:
-                        _lock.release()
-                        return await self._chat("Time doesn't count because game is paused", player)
-                    if (py_time.time() - (race_time * 0.001)) < self._time_at_pause:
-                        _lock.release()
-                        return await self._chat(f"Time doesn't count because game was paused ({race_time}ms / cur time: {py_time.time()} / paused at time: {self._time_at_pause})", player)
-                    if race_time <= self._map_handler.goal_medal:
-                        logger.info(f'[on_map_finish {self.app.app_settings.goal_medal.value} acquired')
+                if self._game_state.is_paused:
+                    _lock.release()
+                    return await self._chat("Time doesn't count because game is paused", player)
+                if (py_time.time() - (race_time * 0.001)) < self._time_at_pause:
+                    _lock.release()
+                    return await self._chat(f"Time doesn't count because game was paused ({race_time}ms / cur time: {py_time.time()} / paused at time: {self._time_at_pause})", player)
+
+                logger.info(f'[on_map_finish] Final time check for {self.app.app_settings.goal_medal.name}')
+                race_medal = self._map_handler.get_medal_by_time(race_time)
+                if race_medal:
+                    if race_medal >= self._score.goal_medal:
+                        logger.info(f'[on_map_finish {self.app.app_settings.goal_medal.name} acquired')
                         self.app.app_settings.update_time_left(self, goal_medal=True)
                         self._game_state.set_map_completed_state()
                         await self.hide_timer()
                         _lock.release()  # with loading True don't need to lock
-                        await self._chat(f'{self.app.app_settings.goal_medal.value}, congratulations to {player.nickname}')
-                        self._score.inc_goal_medal_count(player, self._map_handler.active_map, True)
-                        await self._scoreboard_ui.display()
-                        await self._score_ui.hide()
-                        if not await self.load_with_retry():
+                        await self._chat(f'{player.nickname} claimed {self.app.app_settings.goal_medal.name}, congratulations!')
+                        if await self.load_with_retry():
+                            self._score.inc_medal_count(player, race_medal)
+                            logger.info(f"{self._score.player_finishes[player.login]}")
+                            await self._scoreboard_ui.display()
+                            await self._score_ui.hide()
+                        else:
                             await self.back_to_hub()
-                    elif race_time <= self._map_handler.skip_medal and not self._game_state.skip_medal_available:
-                        logger.info(f'[on_map_finish] {self.app.app_settings.skip_medal.value} acquired')
+                    elif race_medal >= self._score.skip_medal and not self._game_state.skip_medal_available:
+                        logger.info(f'[on_map_finish] {self.app.app_settings.skip_medal.name} acquired')
                         self._game_state.skip_medal_available = True
                         self._game_state.skip_medal_player = player
+                        self._game_state.skip_medal = race_medal
                         _lock.release()
                         await self._score_ui.display()
-                        await self._chat(f'first {self.app.app_settings.skip_medal.value} acquired, congrats to {player.nickname}')
-                        await self._chat(f'You are now allowed to Take the {self.app.app_settings.skip_medal.value} and skip the map', self._rmt_starter_player)
+                        await self._chat(f'First {self.app.app_settings.skip_medal.name} acquired, congrats to {player.nickname}')
+                        await self._chat(f'You are now allowed to take the {race_medal.name} and skip the map', self._rmt_starter_player)
                     else:
                         _lock.release()
                 else:
@@ -307,9 +312,9 @@ class RMTGame:
             if self._game_state.skip_medal_available:
                 if await self._is_player_allowed_to_manage_running_game(player):
                     self.app.app_settings.update_time_left(self, skip_medal=True)
-                    self._score.inc_skip_medal_count(self._game_state.skip_medal_player, self._map_handler.active_map, True)
+                    self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal)
                     self._game_state.set_map_completed_state()
-                    await self._chat(f'{player.nickname} decided to {self.app.app_settings.skip_medal.value} skip')
+                    await self._chat(f'{player.nickname} decided to {self.app.app_settings.skip_medal.name} skip')
                     await self.hide_timer()
                     if await self.load_with_retry():
                         logging.info(f"Loading next map success")
@@ -319,7 +324,7 @@ class RMTGame:
                     else:
                         await self.back_to_hub()
             else:
-                await self._chat(f"{self.app.app_settings.skip_medal.value} skip is not available", player)
+                await self._chat(f"{self.app.app_settings.skip_medal.name} skip is not available", player)
         else:
             await self._chat("You are not allowed to skip", player)
 
@@ -334,7 +339,8 @@ class RMTGame:
                     if not self._map_handler.pre_patch_ice and self._game_state.free_skip_available:
                         await self._chat(f'{player.nickname} decided to use free skip')
                         self._game_state.free_skip_available = False
-                    await self._chat(f'{player.nickname} decided to skip the map')
+                    else:
+                        await self._chat(f'{player.nickname} decided to skip the map')
                     await self.hide_timer()
                     await self._scoreboard_ui.display()
                     await self._score_ui.hide()
@@ -378,88 +384,29 @@ class RMTGame:
         await self._mode_manager._instance.gbx('ForceSpectator', player.login, 2)
         await self._mode_manager._instance.gbx('ForceSpectator', player.login, 0)
 
-    async def set_goal_bonus_1m(self, player: Player, *args, **kwargs):
+    async def set_goal_bonus_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_bonus_seconds = 60
+            self.app.app_settings.goal_bonus_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_bonus_")[1])
             await self._score_ui.display()
 
-    async def set_goal_bonus_3m(self, player: Player, *args, **kwargs):
+    async def set_skip_penalty_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_bonus_seconds = 180
+            self.app.app_settings.skip_penalty_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_penalty_")[1])
             await self._score_ui.display()
 
-    async def set_goal_bonus_5m(self, player: Player, *args, **kwargs):
+    async def set_game_time_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_bonus_seconds = 300
+            self.app.app_settings.game_time_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_game_time_")[1])
             await self._score_ui.display()
 
-    async def set_skip_penalty_30s(self, player: Player, *args, **kwargs):
+    async def set_goal_medal(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_penalty_seconds = 30
+            self.app.app_settings.goal_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_medal_")[1].upper()]
             await self._score_ui.display()
 
-    async def set_skip_penalty_1m(self, player: Player, *args, **kwargs):
+    async def set_skip_medal(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_penalty_seconds = 60
-            await self._score_ui.display()
-
-    async def set_skip_penalty_2m(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_penalty_seconds = 120
-            await self._score_ui.display()
-
-    async def set_game_time_15m(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = 900
-            await self._score_ui.display()
-
-    async def set_game_time_30m(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = 1800
-            await self._score_ui.display()
-
-    async def set_game_time_1h(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = 3600
-            await self._score_ui.display()
-
-    async def set_game_time_2h(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = 7200
-            await self._score_ui.display()
-
-    async def set_goal_medal_author(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_medal = Medals.AUTHOR
-            await self._score_ui.display()
-
-    async def set_goal_medal_gold(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_medal = Medals.GOLD
-            self.app.app_settings.skip_medal = max_medal(self.app.app_settings.goal_medal, self.app.app_settings.skip_medal)
-            await self._score_ui.display()
-
-    async def set_goal_medal_silver(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_medal = Medals.SILVER
-            self.app.app_settings.skip_medal = max_medal(self.app.app_settings.goal_medal, self.app.app_settings.skip_medal)
-            await self._score_ui.display()
-
-    async def set_skip_medal_gold(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_medal = Medals.GOLD
-            self.app.app_settings.goal_medal = min_medal(self.app.app_settings.skip_medal, self.app.app_settings.goal_medal)
-            await self._score_ui.display()
-
-    async def set_skip_medal_silver(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_medal = Medals.SILVER
-            self.app.app_settings.goal_medal = min_medal(self.app.app_settings.skip_medal, self.app.app_settings.goal_medal)
-            await self._score_ui.display()
-
-    async def set_skip_medal_bronze(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_medal = Medals.BRONZE
+            self.app.app_settings.skip_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_medal_")[1].upper()]
             await self._score_ui.display()
 
     async def toggle_infinite_skips(self, player: Player, *args, **kwargs):
@@ -485,6 +432,11 @@ class RMTGame:
     async def set_game_mode_rms(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
             self.app.app_settings = RMSConfig()
+            await self._score_ui.display()
+
+    async def set_map_generator(self, player, caller, values, **kwargs):
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self.app.app_settings.map_generator = MapGenerators[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1].upper()]
             await self._score_ui.display()
 
     async def hide_timer(self):
@@ -515,15 +467,6 @@ class RMTGame:
     async def set_time_left(self, count, time, *args, **kwargs):
         if self._game_state.is_game_stage():
             logger.info(f'ROUND_START {time} -- {count}')
+            if not self._game_state.start_time:
+                self._game_state.start_time = py_time.time()
             self._map_start_time = py_time.time()
-
-    def time_left_str(self):
-        tl = self._time_left
-        if tl == 0:
-            return "00:00:00"
-        if self._game_state.is_paused:
-            pause_duration = int(py_time.time() - self._time_at_pause + .5)
-            tl = self._time_left_at_pause + pause_duration
-        if not self._game_state.map_is_loading and not self._game_state.current_map_completed:
-            tl -= int(py_time.time() - self._map_start_time + .5)
-        return py_time.strftime('%H:%M:%S', py_time.gmtime(tl))

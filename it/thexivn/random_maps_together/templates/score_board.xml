@@ -1,7 +1,7 @@
-<frame pos="-80 80" size="160 160" z-index="3">
-    <quad pos="0 0" size="160 160"  bgcolor="101010EE" scriptevents="1"/>
-    <frame pos="20 -5" size="120 50" z-index="4">
-        <label pos="60 -5" size="85 10" text="{{settings.game_mode.value}} SCORE" textsize="10"
+<frame pos="-80 80" size="160 160" z-idex="3">
+    <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
+    <frame pos="20 -5" size="120 50" z-idex="4">
+        <label pos="60 -5" size="90 10" text="{{settings.game_mode.value}}" textsize="10"
                halign="center" valign="center" style="ManiaPlanetLogos" />
 
         <quad pos="5 -15"   size="20 20" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
@@ -25,16 +25,29 @@
         <frame pos="0 {{ (-10 * loop.index0)}}" size="120 10">
             <quad pos="0 0" size="120 10" bgcolor="eeeeeeFF"/>
             <quad pos="1 -0.5" size="99 9" bgcolor="513877FF"/>
-            <quad pos="85 -0.5" size="34 9" bgcolor="333333FF"/>
-            <label pos="42.5 -4.5" size="85 9" text="{{loop.index0 + 1}}. {{player_score.player.nickname}}" textsize="3.5" textfont="RajdhaniMono"
-                               halign="center" valign="center" />
-
-            <quad pos="90 -0.5"   size="9 9" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
-            <label pos="100 -4.5" size="10 9" text="{{player_score.player_goal_medals}}" textsize="3.5" textfont="RajdhaniMono"
-                               halign="left" valign="center" />
-            <quad pos="105 -0.5"  size="9 9" image="{{ skip_medal_url }}" autoscale="1" keepratio="Fit"/>
-            <label pos="115 -4.5" size="10 9" text="{{player_score.player_skip_medals}}" textsize="3.5" textfont="RajdhaniMono"
-                               halign="left" valign="center" />
+            <quad pos="59 -0.5" size="60 9" bgcolor="333333FF"/>
+            <label pos="30 -4.5" size="30 9" text="{{player_score.player.nickname}}" textsize="3" textfont="RajdhaniMono" halign="center" valign="center" />
+            {% set padding = namespace(count=0) %}
+            {% if player_score.bronze_medals %}
+                <quad pos="{{ 105 - 15 * padding.count }} -0.5"  size="9 9" image="{{ medal_urls.BRONZE.value }}" autoscale="1" keepratio="Fit"/>
+                <label pos="{{ 115 - 15 * padding.count }} -4.5" size="10 9" text="{{player_score.bronze_medals}}" textsize="3.5" textfont="RajdhaniMono" halign="left" valign="center" />
+                {% set padding.count = padding.count + 1 %}
+            {% endif %}
+            {% if player_score.silver_medals %}
+                <quad pos="{{ 105 - 15 * padding.count }} -0.5"  size="9 9" image="{{ medal_urls.SILVER.value }}" autoscale="1" keepratio="Fit"/>
+                <label pos="{{ 115 - 15 * padding.count }} -4.5" size="10 9" text="{{player_score.silver_medals}}" textsize="3.5" textfont="RajdhaniMono" halign="left" valign="center" />
+                {% set padding.count = padding.count + 1 %}
+            {% endif %}
+            {% if player_score.gold_medals %}
+                <quad pos="{{ 105 - 15 * padding.count }} -0.5"  size="9 9" image="{{ medal_urls.GOLD.value }}" autoscale="1" keepratio="Fit"/>
+                <label pos="{{ 115 - 15 * padding.count }} -4.5" size="10 9" text="{{player_score.gold_medals}}" textsize="3.5" textfont="RajdhaniMono" halign="left" valign="center" />
+                {% set padding.count = padding.count + 1 %}
+            {% endif %}
+            {% if player_score.author_medals %}
+                <quad pos="{{ 105 - 15 * padding.count }} -0.5"  size="9 9" image="{{ medal_urls.AUTHOR.value }}" autoscale="1" keepratio="Fit"/>
+                <label pos="{{ 115 - 15 * padding.count }} -4.5" size="10 9" text="{{player_score.author_medals}}" textsize="3.5" textfont="RajdhaniMono" halign="left" valign="center" />
+                {% set padding.count = padding.count + 1 %}
+            {% endif %}
         </frame>
     {% endfor %}
     </frame>

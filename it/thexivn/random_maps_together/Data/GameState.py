@@ -21,6 +21,7 @@ class GameState:
     fins_count_from = "*"  # "*" for anyone, otherwise players login
     fins_count_from_name = "Anyone"
     is_paused = False
+    skip_medal = None
 
     def is_hub_stage(self) -> bool:
         return GameStage.HUB == self.stage
@@ -32,7 +33,6 @@ class GameState:
         return self.is_game_stage() and not self.current_map_completed
 
     def set_start_new_state(self):
-        self.start_time = py_time.time()
         self.current_map_completed = True
         self.stage = GameStage.RMT
         self.free_skip_available = True
@@ -42,6 +42,7 @@ class GameState:
         self.fins_count_from_name = "Anyone"
         self.game_is_in_progress = True
         self.is_paused = False
+        self.start_time = None
 
     def set_new_map_in_game_state(self):
         self.current_map_completed = False

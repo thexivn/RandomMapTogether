@@ -82,8 +82,8 @@ class RandomMapsTogetherView(TimesWidgetView):
         data["ui_tools_enabled"] = self.ui_controls_visible
         if self._game_state:
             data["is_paused"] = self._game_state.is_paused
-            data["goal_medal_url"] = MedalURLs[self.app.app_settings.goal_medal.value].value
-            data["skip_medal_url"] = MedalURLs[self.app.app_settings.skip_medal.value].value
+            data["goal_medal_url"] = MedalURLs[self.app.app_settings.goal_medal.name].value
+            data["skip_medal_url"] = MedalURLs[self.app.app_settings.skip_medal.name].value
             data["game_started"] = self._game_state.game_is_in_progress
             data["skip_medal_visible"] = self._game_state.skip_medal_available
             if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE:
@@ -123,8 +123,9 @@ class RMTScoreBoard(TemplateView):
         data["settings"] = self.app.app_settings
         data["total_goal_medals"] = self._score.total_goal_medals
         data["total_skip_medals"] = self._score.total_skip_medals
-        data["goal_medal_url"] = MedalURLs[self.app.app_settings.goal_medal.value].value
-        data["skip_medal_url"] = MedalURLs[self.app.app_settings.skip_medal.value].value
+        data["goal_medal_url"] = MedalURLs[self.app.app_settings.goal_medal.name].value
+        data["skip_medal_url"] = MedalURLs[self.app.app_settings.skip_medal.name].value
+        data["medal_urls"] = MedalURLs
 
         data["players"] = self._score.get_top_10(20)
         data["time_left"] = self._game.time_left_str()
