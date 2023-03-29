@@ -1,7 +1,7 @@
 from enum import Enum
 
-class Medals(Enum):
-    AUTHOR = "AUTHOR"
-    GOLD = "GOLD"
-    SILVER = "SILVER"
-    BRONZE = "BRONZE"
+class Medals(int, Enum):
+    AUTHOR = 4
+    GOLD = 3
+    SILVER = 2
+    BRONZE = 1

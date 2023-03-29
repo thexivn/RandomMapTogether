@@ -18,6 +18,7 @@ class GameState:
     game_is_in_progress: bool = False
     skip_medal_available: bool = False
     skip_medal_player = None
+    skip_medal = None
 
     def is_hub_stage(self) -> bool:
         return GameStage.HUB == self.stage

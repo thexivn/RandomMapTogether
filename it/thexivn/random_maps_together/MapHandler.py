@@ -81,6 +81,17 @@ class MapHandler:
         else:
             logger.warning('impossible to remove map without UUID')
 
+    def get_medal_by_time(self, race_time: int):
+        if self.active_map:
+            if race_time <= self.active_map.time_author:
+                return Medals.AUTHOR
+            elif race_time <= self.active_map.time_gold:
+                return Medals.GOLD
+            elif race_time <= self.active_map.time_silver:
+                return Medals.SILVER
+            elif race_time <= self.active_map.time_bronze:
+                return Medals.BRONZE
+
     @property
     def skip_medal(self) -> int:
         if self.active_map:
