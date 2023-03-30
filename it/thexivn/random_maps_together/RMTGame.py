@@ -115,6 +115,8 @@ class RMTGame:
     async def update_ui_loop(self):
         while True:
             await asyncio.sleep(0.25)
+            if not self._game_state.game_is_in_progress:
+                continue
             if self._scoreboard_ui._is_global_shown:
                 await self._scoreboard_ui.display()
             elif len(self._scoreboard_ui._is_player_shown) > 0:

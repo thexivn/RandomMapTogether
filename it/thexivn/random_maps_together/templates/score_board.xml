@@ -1,8 +1,7 @@
 <frame pos="-80 80" size="160 160" z-idex="3">
     <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
     <frame pos="20 -5" size="120 50" z-idex="4">
-        <label pos="60 -5" size="90 10" text="{{settings.game_mode.value}}" textsize="10"
-               halign="center" valign="center" style="ManiaPlanetLogos" />
+        <label pos="60 -5" size="90 10" text="{{settings.game_mode.value}}" textsize="10" halign="center" valign="center" style="ManiaPlanetLogos" />
 
         <quad pos="5 -15"   size="20 20" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
         <label pos="40 -25" size="30 20"  text="{{ total_goal_medals }}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
@@ -13,7 +12,7 @@
         {% endif %}
         {% if settings.game_mode.value == "Random Map Survival" %}
             <label pos="5 -45" text="SURVIVED TIME: {{ total_played_time }}" textsize="5" textfont="RajdhaniMono" />
-
+        {% endif %}
     </frame>
 
     <frame pos="20 -57" size="120 100" z-index="4" scroll="1" scrollmax="0 {{scroll_max}}">

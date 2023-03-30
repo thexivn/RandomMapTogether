@@ -48,7 +48,8 @@ class MapHandler:
         await self._map_manager.update_list(full_update=True, detach_fks=True)
         logger.info('UPLOAD COMPLETE')
         await self._map_manager.set_current_map(random_map.uuid)
-        await self._map_manager.remove_map(map_to_remove, delete_file=True)
+        if map_to_remove:
+            await self._map_manager.remove_map(map_to_remove, delete_file=True)
 
         logger.info('map loaded')
         self.map_generator.played_maps.append(self.active_map.uid)

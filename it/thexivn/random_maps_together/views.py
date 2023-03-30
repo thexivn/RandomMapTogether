@@ -86,9 +86,9 @@ class RandomMapsTogetherView(TimesWidgetView):
             data["skip_medal_url"] = MedalURLs[self.app.app_settings.skip_medal.name].value
             data["game_started"] = self._game_state.game_is_in_progress
             data["skip_medal_visible"] = self._game_state.skip_medal_available
+            data["allow_pausing"] = self.app.app_settings.allow_pausing
             if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE:
                 data["free_skip_visible"] = self._game_state.free_skip_available or self.app.app_settings.infinite_free_skips
-                data["allow_pausing"] = self.app.app_settings.allow_pausing
             if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_SURVIVAL:
                 data["free_skip_visible"] = True
             data["skip_pre_patch_ice_visible"] = self.app.map_handler.pre_patch_ice
@@ -128,7 +128,7 @@ class RMTScoreBoard(TemplateView):
 
         data["players"] = self._score.get_top_10(20)
         data["time_left"] = self._game.time_left_str()
-        time_played = self.app.app_settings.game_time_seconds - self._game._time_left + self.app.app_settings.total_time_gained
+        time_played = self.app.app_settings.game_time_seconds - self._game._time_left + getattr(self.app.app_settings, "total_time_gained", 0)
         if not self._game_state.current_map_completed and not self._game_state.map_is_loading:
             time_played += int(py_time.time() - self._game._map_start_time + .5)
 

@@ -30,7 +30,6 @@ class RMCConfig(Configurations):
     game_time_seconds = 3600
     infinite_free_skips = False
     allow_pausing = False
-    total_time_gained = 0 # not used for RMC
 
     def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
         rmt_game._time_left -= int(py_time.time() - rmt_game._map_start_time + .5)
