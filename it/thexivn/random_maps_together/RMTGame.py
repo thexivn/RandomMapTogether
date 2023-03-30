@@ -7,13 +7,12 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
-import pyplanet.conf
 
 from . import MapHandler
 from .Data.Configurations import RMCConfig, RMSConfig
 from .Data.GameScore import GameScore
 from .Data.GameState import GameState
-from .Data.Medals import Medals, max_medal, min_medal
+from .Data.Medals import Medals
 from .Data.GameModes import GameModes
 from .map_generator import MapGenerator, MapGenerators
 from .map_generator.map_pack import MapPack
@@ -65,7 +64,7 @@ class RMTGame:
         logger.info("RMT Game initialized")
 
     async def on_init(self):
-        # await self._map_handler.load_hub()
+        await self._map_handler.load_hub()
         logger.info("RMT Game loaded")
         self._mode_settings = await self._mode_manager.get_settings()
         self._mode_settings[S_FORCE_LAPS_NB] = int(-1)
@@ -106,7 +105,6 @@ class RMTGame:
         self._score_ui.subscribe("ui_set_map_generator_map_pack", self.set_map_generator)
 
         self._score_ui.subscribe("ui_toggle_infinite_skips", self.toggle_infinite_skips)
-        self._score_ui.subscribe("ui_toggle_admin_fins_only", self.toggle_admin_fins_only)
         self._score_ui.subscribe("ui_toggle_allow_pausing", self.toggle_allow_pausing)
 
         self._score_ui.subscribe("ui_set_game_mode_rmc", self.set_game_mode_rmc)
@@ -275,7 +273,7 @@ class RMTGame:
                         self._game_state.set_map_completed_state()
                         await self.hide_timer()
                         _lock.release()  # with loading True don't need to lock
-                        await self._chat(f'{player.nickname} claimed {self.app.app_settings.goal_medal.name}, congratulations!')
+                        await self._chat(f'{player.nickname} claimed {race_medal.name}, congratulations!')
                         if await self.load_with_retry():
                             self._score.inc_medal_count(player, race_medal)
                             logger.info(f"{self._score.player_finishes[player.login]}")
@@ -284,23 +282,17 @@ class RMTGame:
                         else:
                             await self.back_to_hub()
                     elif race_medal >= self._score.skip_medal and not self._game_state.skip_medal_available:
-                        logger.info(f'[on_map_finish] {self.app.app_settings.skip_medal.name} acquired')
+                        logger.info(f'[on_map_finish] {race_medal.name} acquired')
                         self._game_state.skip_medal_available = True
                         self._game_state.skip_medal_player = player
                         self._game_state.skip_medal = race_medal
                         _lock.release()
                         await self._score_ui.display()
-                        await self._chat(f'First {self.app.app_settings.skip_medal.name} acquired, congrats to {player.nickname}')
+                        await self._chat(f'First {race_medal.name} acquired, congrats to {player.nickname}')
                         await self._chat(f'You are now allowed to take the {race_medal.name} and skip the map', self._rmt_starter_player)
                     else:
                         _lock.release()
                 else:
-                    if race_time <= self._map_handler.goal_medal:
-                        logger.info(f'[on_map_finish] {self.app.app_settings.goal_medal.value} acquired by player but it doesn\'t count')
-                        if self._score.inc_goal_medal_count(player, self._map_handler.active_map, False):
-                            await self._chat(f'{player.nickname} got {self.app.app_settings.goal_medal.value}. Gz but it doesn\'t count Sadge')
-                    elif race_time <= self._map_handler.skip_medal:
-                        self._score.inc_skip_medal_count(player, self._map_handler.active_map, False)
                     _lock.release()
             else:
                 _lock.release()
@@ -314,7 +306,7 @@ class RMTGame:
                     self.app.app_settings.update_time_left(self, skip_medal=True)
                     self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal)
                     self._game_state.set_map_completed_state()
-                    await self._chat(f'{player.nickname} decided to {self.app.app_settings.skip_medal.name} skip')
+                    await self._chat(f'{player.nickname} decided to take {self._game_state.skip_medal.name} by {self._game_state.skip_medal_player.nickname} and skip')
                     await self.hide_timer()
                     if await self.load_with_retry():
                         logging.info(f"Loading next map success")
@@ -414,11 +406,6 @@ class RMTGame:
             self.app.app_settings.infinite_free_skips = not self.app.app_settings.infinite_free_skips
             await self._score_ui.display()
 
-    async def toggle_admin_fins_only(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.admin_fins_only = not self.app.app_settings.admin_fins_only
-            await self._score_ui.display()
-
     async def toggle_allow_pausing(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
             self.app.app_settings.allow_pausing = not self.app.app_settings.allow_pausing
@@ -470,3 +457,14 @@ class RMTGame:
             if not self._game_state.start_time:
                 self._game_state.start_time = py_time.time()
             self._map_start_time = py_time.time()
+
+    def time_left_str(self):
+        tl = self._time_left
+        if tl == 0:
+            return "00:00:00"
+        if self._game_state.is_paused:
+            pause_duration = int(py_time.time() - self._time_at_pause + .5)
+            tl = self._time_left_at_pause + pause_duration
+        if not self._game_state.map_is_loading and not self._game_state.current_map_completed:
+            tl -= int(py_time.time() - self._map_start_time + .5)
+        return py_time.strftime('%H:%M:%S', py_time.gmtime(tl))

@@ -14,7 +14,7 @@ from .Data.GameModes import GameModes
 logger = logging.getLogger(__name__)
 
 
-cb_y_off = 0.7
+cb_y_off = 3
 
 def cb_pos(n):
     return f".2 {-23.8 - (5.4 * n) - cb_y_off:.2f}"
@@ -88,7 +88,6 @@ class RandomMapsTogetherView(TimesWidgetView):
             data["skip_medal_visible"] = self._game_state.skip_medal_available
             if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE:
                 data["free_skip_visible"] = self._game_state.free_skip_available or self.app.app_settings.infinite_free_skips
-                data["fins_count_from_name"] = self._game_state.fins_count_from_name
                 data["allow_pausing"] = self.app.app_settings.allow_pausing
             if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_SURVIVAL:
                 data["free_skip_visible"] = True
@@ -134,7 +133,6 @@ class RMTScoreBoard(TemplateView):
             time_played += int(py_time.time() - self._game._map_start_time + .5)
 
         data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(time_played))
-        data["fins_count_from_name"] = self._game_state.fins_count_from_name
 
         data["nb_players"] = len(data['players'])
         data["scroll_max"] = max(0, len(data['players']) * 10 - 100)

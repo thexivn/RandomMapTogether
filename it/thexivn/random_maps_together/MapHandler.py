@@ -69,9 +69,7 @@ class MapHandler:
 
         content = self.map_generator.get_map_content(self._hub_id)
         try:
-            if await self._map_manager.get_map(self._hub_map) not in self._map_manager.maps:
-                content = await self._tmnx_rest_client.get_map_content(self._hub_id)
-                await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_id}.Map.Gbx', overwrite=True)
+            await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_id}.Map.Gbx', overwrite=True)
             await self._map_manager.update_list(True, True)
             await self._map_manager.set_current_map(self._hub_map)
             logger.info("Welcome to the HUB")

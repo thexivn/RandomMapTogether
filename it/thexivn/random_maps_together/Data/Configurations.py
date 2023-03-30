@@ -29,7 +29,6 @@ class RMCConfig(Configurations):
     game_mode = GameModes.RANDOM_MAP_CHALLENGE
     game_time_seconds = 3600
     infinite_free_skips = False
-    admin_fins_only = False
     allow_pausing = False
     total_time_gained = 0 # not used for RMC
 
