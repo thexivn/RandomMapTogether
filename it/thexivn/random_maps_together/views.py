@@ -212,8 +212,6 @@ class PlayerConfigsView(ManualListView):
 
     async def action_toggle_enabled_player(self, player, values, row, **kwargs):
         self.app.app_settings.player_configs[row["player_login"]].enabled ^= True
-        body = await self.render(player_login=player.login)
-        logger.info(body)
         await self.refresh(player=player)
 
     async def get_data(self):
@@ -229,7 +227,6 @@ class PlayerConfigsView(ManualListView):
         ]
 
     def _render_action_attr(self, row, action):
-        logger.info(action)
         return [
             {
                 "key": "styleselected",
