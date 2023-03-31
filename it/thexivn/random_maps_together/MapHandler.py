@@ -37,9 +37,8 @@ class MapHandler:
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
         random_map = self._next_map or self.map_generator.get_map()
-
         self._next_map = None
-        map_to_remove = self._map_manager.current_map
+
         self.pre_patch_ice = (TAG_BOBSLEIGH in random_map.tags or TAG_ICE in random_map.tags) and random_map.last_update < ICE_CHANGE_DATE
         logger.info(f'TAGS: {random_map.tags} UPDATE: {random_map.last_update}')
         logger.info(f'uploading {random_map.uuid}.Map.Gbx to the server...')
@@ -48,11 +47,10 @@ class MapHandler:
         await self._map_manager.update_list(full_update=True, detach_fks=True)
         logger.info('UPLOAD COMPLETE')
         await self._map_manager.set_current_map(random_map.uuid)
-        if map_to_remove:
-            await self._map_manager.remove_map(map_to_remove, delete_file=True)
+        await self.remove_map(await self.app.instance.gbx("GetCurrentMapInfo"))
 
+        self.map_generator.played_maps.append(random_map.uuid)
         logger.info('map loaded')
-        self.map_generator.played_maps.append(self.active_map.uid)
 
     async def pre_load_next_map(self):
         try:
@@ -63,33 +61,22 @@ class MapHandler:
 
     async def load_hub(self):
         logger.info('loading HUB map ...')
-        if await self._map_exists(self._hub_map):
+
+        current_map = await self.app.instance.gbx("GetCurrentMapInfo")
+
+        if current_map["UId"] == self._hub_map:
+            logger.info("Current map is already HUB map")
+        elif await self._map_exists(self._hub_map):
             logger.info('HUB map was already loaded')
             await self._map_manager.set_current_map(self._hub_map)
-            return
-
-        content = self.map_generator.get_map_content(self._hub_id)
-        try:
-            await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_id}.Map.Gbx', overwrite=True)
-            await self._map_manager.update_list(True, True)
-            await self._map_manager.set_current_map(self._hub_map)
-            logger.info("Welcome to the HUB")
-        except Exception as e:
-            logger.error('Exception while loading the HUB', exc_info=e)
-
-    async def remove_loaded_map(self):
-        if self.active_map:
-            uuid = self.active_map.uid
-            if uuid == self._hub_map:
-                logger.info('Skip deletion of HUB MAP')
-                return
-            try:
-                await self._map_manager.remove_map(f'{uuid}.Map.Gbx', delete_file=True)
-            except Exception as e:
-                logger.warning('Impossible to remove map %s', await self.active_map.uid)
-                logger.error('Exception: ', exc_info=e)
         else:
-            logger.warning('impossible to remove map without UUID')
+            content = self.map_generator.get_map_content(self._hub_id)
+            await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_map}.Map.Gbx', overwrite=True)
+            await self._map_manager.set_current_map(self._hub_map)
+
+        await self._map_manager.update_list(True, True)
+        await self.remove_unused_maps()
+        logger.info("Welcome to the HUB")
 
     def get_medal_by_time(self, race_time: int):
         if self.active_map:
@@ -103,9 +90,20 @@ class MapHandler:
                 return Medals.BRONZE
 
     async def _map_exists(self, uuid: str) -> bool:
-        try:
-            db_map = await self._map_manager.get_map(uuid)
-            return await self._storage.driver.exists(db_map.file)
-        except MapNotFound as not_found:
-            logger.exception('Failed to get MAP %s', uuid, exc_info=not_found)
-            return False
+        return next(
+            (map for map in await self.app.instance.gbx("GetMapList", 100, 0) if map["UId"] == uuid),
+            None
+        )
+
+    async def remove_map(self, map):
+        map = await self._map_exists(map["UId"])
+        if map:
+            await self.app.instance.gbx("RemoveMap", map["FileName"])
+
+
+    async def remove_unused_maps(self):
+        current_map = await self.app.instance.gbx("GetCurrentMapInfo")
+
+        for map in await self.app.instance.gbx("GetMapList", 100, 0):
+            if await self._map_exists(map["UId"]) and map["UId"] != self._hub_map:
+                await self.app.instance.gbx("RemoveMap", map["FileName"])
