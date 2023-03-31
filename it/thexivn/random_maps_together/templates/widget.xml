@@ -13,6 +13,9 @@
         {% endif %}
     </frame>
     {% if ui_tools_enabled %}
+            <label pos="70 -2.5" z-index="1" text="$sPlayer Configs" textsize="2.5" textfont="RajdhaniMono"
+                    halign="left" valign="center" style="CardButtonSmallS"
+                    id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_toggle_player_settings" />
         {% if game_started %}
             <frame pos="0 -{{size_y}}" size="{{size_x}} 6">
                 <quad pos="0 0" size="{{size_x}} 6" z-index="0" bgcolor="44664770"/>
@@ -23,8 +26,8 @@
                     <label {{btn_pos_size(0) | safe}} z-index="1" text="$sStop" textsize="2.5" textfont="RajdhaniMono"
                            halign="left" valign="center" style="CardButtonSmallS"
                            id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_stop_rmt" />
-                    {% if skip_medal_visible %}
-                        <label pos="35 -3" size="25 5" z-index="1" text="Take {{settings.skip_medal.name}} Medal" textsize="2.5" textfont="RajdhaniMono"
+                    {% if skip_medal %}
+                        <label pos="35 -3" size="25 5" z-index="1" text="Take {{skip_medal.name}} Medal" textsize="2.5" textfont="RajdhaniMono"
                                halign="left" valign="center" style="CardButtonSmallS"
                                id="rmt_gold_btn" scriptevents="1" action="{{ id }}__ui_skip_medal" />
                     {% elif skip_pre_patch_ice_visible %}
@@ -55,22 +58,22 @@
                 <label pos="48 -1.5" z-index="1" text="{% if settings.game_mode.value == 'Random Map Survival' %}$000{% endif %}Random Map Survival" textsize="2.5" textfont="RajdhaniMono" halign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_set_game_mode_rms"/>
             </frame>
             {% if settings.game_mode.value == "Random Map Challenge" %}
-                <frame pos="0 -{{size_y + size_y}}" size="{{size_x}} 47">
-                    <quad pos="0 0" size="{{size_x}} 47" z-index="0" bgcolor="44664770"/>
+                <frame pos="0 -{{size_y + size_y}}" size="{{size_x}} 52">
+                    <quad pos="0 0" size="{{size_x}} 52" z-index="0" bgcolor="44664770"/>
 
                     <label pos="0.6 -3.0" size="14 5" z-index="1" text="$sMap Generator:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
-                    <label pos="15 -3.0" z-index="1" text="{% if settings.map_generator.value == 'RANDOM' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
-                    <label pos="27 -3.0" z-index="1" text="{% if settings.map_generator.value == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
-                    <label pos="39 -3.0" z-index="1" text="{% if settings.map_generator.value == 'MAP PACK' %}$000{% endif %}Map Pack" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
-                    {% if settings.map_generator.value == 'MAP PACK' %}
-                    <entry pos="51.7 -3.0" z-index="1" name="map_pack_id" selecttext="1" textsize="1" size="14 5.2" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    <label pos="15 -3.0" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'MapGenerator' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
+                    <label pos="27 -3.0" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
+                    <label pos="39 -3.0" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'MapPack' %}$000{% endif %}Map Pack" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
+                    {% if settings.map_generator.__class__.__name__ == 'MapPack' %}
+                    <label pos="51.7 -3.0" z-index="1" textsize="1" size="14 5.2" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" text="{{ settings.map_generator.map_pack_id }}" action="{{ id }}__ui_set_map_pack_id"/>
                     {% endif %}
 
                     <label pos="0.6 -10.4" size="14.0 5" z-index="1" text="$sTime Limit:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
-                    <label pos="15 -10.4" z-index="1" text="{% if settings.game_time_seconds == 1800 %}$000{% endif %}30m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_30m"/>
-                    <label pos="27 -10.4" z-index="1" text="{% if settings.game_time_seconds == 3600 %}$000{% endif %}1h" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_1h"/>
-                    <label pos="39 -10.4" z-index="1" text="{% if settings.game_time_seconds == 7200 %}$000{% endif %}2h" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_2h"/>
-                    <entry pos="51.7 -10.4" z-index="1" name="game_time_seconds" selecttext="1" textsize="2.5" size="11.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" default="{{ settings.game_time_seconds }}"/>
+                    <label pos="15 -10.4" z-index="1" text="{% if settings.game_time_seconds == 1800 %}$000{% endif %}30m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_1800"/>
+                    <label pos="27 -10.4" z-index="1" text="{% if settings.game_time_seconds == 3600 %}$000{% endif %}1h" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_3600"/>
+                    <label pos="39 -10.4" z-index="1" text="{% if settings.game_time_seconds == 7200 %}$000{% endif %}2h" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_7200"/>
+                    <label pos="51.7 -10.4" z-index="1" textsize="2.5" size="11.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" text="{{ settings.game_time_seconds }}" scriptevents="1" action="{{ id }}__ui_set_game_time_custom"/>
 
                     <label pos="0.6 -17.8" size="14.0 5" z-index="1" text="$sGoal Medal:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <label pos="15 -17.8" z-index="1" text="{% if settings.goal_medal.name == 'AUTHOR' %}$000{% endif %}Author" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_goal_medal_author"/>
@@ -82,45 +85,48 @@
                     <label pos="27 -25.2" z-index="1" text="{% if settings.skip_medal.name == 'SILVER' %}$000{% endif %}Silver" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_silver"/>
                     <label pos="39 -25.2" z-index="1" text="{% if settings.skip_medal.name == 'BRONZE' %}$000{% endif %}Bronze" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_bronze"/>
 
-                    <label pos="{{cbl_pos(1)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sInfinite Skips" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_infinite_skips"/>
-                    <quad pos="{{cb_pos(1)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.infinite_free_skips | int }}" scriptevents="1" action="{{ id }}__ui_toggle_infinite_skips"/>
+                    <label pos="{{cbl_pos(1)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sPlayers enabled by default" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_enabled_players"/>
+                    <quad pos="{{cb_pos(1)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.enabled | int }}" scriptevents="1" action="{{ id }}__ui_toggle_enabled_players"/>
 
-                    <label pos="{{cbl_pos(2)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sAllow Pausing" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
-                    <quad pos="{{cb_pos(2)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.allow_pausing | int }}" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
+                    <label pos="{{cbl_pos(2)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sInfinite Skips" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_infinite_skips"/>
+                    <quad pos="{{cb_pos(2)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.infinite_free_skips | int }}" scriptevents="1" action="{{ id }}__ui_toggle_infinite_skips"/>
 
-                    <label pos="1 -44" size="30 5" z-index="1" text="$sStart RMT" textsize="2.5" textfont="RajdhaniMono"
+                    <label pos="{{cbl_pos(3)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sAllow Pausing" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
+                    <quad pos="{{cb_pos(3)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.allow_pausing | int }}" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
+
+                    <label pos="1 -49" size="30 5" z-index="1" text="$sStart RMT" textsize="2.5" textfont="RajdhaniMono"
                         halign="left" valign="center" style="CardButtonSmall"
                         id="rmt_stop_btn" scriptevents="1" action="{{ id }}__ui_start_rmt" />
                 </frame>
             {% elif settings.game_mode.value == "Random Map Survival" %}
-                <frame pos="0 -{{size_y + size_y}}" size="{{size_x}} 55">
-                    <quad pos="0 0" size="{{size_x}} 55" z-index="0" bgcolor="44664770"/>
+                <frame pos="0 -{{size_y + size_y}}" size="{{size_x}} 60">
+                    <quad pos="0 0" size="{{size_x}} 60" z-index="0" bgcolor="44664770"/>
 
-                    <label pos="0.6 -3" size="14 5" z-index="1" text="$sMap Generator:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
-                    <label pos="15 -3" z-index="1" text="{% if settings.map_generator.value == 'RANDOM' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
-                    <label pos="27 -3" z-index="1" text="{% if settings.map_generator.value == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
-                    <label pos="39 -3" z-index="1" text="{% if settings.map_generator.value == 'MAP PACK' %}$000{% endif %}Map Pack" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
-                    {% if settings.map_generator.value == 'MAP PACK' %}
-                    <entry pos="51.7 -3" z-index="1" name="map_pack_id" selecttext="1" textsize="1" size="14 5.2" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    <label pos="0.6 -3" size="24 5" z-index="1" text="$sMap Generator:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
+                    <label pos="15 -3" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'MapGenerator' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
+                    <label pos="27 -3" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
+                    <label pos="39 -3" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'MapPack' %}$000{% endif %}Map Pack" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
+                    {% if settings.map_generator.__class__.__name__ == 'MapPack' %}
+                    <label pos="51.7 -3" z-index="1" texttextsize="1" size="14 5.2" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" text="{{ settings.map_generator.map_pack_id }}" action="{{ id }}__ui_set_map_pack_id"/>
                     {% endif %}
 
                     <label pos="0.6 -10.4" size="14 5" z-index="1" text="$sTime Limit:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
-                    <label pos="15 -10.4" z-index="1" text="{% if settings.game_time_seconds == 900 %}$000{% endif %}15m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_15m"/>
-                    <label pos="27 -10.4" z-index="1" text="{% if settings.game_time_seconds == 1800 %}$000{% endif %}30m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_30m"/>
-                    <label pos="39 -10.4" z-index="1" text="{% if settings.game_time_seconds == 3600 %}$000{% endif %}1h" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_1h"/>
-                    <entry pos="51.7 -10.4" z-index="1" name="game_time_seconds" selecttext="1" textsize="2.5" size="10.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" default="{{ settings.game_time_seconds }}"/>
+                    <label pos="15 -10.4" z-index="1" text="{% if settings.game_time_seconds == 900 %}$000{% endif %}15m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_900"/>
+                    <label pos="27 -10.4" z-index="1" text="{% if settings.game_time_seconds == 1800 %}$000{% endif %}30m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_1800"/>
+                    <label pos="39 -10.4" z-index="1" text="{% if settings.game_time_seconds == 3600 %}$000{% endif %}1h" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_3600"/>
+                    <label pos="51.7 -10.4" z-index="1" textsize="2.5" size="10.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" text="{{ settings.game_time_seconds }}" scriptevents="1" action="{{ id }}__ui_set_game_time_custom"/>
 
                     <label pos="0.6 -17.8" size="14 5" z-index="1" text="$sSkip Penalty:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
-                    <label pos="15 -17.8" z-index="1" text="{% if settings.skip_penalty_seconds == 30 %}$000{% endif %}30s" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_penalty_30s"/>
-                    <label pos="27 -17.8" z-index="1" text="{% if settings.skip_penalty_seconds == 60 %}$000{% endif %}1m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_penalty_1m"/>
-                    <label pos="39 -17.8" z-index="1" text="{% if settings.skip_penalty_seconds == 120 %}$000{% endif %}2m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_penalty_2m"/>
-                    <entry pos="51.7 -17.8" z-index="1" name="skip_penalty_seconds" selecttext="1" textsize="2.5" size="10.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" default="{{ settings.skip_penalty_seconds }}"/>
+                    <label pos="15 -17.8" z-index="1" text="{% if settings.skip_penalty_seconds == 30 %}$000{% endif %}30s" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_penalty_30"/>
+                    <label pos="27 -17.8" z-index="1" text="{% if settings.skip_penalty_seconds == 60 %}$000{% endif %}1m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_penalty_60"/>
+                    <label pos="39 -17.8" z-index="1" text="{% if settings.skip_penalty_seconds == 120 %}$000{% endif %}2m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_penalty_120"/>
+                    <label pos="51.7 -17.8" z-index="1" textsize="2.5" size="10.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" text="{{ settings.skip_penalty_seconds }}" scriptevents="1" action="{{ id }}__ui_set_skip_penalty_custom"/>
 
                     <label pos="0.6 -25.2" size="14 5" z-index="1" text="$sGoal Bonus:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
-                    <label pos="15 -25.2" z-index="1" text="{% if settings.goal_bonus_seconds == 60 %}$000{% endif %}1m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_goal_bonus_1m"/>
-                    <label pos="27 -25.2" z-index="1" text="{% if settings.goal_bonus_seconds == 180 %}$000{% endif %}3m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_goal_bonus_3m"/>
-                    <label pos="39 -25.2" z-index="1" text="{% if settings.goal_bonus_seconds == 300 %}$000{% endif %}5m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_goal_bonus_5m"/>
-                    <entry pos="51.7 -25.2" z-index="1" name="goal_bonus_seconds" selecttext="1" textsize="2.5" size="10.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" default="{{ settings.goal_bonus_seconds }}"/>
+                    <label pos="15 -25.2" z-index="1" text="{% if settings.goal_bonus_seconds == 60 %}$000{% endif %}1m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_goal_bonus_60"/>
+                    <label pos="27 -25.2" z-index="1" text="{% if settings.goal_bonus_seconds == 180 %}$000{% endif %}3m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_goal_bonus_180"/>
+                    <label pos="39 -25.2" z-index="1" text="{% if settings.goal_bonus_seconds == 300 %}$000{% endif %}5m" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_goal_bonus_300"/>
+                    <label pos="51.7 -25.2" z-index="1" textsize="2.5" size="10.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" text="{{ settings.goal_bonus_seconds }}" scriptevents="1" action="{{ id }}__ui_set_goal_bonus_custom"/>
 
                     <label pos="0.6 -32.6" size="14 5" z-index="1" text="$sGoal Medal:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <label pos="15 -32.6" z-index="1" text="{% if settings.goal_medal.name == 'AUTHOR' %}$000{% endif %}Author" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_goal_medal_author"/>
@@ -132,10 +138,13 @@
                     <label pos="27 -40" z-index="1" text="{% if settings.skip_medal.name == 'SILVER' %}$000{% endif %}Silver" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_silver"/>
                     <label pos="39 -40" z-index="1" text="{% if settings.skip_medal.name == 'BRONZE' %}$000{% endif %}Bronze" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_skip_medal_bronze"/>
 
-                    <label pos="{{cbl_pos(3.5)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sAllow Pausing" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
-                    <quad pos="{{cb_pos(3.5)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.allow_pausing | int }}" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
+                    <label pos="{{cbl_pos(3.5)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sPlayers enabled by default" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_enabled_players"/>
+                    <quad pos="{{cb_pos(3.5)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.enabled | int }}" scriptevents="1" action="{{ id }}__ui_toggle_enabled_players"/>
 
-                    <label pos="1 -52" size="30 5" z-index="1" text="$sStart RMT" textsize="2.5" textfont="RajdhaniMono"
+                    <label pos="{{cbl_pos(4.5)}}" size="{{size_x * 0.7}} 5" z-index="1" text="$sAllow Pausing" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
+                    <quad pos="{{cb_pos(4.5)}}" z-index="1" size="6 6" halign="left" valign="center" style="Icons64x64_1" substyle="Check" styleselected="{{ settings.allow_pausing | int }}" scriptevents="1" action="{{ id }}__ui_toggle_allow_pausing"/>
+
+                    <label pos="1 -57" size="30 5" z-index="1" text="$sStart RMT" textsize="2.5" textfont="RajdhaniMono"
                         halign="left" valign="center" style="CardButtonSmall"
                         id="rmt_stop_btn" scriptevents="1" action="{{ id }}__ui_start_rmt" />
                 </frame>

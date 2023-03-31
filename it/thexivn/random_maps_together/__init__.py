@@ -21,7 +21,7 @@ class RandomMapsTogetherApp(AppConfig):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.app_settings: Configurations = RMCConfig()
+        self.app_settings: Configurations = RMCConfig(self)
         self.map_handler = MapHandler(self, self.instance.map_manager, self.instance.storage)
         self.instance.chat()
         self.widget = RandomMapsTogetherView(self)
@@ -34,7 +34,7 @@ class RandomMapsTogetherApp(AppConfig):
         await super().on_init()
 
         await self.rmt_game.on_init()
-        tm_callbacks.finish.register(self.rmt_game.on_map_finsh)
+        tm_callbacks.finish.register(self.rmt_game.on_map_finish)
         mania_callback.map.map_begin.register(self.rmt_game.map_begin_event)
         mania_callback.flow.round_end.register(self.rmt_game.map_end_event)
         mania_callback.flow.match_end__end.register(self.rmt_game.hide_custom_scoreboard)
@@ -72,7 +72,7 @@ class RandomMapsTogetherApp(AppConfig):
 
     async def on_stop(self):
         await super().on_stop()
-        tm_callbacks.finish.unregister(self.rmt_game.on_map_finsh)
+        tm_callbacks.finish.unregister(self.rmt_game.on_map_finish)
         mania_callback.map.map_begin.unregister(self.rmt_game.map_begin_event)
         mania_callback.flow.round_end.unregister(self.rmt_game.map_end_event)
         mania_callback.flow.match_end__end.unregister(self.rmt_game.hide_custom_scoreboard)
@@ -88,6 +88,12 @@ class RandomMapsTogetherApp(AppConfig):
     async def player_connect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
         if not is_spectator:
             await self.widget.display(player)
+            if self.rmt_game._game_state.game_is_in_progress:
+                self.app_settings.update_player_configs()
+
+    async def player_disconnect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
+        if not is_spectator:
+            self.app_settings.player_configs.pop(player.login, None)
 
     async def ref(self, player: Player, *args, **kwargs):
         await self.widget.display(player)

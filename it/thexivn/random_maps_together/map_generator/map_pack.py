@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class MapPack(MapGenerator):
-    def __init__(self, map_pack_id):
+    def __init__(self, map_pack_id=None):
         super().__init__()
         self.map_pack_id = map_pack_id
 

@@ -7,18 +7,18 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
+from pyplanet.views.generics.alert import AlertView, PromptView
 
 from . import MapHandler
 from .Data.Configurations import RMCConfig, RMSConfig
 from .Data.GameScore import GameScore
 from .Data.GameState import GameState
 from .Data.Medals import Medals
-from .Data.GameModes import GameModes
-from .map_generator import MapGenerator, MapGenerators
+from .map_generator import MapGenerator
 from .map_generator.map_pack import MapPack
 from .map_generator.totd import TOTD
 
-from .views import RandomMapsTogetherView, RMTScoreBoard
+from .views import RandomMapsTogetherView, RMTScoreBoard, PlayerConfigsView
 
 BIG_MESSAGE = 'Race_BigMessage'
 
@@ -56,11 +56,11 @@ class RMTGame:
         self._game_state = GameState()
         self._score_ui.set_score(self._score)
         self._score_ui.set_game_state(self._game_state)
-        self._scoreboard_ui = RMTScoreBoard(self._score_ui.app, self._score, self._game_state, self)
+        self._scoreboard_ui = RMTScoreBoard(app, self._score, self._game_state, self)
+        self._player_configs_ui = PlayerConfigsView(app)
         self._tm_ui = tm_ui_manager
         self._time_left_at_pause = 83
         self._time_at_pause = py_time.time()
-
         logger.info("RMT Game initialized")
 
     async def on_init(self):
@@ -83,14 +83,17 @@ class RMTGame:
         self._score_ui.subscribe("ui_set_game_time_1800", self.set_game_time_seconds)
         self._score_ui.subscribe("ui_set_game_time_3600", self.set_game_time_seconds)
         self._score_ui.subscribe("ui_set_game_time_7200", self.set_game_time_seconds)
+        self._score_ui.subscribe("ui_set_game_time_custom", self.set_game_time_seconds)
 
         self._score_ui.subscribe("ui_set_goal_bonus_60", self.set_goal_bonus_seconds)
         self._score_ui.subscribe("ui_set_goal_bonus_180", self.set_goal_bonus_seconds)
         self._score_ui.subscribe("ui_set_goal_bonus_300", self.set_goal_bonus_seconds)
+        self._score_ui.subscribe("ui_set_goal_bonus_custom", self.set_goal_bonus_seconds)
 
         self._score_ui.subscribe("ui_set_skip_penalty_30", self.set_skip_penalty_seconds)
         self._score_ui.subscribe("ui_set_skip_penalty_60", self.set_skip_penalty_seconds)
         self._score_ui.subscribe("ui_set_skip_penalty_120", self.set_skip_penalty_seconds)
+        self._score_ui.subscribe("ui_set_skip_penalty_custom", self.set_skip_penalty_seconds)
 
         self._score_ui.subscribe("ui_set_goal_medal_author", self.set_goal_medal)
         self._score_ui.subscribe("ui_set_goal_medal_gold", self.set_goal_medal)
@@ -103,6 +106,7 @@ class RMTGame:
         self._score_ui.subscribe("ui_set_map_generator_random", self.set_map_generator)
         self._score_ui.subscribe("ui_set_map_generator_totd", self.set_map_generator)
         self._score_ui.subscribe("ui_set_map_generator_map_pack", self.set_map_generator)
+        self._score_ui.subscribe("ui_set_map_pack_id", self.set_map_pack_id)
 
         self._score_ui.subscribe("ui_toggle_infinite_skips", self.toggle_infinite_skips)
         self._score_ui.subscribe("ui_toggle_allow_pausing", self.toggle_allow_pausing)
@@ -110,17 +114,21 @@ class RMTGame:
         self._score_ui.subscribe("ui_set_game_mode_rmc", self.set_game_mode_rmc)
         self._score_ui.subscribe("ui_set_game_mode_rms", self.set_game_mode_rms)
 
+        self._score_ui.subscribe("ui_toggle_enabled_players", self.toggle_enabled_players)
+
+        self._score_ui.subscribe("ui_toggle_player_settings", self.toggle_player_settings)
+
         asyncio.ensure_future(self.update_ui_loop())
 
     async def update_ui_loop(self):
         while True:
             await asyncio.sleep(0.25)
-            if not self._game_state.game_is_in_progress:
-                continue
-            if self._scoreboard_ui._is_global_shown:
-                await self._scoreboard_ui.display()
-            elif len(self._scoreboard_ui._is_player_shown) > 0:
-                await self._scoreboard_ui.display(self._scoreboard_ui._is_player_shown.keys())
+            if self._game_state.game_is_in_progress:
+                if self._scoreboard_ui._is_global_shown:
+                    await self._scoreboard_ui.display()
+                elif len(self._scoreboard_ui._is_player_shown) > 0:
+                    await self._scoreboard_ui.display(self._scoreboard_ui._is_player_shown.keys())
+            self.app.app_settings.update_player_configs()
 
     async def command_start_rmt(self, player: Player, _, values, *args, **kwargs):
         if player.level < self.app.app_settings.min_level_to_start:
@@ -131,27 +139,11 @@ class RMTGame:
         await self._scoreboard_ui.display()
 
         if self._game_state.is_hub_stage():
-            self.app.app_settings.game_time_seconds = int(values["game_time_seconds"])
-            if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_SURVIVAL:
-                self.app.app_settings.goal_bonus_seconds = int(values["goal_bonus_seconds"])
-                self.app.app_settings.skip_penalty_seconds = int(values["skip_penalty_seconds"])
-
-            self._score.goal_medal = self.app.app_settings.goal_medal
-            self._score.skip_medal = self.app.app_settings.skip_medal
-
-            if self.app.app_settings.map_generator == MapGenerators.RANDOM:
-                self._map_handler.map_generator = MapGenerator()
-            elif self.app.app_settings.map_generator == MapGenerators.MAP_PACK:
-                if values.get("map_pack_id"):
-                    self._map_handler.map_generator = MapPack(int(values.get("map_pack_id")))
-                else:
-                    await self._chat(f"{self.app.app_settings.game_mode.value} RMT failed to start: Missing map pack ID")
-                    return
-            elif self.app.app_settings.map_generator == MapGenerators.TOTD:
-                self._map_handler.map_generator = TOTD()
-
+            self.app.app_settings.update_player_configs()
+            self._map_handler.map_generator = self.app.app_settings.map_generator
             self._game_state.set_start_new_state()
             await self._chat(f'{player.nickname} started new {self.app.app_settings.game_mode.value}, loading next map ...')
+            logger.info(self.app.app_settings.map_generator)
             self._rmt_starter_player = player
             self._time_left = self.app.app_settings.game_time_seconds
             self._mode_settings[S_TIME_LIMIT] = self._time_left
@@ -231,7 +223,6 @@ class RMTGame:
         logger.info("MAP end")
         await self.set_original_scoreboard_visible(False)
         if self._game_state.is_game_stage():
-            self._game_state.skip_medal_available = False
             self._game_state.skip_medal_player = None
             self._game_state.skip_medal = None
             self._score_ui.ui_controls_visible = False
@@ -246,9 +237,9 @@ class RMTGame:
                 await self._mode_manager.update_settings(self._mode_settings)
 
 
-    async def on_map_finsh(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow,
+    async def on_map_finish(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow,
                            is_end_race: bool, is_end_lap, raw, *args, **kwargs):
-        logger.info(f'[on_map_finsh] {player.nickname} has finished the map with time: {race_time}ms')
+        logger.info(f'[on_map_finish] {player.nickname} has finished the map with time: {race_time}ms')
         if self._game_state.is_game_stage():
             await _lock.acquire()  # lock to avoid multiple AT before next map is loaded
             if self._game_state.current_map_completed:
@@ -269,7 +260,9 @@ class RMTGame:
                 logger.info(f'[on_map_finish] Final time check for {self.app.app_settings.goal_medal.name}')
                 race_medal = self._map_handler.get_medal_by_time(race_time)
                 if race_medal:
-                    if race_medal >= self._score.goal_medal:
+                    if race_medal >= self.app.app_settings.player_configs[player.login].goal_medal:
+                        if not self.app.app_settings.player_configs[player.login].enabled:
+                            return await self._chat(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
                         logger.info(f'[on_map_finish {self.app.app_settings.goal_medal.name} acquired')
                         self.app.app_settings.update_time_left(self, goal_medal=True)
                         self._game_state.set_map_completed_state()
@@ -277,15 +270,16 @@ class RMTGame:
                         _lock.release()  # with loading True don't need to lock
                         await self._chat(f'{player.nickname} claimed {race_medal.name}, congratulations!')
                         if await self.load_with_retry():
-                            self._score.inc_medal_count(player, race_medal)
+                            self._score.inc_medal_count(player, race_medal, goal_medal=True)
                             logger.info(f"{self._score.player_finishes[player.login]}")
                             await self._scoreboard_ui.display()
                             await self._score_ui.hide()
                         else:
                             await self.back_to_hub()
-                    elif race_medal >= self._score.skip_medal and not self._game_state.skip_medal_available:
+                    elif race_medal >= self.app.app_settings.player_configs[player.login].skip_medal and not self._game_state.skip_medal:
+                        if not self.app.app_settings.player_configs[player.login].enabled:
+                            return await self._chat(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
                         logger.info(f'[on_map_finish] {race_medal.name} acquired')
-                        self._game_state.skip_medal_available = True
                         self._game_state.skip_medal_player = player
                         self._game_state.skip_medal = race_medal
                         _lock.release()
@@ -303,10 +297,10 @@ class RMTGame:
         if self._game_state.is_paused:
             return await self._chat("Game currently paused", player)
         if self._game_state.skip_command_allowed():
-            if self._game_state.skip_medal_available:
+            if self._game_state.skip_medal:
                 if await self._is_player_allowed_to_manage_running_game(player):
                     self.app.app_settings.update_time_left(self, skip_medal=True)
-                    self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal)
+                    self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal, skip_medal=True)
                     self._game_state.set_map_completed_state()
                     await self._chat(f'{player.nickname} decided to take {self._game_state.skip_medal.name} by {self._game_state.skip_medal_player.nickname} and skip')
                     await self.hide_timer()
@@ -350,7 +344,7 @@ class RMTGame:
     async def command_toggle_pause(self, player: Player, *args, **kwargs):
         if not self.app.app_settings.allow_pausing or not await self._is_player_allowed_to_manage_running_game(player):
             return await self._chat("Cannot toggle pause", player)
-        self._game_state.is_paused = not self._game_state.is_paused
+        self._game_state.is_paused ^= True
         pause_duration = 0
         if self._game_state.is_paused:
             self._time_at_pause = py_time.time()
@@ -380,17 +374,27 @@ class RMTGame:
 
     async def set_goal_bonus_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_bonus_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_bonus_")[1])
+            time_seconds = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_bonus_")[1]
+            if time_seconds == "custom":
+                time_seconds = await self._prompt_for_input(player, "Goal bonus in seconds")
+            self.app.app_settings.goal_bonus_seconds = int(time_seconds)
             await self._score_ui.display()
 
     async def set_skip_penalty_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_penalty_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_penalty_")[1])
+            time_seconds = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_penalty_")[1]
+            if time_seconds == "custom":
+                time_seconds = await self._prompt_for_input(player, "Skip penalty in seconds")
+            self.app.app_settings.skip_penalty_seconds = int(time_seconds)
             await self._score_ui.display()
 
     async def set_game_time_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.game_time_seconds = int(caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_game_time_")[1])
+            time_seconds = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_game_time_")[1]
+            if time_seconds == "custom":
+                time_seconds = await self._prompt_for_input(player, "Game time in seconds")
+
+            self.app.app_settings.game_time_seconds = int(time_seconds)
             await self._score_ui.display()
 
     async def set_goal_medal(self, player: Player, caller, values, **kwargs):
@@ -405,27 +409,49 @@ class RMTGame:
 
     async def toggle_infinite_skips(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.infinite_free_skips = not self.app.app_settings.infinite_free_skips
+            self.app.app_settings.infinite_free_skips ^= True
             await self._score_ui.display()
 
     async def toggle_allow_pausing(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.allow_pausing = not self.app.app_settings.allow_pausing
+            self.app.app_settings.allow_pausing ^= True
             await self._score_ui.display()
 
     async def set_game_mode_rmc(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings = RMCConfig()
+            self.app.app_settings = RMCConfig(self.app)
             await self._score_ui.display()
 
     async def set_game_mode_rms(self, player: Player, *args, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings = RMSConfig()
+            self.app.app_settings = RMSConfig(self.app)
             await self._score_ui.display()
 
     async def set_map_generator(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.map_generator = MapGenerators[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1].upper()]
+            map_generator_string = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1]
+            if map_generator_string == "random":
+                self.app.app_settings.map_generator = MapGenerator()
+            elif map_generator_string == "totd":
+                self.app.app_settings.map_generator = TOTD()
+            elif map_generator_string == "map_pack":
+                self.app.app_settings.map_generator = MapPack()
+            await self._score_ui.display()
+
+    async def set_map_pack_id(self, player, caller, values, **kwargs):
+        if await self._check_player_allowed_to_change_game_settings(player):
+            map_pack_id = await self._prompt_for_input(player, "Map Pack ID")
+            self.app.app_settings.map_generator.map_pack_id = int(map_pack_id)
+            await self._score_ui.display()
+
+    async def toggle_player_settings(self, player, caller, values, **kwargs):
+        if await self._check_player_allowed_to_change_game_settings(player):
+            await self._player_configs_ui.display(player)
+            logger.info(self.app.app_settings.player_configs)
+
+    async def toggle_enabled_players(self, player, caller, values, **kwargs):
+        if await self._check_player_allowed_to_change_game_settings(player):
+            self.app.app_settings.enabled ^= True
             await self._score_ui.display()
 
     async def hide_timer(self):
@@ -459,6 +485,13 @@ class RMTGame:
             if not self._game_state.start_time:
                 self._game_state.start_time = py_time.time()
             self._map_start_time = py_time.time()
+
+    async def _prompt_for_input(self, player, message):
+        prompt_view = PromptView(message)
+        await prompt_view.display([player])
+        input_string = await prompt_view.wait_for_input()
+        await prompt_view.destroy()
+        return input_string
 
     def time_left_str(self):
         tl = self._time_left

@@ -5,11 +5,6 @@ from ..Data.APIMapInfo import APIMapInfo
 
 logger = logging.getLogger(__name__)
 
-class MapGenerators(Enum):
-    RANDOM = "RANDOM"
-    TOTD = "TOTD"
-    MAP_PACK = "MAP PACK"
-
 class MapGenerator:
     def __init__(self):
         self.search_url = "https://trackmania.exchange/mapsearch2/search/"

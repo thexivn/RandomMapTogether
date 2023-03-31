@@ -4,11 +4,13 @@ import time as py_time
 from jinja2 import Template
 
 from pyplanet.views import TemplateView
+from pyplanet.views.generics.list import ManualListView
 from pyplanet.views.generics.widget import TimesWidgetView
 
 from .Data.GameScore import GameScore
 from .Data.GameState import GameState
 from .Data.MedalURLs import MedalURLs
+from .Data.Medals import Medals
 from .Data.GameModes import GameModes
 
 logger = logging.getLogger(__name__)
@@ -85,7 +87,7 @@ class RandomMapsTogetherView(TimesWidgetView):
             data["goal_medal_url"] = MedalURLs[self.app.app_settings.goal_medal.name].value
             data["skip_medal_url"] = MedalURLs[self.app.app_settings.skip_medal.name].value
             data["game_started"] = self._game_state.game_is_in_progress
-            data["skip_medal_visible"] = self._game_state.skip_medal_available
+            data["skip_medal"] = self._game_state.skip_medal
             data["allow_pausing"] = self.app.app_settings.allow_pausing
             if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE:
                 data["free_skip_visible"] = self._game_state.free_skip_available or self.app.app_settings.infinite_free_skips
@@ -144,3 +146,113 @@ class RMTScoreBoard(TemplateView):
             await self.hide([login])
         else:
             await self.display([login])
+
+
+class PlayerConfigsView(ManualListView):
+    app = None
+
+    title = 'Player Configs'
+    template_name = "random_maps_together/player_configs.xml"
+    icon_style = 'Icons128x128_1'
+    icon_substyle = 'Browse'
+
+    data = []
+
+    def __init__(self, app):
+        super().__init__(self)
+        self.app = app
+        self.manager = app.context.ui
+
+    async def get_fields(self):
+        return [
+			{
+				'name': 'Player',
+				'index': 'player_nickname',
+				'sorting': True,
+				'searching': True,
+				'width': 70,
+				'type': 'label',
+			},
+			{
+				'name': 'Player Login',
+				'index': 'player_login',
+				'sorting': True,
+				'searching': True,
+				'width': 70,
+				'type': 'label',
+			},
+			{
+				'name': 'Goal Medal',
+				'index': 'goal_medal',
+				'sorting': True,
+				'searching': False,
+				'width': 30,
+                'action': self._toggle_next_goal_medal
+			},
+			{
+				'name': 'Skip Medal',
+				'index': 'skip_medal',
+				'sorting': True,
+				'searching': False,
+				'width': 30,
+                'action': self._toggle_next_skip_medal
+			},
+		]
+
+    async def get_actions(self):
+        return [
+            {
+                    'name': 'Enabled',
+                    'action': self.action_toggle_enabled_player,
+                    'style': 'Icons64x64_1',
+                    'substyle': 'Check',
+                    'attrs_renderer': self._render_action_attr,
+            },
+        ]
+
+    async def action_toggle_enabled_player(self, player, values, row, **kwargs):
+        self.app.app_settings.player_configs[row["player_login"]].enabled ^= True
+        body = await self.render(player_login=player.login)
+        logger.info(body)
+        await self.refresh(player=player)
+
+    async def get_data(self):
+        self.app.app_settings.update_player_configs()
+        return [
+            {
+                "player_nickname": player_config.player.nickname,
+                "player_login": player_config.player.login,
+                "goal_medal": player_config.goal_medal.name,
+                "skip_medal": player_config.skip_medal.name,
+            }
+            for player_config in sorted(self.app.app_settings.player_configs.values(), key=lambda x: x.player.nickname)
+        ]
+
+    def _render_action_attr(self, row, action):
+        logger.info(action)
+        return [
+            {
+                "key": "styleselected",
+                "value": self.app.app_settings.player_configs[row["player_login"]].enabled
+            }
+        ]
+
+    async def _toggle_next_goal_medal(self, player, values, row, **kwargs):
+        medals = [Medals.AUTHOR, Medals.GOLD, Medals.SILVER]
+        current_index = medals.index(Medals[row["goal_medal"]])
+        if current_index == 2:
+            self.app.app_settings.player_configs[row["player_login"]].goal_medal = medals[0]
+        else:
+            self.app.app_settings.player_configs[row["player_login"]].goal_medal = medals[current_index + 1]
+
+        await self.refresh(player=player)
+
+    async def _toggle_next_skip_medal(self, player, values, row, **kwargs):
+        medals = [Medals.GOLD, Medals.SILVER, Medals.BRONZE]
+        current_index = medals.index(Medals[row["skip_medal"]])
+        if current_index == 2:
+            self.app.app_settings.player_configs[row["player_login"]].skip_medal = medals[0]
+        else:
+            self.app.app_settings.player_configs[row["player_login"]].skip_medal = medals[current_index + 1]
+
+        await self.refresh(player=player)

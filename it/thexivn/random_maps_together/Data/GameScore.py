@@ -20,20 +20,18 @@ class PlayerScoreInfo:
 
 @dataclass
 class GameScore:
-    goal_medal = None
-    skip_medal = None
     total_goal_medals: int = 0
     total_skip_medals: int = 0
     player_finishes: Dict[str, PlayerScoreInfo] = field(default_factory=dict)
 
-    def inc_medal_count(self, player: Player, medal: Medals):
+    def inc_medal_count(self, player: Player, medal: Medals, goal_medal=False, skip_medal=False):
         if not player.login in self.player_finishes:
             self.player_finishes[player.login] = PlayerScoreInfo(player)
 
-        if medal >= self.goal_medal:
+        if goal_medal:
             self.total_goal_medals += 1
             self.player_finishes[player.login].goal_medals += 1
-        elif medal >= self.skip_medal:
+        elif skip_medal:
             self.total_skip_medals += 1
             self.player_finishes[player.login].skip_medals += 1
 

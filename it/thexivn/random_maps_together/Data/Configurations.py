@@ -1,16 +1,32 @@
 from dataclasses import dataclass
 import time as py_time
+from typing import Dict
 
 from .Medals import Medals
 from .GameModes import GameModes
-from ..map_generator import MapGenerators
+from ..map_generator import MapGenerator
+from pyplanet.apps.core.maniaplanet.models import Player
+from pyplanet.apps.config import AppConfig
+
+@dataclass
+class PlayerConfig:
+    player: Player
+    goal_medal: Medals
+    skip_medal: Medals
+    enabled: bool = True
 
 @dataclass
 class Configurations:
+    app: AppConfig
     goal_medal = Medals.AUTHOR
     skip_medal = Medals.GOLD
+    enabled = True
     min_level_to_start = 1
-    map_generator = MapGenerators.RANDOM
+    map_generator = MapGenerator()
+    player_configs: Dict[str, PlayerConfig] = None
+
+    def __post_init__(self):
+        self.update_player_configs()
 
     def set_min_level_to_start(self, old_value: str, value: str):
         level = int(value)
@@ -23,6 +39,17 @@ class Configurations:
 
     def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
         pass
+
+    def update_player_configs(self):
+        if not self.player_configs:
+            self.player_configs = {
+                player.login: PlayerConfig(player, self.goal_medal, self.skip_medal, self.enabled)
+                for player in self.app.instance.player_manager.online
+            }
+        else:
+            for player in self.app.instance.player_manager.online:
+                if not player.login in self.player_configs:
+                    self.player_configs[player.login] = PlayerConfig(player, self.goal_medal, self.skip_medal, self.enabled)
 
 @dataclass
 class RMCConfig(Configurations):
