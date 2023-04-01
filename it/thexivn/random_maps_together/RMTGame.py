@@ -128,10 +128,8 @@ class RMTGame:
 
         if self._game_state.is_hub_stage():
             self.app.app_settings.update_player_configs()
-            self._map_handler.map_generator = self.app.app_settings.map_generator
             self._game_state.set_start_new_state()
             await self._chat(f'{player.nickname} started new {self.app.app_settings.game_mode.value}, loading next map ...')
-            logger.info(self.app.app_settings.map_generator)
             self._rmt_starter_player = player
             self._time_left = self.app.app_settings.game_time_seconds
             self._mode_settings[S_TIME_LIMIT] = self._time_left
@@ -429,6 +427,7 @@ class RMTGame:
             elif map_generator_string == "map_pack":
                 self.app.app_settings.map_generator = MapPack()
                 await self.set_map_pack_id(player, caller, values, **kwargs)
+            asyncio.create_task(background_loading_map(self._map_handler))
             await self._score_ui.display()
 
     async def set_map_pack_id(self, player, caller, values, **kwargs):

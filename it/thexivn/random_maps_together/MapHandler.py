@@ -27,7 +27,6 @@ class MapHandler:
         self.active_map: Map = None
         self.pre_patch_ice = False
         self._next_map: Optional[APIMapInfo] = None
-        self.map_generator = MapGenerator()
 
     async def await_next_map(self):
         while self._next_map is None:
@@ -36,7 +35,7 @@ class MapHandler:
 
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
-        random_map = self._next_map or self.map_generator.get_map()
+        random_map = self._next_map or self.app.app_settings.map_generator.get_map()
         self._next_map = None
 
         map_to_remove = await self.app.instance.gbx("GetCurrentMapInfo")
@@ -52,12 +51,12 @@ class MapHandler:
 
         await self.remove_map(map_to_remove)
 
-        self.map_generator.played_maps.append(random_map.uuid)
+        self.app.app_settings.map_generator.played_maps.append(random_map.uuid)
         logger.info('map loaded')
 
     async def pre_load_next_map(self):
         try:
-            self._next_map = self.map_generator.get_map()
+            self._next_map = self.app.app_settings.map_generator.get_map()
         except:
             self._next_map = None
             logger.warning('Preload failed')
@@ -73,7 +72,7 @@ class MapHandler:
             logger.info('HUB map was already loaded')
             await self._map_manager.set_current_map(self._hub_map)
         else:
-            content = self.map_generator.get_map_content(self._hub_id)
+            content = self.app.app_settings.map_generator.get_map_content(self._hub_id)
             await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_map}.Map.Gbx', overwrite=True)
             await self._map_manager.update_list(full_update=True, detach_fks=True)
             await self._map_manager.set_current_map(self._hub_map)
