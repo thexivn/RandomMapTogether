@@ -183,7 +183,7 @@ class RMTGame:
             self._score.rest()
             await self._score_ui.hide()
             await self._map_handler.load_hub()
-            await background_loading_map(self._map_handler)
+            asyncio.create_task(background_loading_map(self._map_handler))
 
             self._rmt_starter_player = None
             logger.info("Back to HUB completed")
