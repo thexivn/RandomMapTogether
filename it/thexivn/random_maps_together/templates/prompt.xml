@@ -1,0 +1,20 @@
+<frame pos="0 0" z-index="900">
+  <quad pos="0 0" size="320 180" halign="center" valign="center" style="Bgs1" substyle="BgDialogBlur" z-index="500" />
+  <quad pos="0 38" size="156.5 8" halign="center" style="Bgs1InRace" substyle="BgGlow2" z-index="520" />
+  <quad size="150 67" halign="center" valign="center" style="Bgs1InRace" substyle="BgWindow2" z-index="510" />
+  <quad pos="0 -34" size="150 2" halign="center" style="Bgs1InRace" substyle="BgMetalBar" z-index="520" />
+
+  <frame z-index="550">
+    {% block body %}
+      <label pos="0 11" size="135 24" halign="center" valign="center2" textsize="2" textcolor="FFF" autonewline="1" text="{{ message }} $f90{{ errors }}" z-index="560" />
+      {% if entry %}
+      <entry pos="0 -10" size="135 7" halign="center" valign="center2" textsize="2" textcolor="FFF" default="{{ default }}" name="prompt_value" z-index="560" />
+      {% endif %}
+
+      {% for button in buttons %}
+        <label pos={% if buttons | length % 2 == 0 %}"{{ (buttons | length) / 2 * -30 + 30 * loop.index0 }} {{ -25 if entry else -10 }}"{% else %}"{{ (buttons | length - 1) / 2 * -30 + 30 * loop.index0 }} {{ -25 if entry else -10 }}"{% endif %} style="CardButtonSmallS" valign="center" halign="center" text="{{ button.name }}" translate="1" action="{{ id }}__button_{{ loop.index0 }}" />
+      {% endfor %}
+      <label pos="0 -40" style="CardButtonMedium" valign="center" halign="center" text="OK" translate="1" action="{{ id }}__button_ok" />
+    {% endblock %}
+  </frame>
+</frame>

@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Dict, Optional
 import time as py_time
 from jinja2 import Template
@@ -6,6 +7,7 @@ from jinja2 import Template
 from pyplanet.views import TemplateView
 from pyplanet.views.generics.list import ManualListView
 from pyplanet.views.generics.widget import TimesWidgetView
+from pyplanet.views.generics.alert import AlertView
 
 from .Data.GameScore import GameScore
 from .Data.GameState import GameState
@@ -165,39 +167,39 @@ class PlayerConfigsView(ManualListView):
 
     async def get_fields(self):
         return [
-			{
-				'name': 'Player',
-				'index': 'player_nickname',
-				'sorting': True,
-				'searching': True,
-				'width': 70,
-				'type': 'label',
-			},
-			{
-				'name': 'Player Login',
-				'index': 'player_login',
-				'sorting': True,
-				'searching': True,
-				'width': 70,
-				'type': 'label',
-			},
-			{
-				'name': 'Goal Medal',
-				'index': 'goal_medal',
-				'sorting': True,
-				'searching': False,
-				'width': 30,
-                'action': self._toggle_next_goal_medal
-			},
-			{
-				'name': 'Skip Medal',
-				'index': 'skip_medal',
-				'sorting': True,
-				'searching': False,
-				'width': 30,
-                'action': self._toggle_next_skip_medal
-			},
-		]
+            {
+                'name': 'Player',
+                'index': 'player_nickname',
+                'sorting': True,
+                'searching': True,
+                'width': 70,
+                'type': 'label',
+            },
+            {
+                'name': 'Player Login',
+                'index': 'player_login',
+                'sorting': True,
+                'searching': True,
+                'width': 70,
+                'type': 'label',
+            },
+            {
+                'name': 'Goal Medal',
+                'index': 'goal_medal',
+                'sorting': True,
+                'searching': False,
+                'width': 30,
+                'action': self._prompt_for_goal_medal
+            },
+            {
+                'name': 'Skip Medal',
+                'index': 'skip_medal',
+                'sorting': True,
+                'searching': False,
+                'width': 30,
+                'action': self._prompt_for_skip_medal
+            },
+        ]
 
     async def get_actions(self):
         return [
@@ -234,22 +236,95 @@ class PlayerConfigsView(ManualListView):
             }
         ]
 
-    async def _toggle_next_goal_medal(self, player, values, row, **kwargs):
-        medals = [Medals.AUTHOR, Medals.GOLD, Medals.SILVER]
-        current_index = medals.index(Medals[row["goal_medal"]])
-        if current_index == 2:
-            self.app.app_settings.player_configs[row["player_login"]].goal_medal = medals[0]
-        else:
-            self.app.app_settings.player_configs[row["player_login"]].goal_medal = medals[current_index + 1]
+    async def _prompt_for_goal_medal(self, player, values, row, **kwargs):
+        buttons = [
+            {"name": medal.name, "value": medal}
+            for medal in [Medals.AUTHOR, Medals.GOLD, Medals.SILVER]
+        ]
+
+        medal = await prompt_for_input(player, "Goal Medal", buttons=buttons, entry=False)
+        self.app.app_settings.player_configs[row["player_login"]].goal_medal = medal
 
         await self.refresh(player=player)
 
-    async def _toggle_next_skip_medal(self, player, values, row, **kwargs):
-        medals = [Medals.GOLD, Medals.SILVER, Medals.BRONZE]
-        current_index = medals.index(Medals[row["skip_medal"]])
-        if current_index == 2:
-            self.app.app_settings.player_configs[row["player_login"]].skip_medal = medals[0]
-        else:
-            self.app.app_settings.player_configs[row["player_login"]].skip_medal = medals[current_index + 1]
+    async def _prompt_for_skip_medal(self, player, values, row, **kwargs):
+        buttons = [
+            {"name": medal.name, "value": medal}
+            for medal in [Medals.GOLD, Medals.SILVER, Medals.BRONZE]
+        ]
+
+        medal = await prompt_for_input(player, "Skip Medal", buttons=buttons, entry=False)
+        self.app.app_settings.player_configs[row["player_login"]].skip_medal = medal
 
         await self.refresh(player=player)
+
+class PlayerPromptView(AlertView):
+    template_name = 'random_maps_together/prompt.xml'
+
+    def __init__(self, message, buttons=None, manager=None, default='', validator=None, entry=True):
+        super().__init__(message, "md", buttons, manager)
+        self.data["buttons"] = buttons or []
+        self.disable_alt_menu = True
+        self.entry = entry
+
+        self.default = default
+        self.validator = validator or self.validate_input
+
+        self.data['default'] = self.default
+        self.data["entry"] = self.entry
+
+    async def wait_for_input(self):  # pragma: no cover
+        """
+        Wait for input and return it.
+        :return: Returns the string value of the user.
+        """
+        return await self.response_future
+
+    def validate_input(self, value):  # pragma: no cover
+        if not value or len(value) == 0:
+            return False, 'Empty value given!'
+        return True, None
+
+    async def handle(self, player, action, values, **kwargs):  # pragma: no cover
+        # Try to parse the button id instead of the whole action string.
+        button = None
+        try:
+            match = re.search(r'button_([0-9]+)$', action)
+            if match:
+                button = match.group(1)
+            match = re.search(r'button_(ok)$', action)
+            if match:
+                button = match.group(1)
+        except:
+            pass
+
+        if button == "ok":
+            self.data['errors'] = ''
+            value = self.default
+            if 'prompt_value' in values:
+                value = values['prompt_value']
+
+            valid, message = self.validator(value)
+
+            if valid:
+                await self.close(player)
+                self.response_future.set_result(value)
+                return
+
+            self.data['errors'] = message
+        elif button:
+            await self.close(player)
+            self.response_future.set_result(self.data["buttons"][int(button)])
+            return
+
+        await self.display([player.login])
+
+async def prompt_for_input(player, message, buttons=None, entry=True):
+    prompt_view = PlayerPromptView(message, buttons, entry=entry)
+    await prompt_view.display([player])
+    player_input = await prompt_view.wait_for_input()
+    await prompt_view.destroy()
+    if isinstance(player_input, dict):
+        return player_input.get("value", player_input["name"])
+    else:
+        return player_input

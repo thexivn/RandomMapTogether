@@ -7,18 +7,18 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
-from pyplanet.views.generics.alert import AlertView, PromptView
 
 from . import MapHandler
 from .Data.Configurations import RMCConfig, RMSConfig
 from .Data.GameScore import GameScore
 from .Data.GameState import GameState
+from .Data.GameModes import GameModes
 from .Data.Medals import Medals
 from .map_generator import MapGenerator
 from .map_generator.map_pack import MapPack
 from .map_generator.totd import TOTD
 
-from .views import RandomMapsTogetherView, RMTScoreBoard, PlayerConfigsView
+from .views import RandomMapsTogetherView, RMTScoreBoard, PlayerConfigsView, prompt_for_input
 
 BIG_MESSAGE = 'Race_BigMessage'
 
@@ -79,21 +79,9 @@ class RMTGame:
         self._score_ui.subscribe("ui_toggle_pause", self.command_toggle_pause)
         self._score_ui.subscribe("ui_toggle_scoreboard", self.command_toggle_scoreboard)
 
-        self._score_ui.subscribe("ui_set_game_time_900", self.set_game_time_seconds)
-        self._score_ui.subscribe("ui_set_game_time_1800", self.set_game_time_seconds)
-        self._score_ui.subscribe("ui_set_game_time_3600", self.set_game_time_seconds)
-        self._score_ui.subscribe("ui_set_game_time_7200", self.set_game_time_seconds)
-        self._score_ui.subscribe("ui_set_game_time_custom", self.set_game_time_seconds)
-
-        self._score_ui.subscribe("ui_set_goal_bonus_60", self.set_goal_bonus_seconds)
-        self._score_ui.subscribe("ui_set_goal_bonus_180", self.set_goal_bonus_seconds)
-        self._score_ui.subscribe("ui_set_goal_bonus_300", self.set_goal_bonus_seconds)
-        self._score_ui.subscribe("ui_set_goal_bonus_custom", self.set_goal_bonus_seconds)
-
-        self._score_ui.subscribe("ui_set_skip_penalty_30", self.set_skip_penalty_seconds)
-        self._score_ui.subscribe("ui_set_skip_penalty_60", self.set_skip_penalty_seconds)
-        self._score_ui.subscribe("ui_set_skip_penalty_120", self.set_skip_penalty_seconds)
-        self._score_ui.subscribe("ui_set_skip_penalty_custom", self.set_skip_penalty_seconds)
+        self._score_ui.subscribe("ui_set_game_time_seconds", self.set_game_time_seconds)
+        self._score_ui.subscribe("ui_set_goal_bonus_seconds", self.set_goal_bonus_seconds)
+        self._score_ui.subscribe("ui_set_skip_penalty_seconds", self.set_skip_penalty_seconds)
 
         self._score_ui.subscribe("ui_set_goal_medal_author", self.set_goal_medal)
         self._score_ui.subscribe("ui_set_goal_medal_gold", self.set_goal_medal)
@@ -363,27 +351,42 @@ class RMTGame:
 
     async def set_goal_bonus_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            time_seconds = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_bonus_")[1]
-            if time_seconds == "custom":
-                time_seconds = await self._prompt_for_input(player, "Goal bonus in seconds")
+            buttons = [
+                {"name": "1m", "value": 60},
+                {"name": "3m", "value": 180},
+                {"name": "5m", "value": 300}
+            ]
+            time_seconds = await prompt_for_input(player, "Goal bonus in seconds", buttons)
             self.app.app_settings.goal_bonus_seconds = int(time_seconds)
+
             await self._score_ui.display()
 
     async def set_skip_penalty_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            time_seconds = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_penalty_")[1]
-            if time_seconds == "custom":
-                time_seconds = await self._prompt_for_input(player, "Skip penalty in seconds")
+            buttons = [
+                {"name": "30s", "value": 30},
+                {"name": "1m", "value": 60},
+                {"name": "2m", "value": 120}
+            ]
+            time_seconds = await prompt_for_input(player, "Skip penalty in seconds", buttons)
             self.app.app_settings.skip_penalty_seconds = int(time_seconds)
+
             await self._score_ui.display()
 
     async def set_game_time_seconds(self, player: Player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            time_seconds = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_game_time_")[1]
-            if time_seconds == "custom":
-                time_seconds = await self._prompt_for_input(player, "Game time in seconds")
-
+            buttons = [
+                {"name": "30m", "value": 1800},
+                {"name": "1h", "value": 3600},
+                {"name": "2h", "value": 7200}
+            ] if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE else [
+                {"name": "15m", "value": 900},
+                {"name": "30m", "value": 1800},
+                {"name": "1h", "value": 3600}
+            ]
+            time_seconds = await prompt_for_input(player, "Game time in seconds", buttons)
             self.app.app_settings.game_time_seconds = int(time_seconds)
+
             await self._score_ui.display()
 
     async def set_goal_medal(self, player: Player, caller, values, **kwargs):
@@ -425,11 +428,12 @@ class RMTGame:
                 self.app.app_settings.map_generator = TOTD()
             elif map_generator_string == "map_pack":
                 self.app.app_settings.map_generator = MapPack()
+                await self.set_map_pack_id(player, caller, values, **kwargs)
             await self._score_ui.display()
 
     async def set_map_pack_id(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            map_pack_id = await self._prompt_for_input(player, "Map Pack ID")
+            map_pack_id = await prompt_for_input(player, "Map Pack ID")
             self.app.app_settings.map_generator.map_pack_id = int(map_pack_id)
             await self._score_ui.display()
 
@@ -474,13 +478,6 @@ class RMTGame:
             if not self._game_state.start_time:
                 self._game_state.start_time = py_time.time()
             self._map_start_time = py_time.time()
-
-    async def _prompt_for_input(self, player, message):
-        prompt_view = PromptView(message)
-        await prompt_view.display([player])
-        input_string = await prompt_view.wait_for_input()
-        await prompt_view.destroy()
-        return input_string
 
     def time_left_str(self):
         tl = self._time_left
