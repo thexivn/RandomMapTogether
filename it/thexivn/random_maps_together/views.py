@@ -222,8 +222,8 @@ class PlayerConfigsView(ManualListView):
             {
                 "player_nickname": player_config.player.nickname,
                 "player_login": player_config.player.login,
-                "goal_medal": player_config.goal_medal.name,
-                "skip_medal": player_config.skip_medal.name,
+                "goal_medal": player_config.goal_medal.name if player_config.goal_medal else None,
+                "skip_medal": player_config.skip_medal.name if player_config.skip_medal else None,
             }
             for player_config in sorted(self.app.app_settings.player_configs.values(), key=lambda x: x.player.nickname)
         ]
@@ -242,7 +242,7 @@ class PlayerConfigsView(ManualListView):
             for medal in [Medals.AUTHOR, Medals.GOLD, Medals.SILVER]
         ]
 
-        medal = await prompt_for_input(player, "Goal Medal", buttons=buttons, entry=False)
+        medal = await prompt_for_input(player, "Goal Medal", buttons=buttons, entry=False, validator=lambda x: (True, ""))
         self.app.app_settings.player_configs[row["player_login"]].goal_medal = medal
 
         await self.refresh(player=player)
@@ -253,7 +253,7 @@ class PlayerConfigsView(ManualListView):
             for medal in [Medals.GOLD, Medals.SILVER, Medals.BRONZE]
         ]
 
-        medal = await prompt_for_input(player, "Skip Medal", buttons=buttons, entry=False)
+        medal = await prompt_for_input(player, "Skip Medal", buttons=buttons, entry=False, validator=lambda x: (True, ""))
         self.app.app_settings.player_configs[row["player_login"]].skip_medal = medal
 
         await self.refresh(player=player)
@@ -319,8 +319,8 @@ class PlayerPromptView(AlertView):
 
         await self.display([player.login])
 
-async def prompt_for_input(player, message, buttons=None, entry=True):
-    prompt_view = PlayerPromptView(message, buttons, entry=entry)
+async def prompt_for_input(player, message, buttons=None, entry=True, validator=None):
+    prompt_view = PlayerPromptView(message, buttons, entry=entry, validator=validator)
     await prompt_view.display([player])
     player_input = await prompt_view.wait_for_input()
     await prompt_view.destroy()

@@ -11,8 +11,8 @@ from pyplanet.apps.config import AppConfig
 @dataclass
 class PlayerConfig:
     player: Player
-    goal_medal: Medals
-    skip_medal: Medals
+    goal_medal: Medals = None
+    skip_medal: Medals = None
     enabled: bool = True
 
 @dataclass
@@ -43,13 +43,13 @@ class Configurations:
     def update_player_configs(self):
         if not self.player_configs:
             self.player_configs = {
-                player.login: PlayerConfig(player, self.goal_medal, self.skip_medal, self.enabled)
+                player.login: PlayerConfig(player, enabled=self.enabled)
                 for player in self.app.instance.player_manager.online
             }
         else:
             for player in self.app.instance.player_manager.online:
                 if not player.login in self.player_configs:
-                    self.player_configs[player.login] = PlayerConfig(player, self.goal_medal, self.skip_medal, self.enabled)
+                    self.player_configs[player.login] = PlayerConfig(player, enabled=self.enabled)
 
 @dataclass
 class RMCConfig(Configurations):

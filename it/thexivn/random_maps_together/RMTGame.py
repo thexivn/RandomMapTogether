@@ -243,7 +243,7 @@ class RMTGame:
                     logger.info(f'[on_map_finish] Final time check for {self.app.app_settings.goal_medal.name}')
                     race_medal = self._map_handler.get_medal_by_time(race_time)
                     if race_medal:
-                        if race_medal >= self.app.app_settings.player_configs[player.login].goal_medal:
+                        if race_medal >= (self.app.app_settings.player_configs[player.login].goal_medal or self.app.app_settings.goal_medal):
                             if not self.app.app_settings.player_configs[player.login].enabled:
                                 return await self._chat(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
                             logger.info(f'[on_map_finish {self.app.app_settings.goal_medal.name} acquired')
@@ -258,7 +258,7 @@ class RMTGame:
                                 await self._score_ui.hide()
                             else:
                                 await self.back_to_hub()
-                        elif race_medal >= self.app.app_settings.player_configs[player.login].skip_medal and not self._game_state.skip_medal:
+                        elif race_medal >= (self.app.app_settings.player_configs[player.login].skip_medal or self.app.app_settings.skip_medal) and not self._game_state.skip_medal:
                             if not self.app.app_settings.player_configs[player.login].enabled:
                                 return await self._chat(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
                             logger.info(f'[on_map_finish] {race_medal.name} acquired')
@@ -439,7 +439,6 @@ class RMTGame:
     async def toggle_player_settings(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
             await self._player_configs_ui.display(player)
-            logger.info(self.app.app_settings.player_configs)
 
     async def toggle_enabled_players(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
