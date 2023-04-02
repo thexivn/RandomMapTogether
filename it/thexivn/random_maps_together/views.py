@@ -213,7 +213,11 @@ class PlayerConfigsView(ManualListView):
         ]
 
     async def action_toggle_enabled_player(self, player, values, row, **kwargs):
-        self.app.app_settings.player_configs[row["player_login"]].enabled ^= True
+        input_value = await prompt_for_input(player, "Enable or disable player, OK for default", [
+            {"name": "Enable", "value": True},
+            {"name": "Disable", "value": False},
+        ], entry=False, validator=lambda x: (True, ""))
+        self.app.app_settings.player_configs[row["player_login"]].enabled = input_value
         await self.refresh(player=player)
 
     async def get_data(self):
@@ -232,7 +236,7 @@ class PlayerConfigsView(ManualListView):
         return [
             {
                 "key": "styleselected",
-                "value": self.app.app_settings.player_configs[row["player_login"]].enabled
+                "value": self.app.app_settings.player_configs[row["player_login"]].enabled if self.app.app_settings.player_configs[row["player_login"]].enabled is not None else self.app.app_settings.enabled
             }
         ]
 
@@ -319,8 +323,8 @@ class PlayerPromptView(AlertView):
 
         await self.display([player.login])
 
-async def prompt_for_input(player, message, buttons=None, entry=True, validator=None):
-    prompt_view = PlayerPromptView(message, buttons, entry=entry, validator=validator)
+async def prompt_for_input(player, message, buttons=None, entry=True, validator=None, default=None):
+    prompt_view = PlayerPromptView(message, buttons, entry=entry, validator=validator, default=default)
     await prompt_view.display([player])
     player_input = await prompt_view.wait_for_input()
     await prompt_view.destroy()

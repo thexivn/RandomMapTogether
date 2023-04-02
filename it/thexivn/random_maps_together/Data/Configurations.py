@@ -13,7 +13,7 @@ class PlayerConfig:
     player: Player
     goal_medal: Medals = None
     skip_medal: Medals = None
-    enabled: bool = True
+    enabled: bool = None
 
 @dataclass
 class Configurations:
@@ -43,13 +43,13 @@ class Configurations:
     def update_player_configs(self):
         if not self.player_configs:
             self.player_configs = {
-                player.login: PlayerConfig(player, enabled=self.enabled)
+                player.login: PlayerConfig(player)
                 for player in self.app.instance.player_manager.online
             }
         else:
             for player in self.app.instance.player_manager.online:
                 if not player.login in self.player_configs:
-                    self.player_configs[player.login] = PlayerConfig(player, enabled=self.enabled)
+                    self.player_configs[player.login] = PlayerConfig(player)
 
 @dataclass
 class RMCConfig(Configurations):
