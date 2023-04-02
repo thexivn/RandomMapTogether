@@ -1,6 +1,6 @@
-<frame pos="-80 80" size="160 160" z-idex="3">
+<frame pos="-80 80" size="160 160" z-index="3">
     <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
-    <frame pos="20 -5" size="120 50" z-idex="4">
+    <frame pos="20 -5" size="120 50" z-index="4">
         <label pos="60 -5" size="90 10" text="{{settings.game_mode.value}}" textsize="10" halign="center" valign="center" style="ManiaPlanetLogos" />
 
         <quad pos="5 -15"   size="20 20" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
@@ -15,7 +15,7 @@
         {% endif %}
     </frame>
 
-    <frame pos="20 -57" size="120 100" z-index="4" scroll="1" scrollmax="0 {{scroll_max}}">
+    <frame pos="20 -57" size="140 100" z-index="4" scroll="1" scrollmax="0 {{scroll_max}}">
         <quad pos="0 0" size="120 {{nb_players * 10}}" z-index="10" scriptevents="1" bgcolor="ee000000" />
     {% for player_score in players %}
         <frame pos="0 {{ (-10 * loop.index0)}}" size="120 10">
@@ -45,6 +45,12 @@
                 {% set padding.count = padding.count + 1 %}
             {% endif %}
         </frame>
+        {% if settings.player_configs[player_score.player.login].goal_medal %}
+        <quad pos="121 -0.5" size="9 9" image="{{ medal_urls[settings.player_configs[player_score.player.login].goal_medal.name].value }}" autoscale="1" keepratio="Fit"/>
+        {% endif %}
+        {% if settings.player_configs[player_score.player.login].skip_medal %}
+        <quad pos="130 -0.5" size="9 9" image="{{ medal_urls[settings.player_configs[player_score.player.login].skip_medal.name].value }}" autoscale="1" keepratio="Fit"/>
+        {% endif %}
     {% endfor %}
     </frame>
 </frame>
