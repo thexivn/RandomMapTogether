@@ -68,7 +68,6 @@ class RMTGame:
         logger.info("RMT Game loaded")
         self._mode_settings = await self._mode_manager.get_settings()
         self._mode_settings[S_FORCE_LAPS_NB] = int(-1)
-        asyncio.create_task(background_loading_map(self._map_handler))
         # self._mode_settings[S_CHAT_TIME] = int(1)
         await self.hide_timer()
         await self._score_ui.display()
@@ -183,7 +182,6 @@ class RMTGame:
             self._score.rest()
             await self._score_ui.hide()
             await self._map_handler.load_hub()
-            asyncio.create_task(background_loading_map(self._map_handler))
 
             self._rmt_starter_player = None
             logger.info("Back to HUB completed")
@@ -253,7 +251,6 @@ class RMTGame:
                             await self._chat(f'{player.nickname} claimed {race_medal.name}, congratulations!')
                             if await self.load_with_retry():
                                 self._score.inc_medal_count(player, race_medal, goal_medal=True)
-                                logger.info(f"{self._score.player_finishes[player.login]}")
                                 await self._scoreboard_ui.display()
                                 await self._score_ui.hide()
                             else:

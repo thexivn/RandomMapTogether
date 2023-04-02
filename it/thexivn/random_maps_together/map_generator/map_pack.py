@@ -15,7 +15,7 @@ class MapPack(MapGenerator):
         self.map_pack_id = map_pack_id
 
     def get_map(self) -> APIMapInfo:
-        response = requests.get(f"{self.map_pack_url}{self.map_pack_id}").json()
+        response = self.session.get(f"{self.map_pack_url}{self.map_pack_id}").json()
         non_played_maps = [map for map in response if map.get("TrackUID") not in self.played_maps]
         if non_played_maps:
             map = random.choice(non_played_maps)
