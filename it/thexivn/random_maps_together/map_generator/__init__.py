@@ -1,4 +1,3 @@
-from enum import Enum
 import logging
 import requests
 from ..Data.APIMapInfo import APIMapInfo
@@ -6,8 +5,8 @@ from ..Data.APIMapInfo import APIMapInfo
 logger = logging.getLogger(__name__)
 
 class MapGenerator:
-    def __init__(self):
-        self.session = requests.Session()
+    def __init__(self, app):
+        self.app = app
         self.search_url = "https://trackmania.exchange/mapsearch2/search/"
         self.download_url = "https://trackmania.exchange/maps/download/"
         self.map_pack_url = "https://trackmania.exchange/api/mappack/get_mappack_tracks/"
@@ -16,7 +15,7 @@ class MapGenerator:
 
     def get_map_content(self, map_id) -> bytes:
         logger.info("downloading %s%s", self.download_url, map_id)
-        content = self.session.get(f'{self.download_url}{map_id}').content
+        content = self.app.session.get(f'{self.download_url}{map_id}').content
         logger.info("download completed for mapID %s", map_id)
         return content
 

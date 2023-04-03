@@ -1,8 +1,6 @@
 import logging
 import random
 
-import requests
-
 from ..Data.APIMapInfo import APIMapInfo
 from . import MapGenerator
 
@@ -11,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class TOTD(MapGenerator):
     def get_map(self) -> APIMapInfo:
-        response = self.session.get(
+        response = self.app.session.get(
             f'{self.search_map_packs_url}',
             params={
                 "api": "on",
@@ -22,7 +20,7 @@ class TOTD(MapGenerator):
             }
         )
         map_pack = response.json().get("results")[0]
-        map_pack_maps = self.session.get(f"{self.map_pack_url}{map_pack.get('ID')}").json()
+        map_pack_maps = self.app.session.get(f"{self.map_pack_url}{map_pack.get('ID')}").json()
         map = random.choice([map for map in map_pack_maps if map.get("TrackUID") not in self.played_maps])
 
         return APIMapInfo(

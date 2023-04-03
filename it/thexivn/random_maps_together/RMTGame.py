@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import time as py_time
-from threading import Thread
 
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
@@ -195,12 +194,12 @@ class RMTGame:
                 await self._chat("$o$FB0 This track was created before the ICE physics change $z"
                                  , self._rmt_starter_player)
             self._game_state.set_new_map_in_game_state()
-            asyncio.create_task(background_loading_map(self._map_handler))
         else:
             await self.hide_timer()
             self._game_state.current_map_completed = True
 
-        await self._score_ui.display()
+            await self._score_ui.display()
+            await background_loading_map(self._map_handler),
         logger.info("[map_begin_event] ENDED")
 
     async def map_end_event(self, time, count, *args, **kwargs):
@@ -418,18 +417,18 @@ class RMTGame:
         if await self._check_player_allowed_to_change_game_settings(player):
             map_generator_string = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1]
             if map_generator_string == "random":
-                self.app.app_settings.map_generator = MapGenerator()
+                self.app.app_settings.map_generator = MapGenerator(self.app)
             elif map_generator_string == "totd":
-                self.app.app_settings.map_generator = TOTD()
+                self.app.app_settings.map_generator = TOTD(self.app)
             elif map_generator_string == "map_pack":
-                self.app.app_settings.map_generator = MapPack()
+                self.app.app_settings.map_generator = MapPack(self.app)
                 await self.set_map_pack_id(player, caller, values, **kwargs)
-            asyncio.create_task(background_loading_map(self._map_handler))
             await self._score_ui.display()
+            await background_loading_map(self._map_handler)
 
     async def set_map_pack_id(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            map_pack_id = await prompt_for_input(player, "Map Pack ID")
+            map_pack_id = await prompt_for_input(player, "Map Pack ID", default="")
             self.app.app_settings.map_generator.map_pack_id = int(map_pack_id)
             await self._score_ui.display()
 

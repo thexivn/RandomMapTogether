@@ -22,10 +22,11 @@ class Configurations:
     skip_medal = Medals.GOLD
     enabled = True
     min_level_to_start = 1
-    map_generator = MapGenerator()
+    map_generator = None
     player_configs: Dict[str, PlayerConfig] = None
 
     def __post_init__(self):
+        self.map_generator = MapGenerator(self.app)
         self.update_player_configs()
 
     def set_min_level_to_start(self, old_value: str, value: str):

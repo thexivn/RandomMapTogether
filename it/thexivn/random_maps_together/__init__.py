@@ -1,4 +1,5 @@
 import logging
+import requests
 
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -21,6 +22,7 @@ class RandomMapsTogetherApp(AppConfig):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.session = requests.Session()
         self.app_settings: Configurations = RMCConfig(self)
         self.map_handler = MapHandler(self, self.instance.map_manager, self.instance.storage)
         self.instance.chat()
