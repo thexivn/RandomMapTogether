@@ -35,7 +35,7 @@ class MapHandler:
 
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
-        random_map = self._next_map or self.app.app_settings.map_generator.get_map()
+        random_map = await self.await_next_map()
         self._next_map = None
 
         map_to_remove = await self.app.instance.gbx("GetCurrentMapInfo")
@@ -54,7 +54,7 @@ class MapHandler:
         self.app.app_settings.map_generator.played_maps.append(random_map.uuid)
         logger.info('map loaded')
 
-    async def pre_load_next_map(self):
+    def pre_load_next_map(self):
         try:
             self._next_map = self.app.app_settings.map_generator.get_map()
         except:

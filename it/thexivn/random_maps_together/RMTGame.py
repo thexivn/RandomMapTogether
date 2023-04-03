@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from threading import Thread
 import time as py_time
 
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -33,9 +34,9 @@ _lock = asyncio.Lock()
 logger = logging.getLogger(__name__)
 
 
-async def background_loading_map(map_handler: MapHandler):
+def background_loading_map(map_handler: MapHandler):
     logger.info("[background_loading_map] STARTED")
-    await map_handler.pre_load_next_map()
+    map_handler.pre_load_next_map()
     logger.info("[background_loading_map] COMPLETED")
 
 
@@ -193,13 +194,13 @@ class RMTGame:
             if self._map_handler.pre_patch_ice:
                 await self._chat("$o$FB0 This track was created before the ICE physics change $z"
                                  , self._rmt_starter_player)
+            Thread(target=background_loading_map, args=[self._map_handler]).start()
             self._game_state.set_new_map_in_game_state()
         else:
             await self.hide_timer()
             self._game_state.current_map_completed = True
 
-            await self._score_ui.display()
-            await background_loading_map(self._map_handler),
+        await self._score_ui.display()
         logger.info("[map_begin_event] ENDED")
 
     async def map_end_event(self, time, count, *args, **kwargs):
@@ -423,8 +424,8 @@ class RMTGame:
             elif map_generator_string == "map_pack":
                 self.app.app_settings.map_generator = MapPack(self.app)
                 await self.set_map_pack_id(player, caller, values, **kwargs)
+            Thread(target=background_loading_map, args=[self._map_handler]).start()
             await self._score_ui.display()
-            await background_loading_map(self._map_handler)
 
     async def set_map_pack_id(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
