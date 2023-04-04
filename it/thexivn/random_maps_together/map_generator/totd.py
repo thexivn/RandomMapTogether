@@ -2,12 +2,16 @@ import logging
 import random
 
 from ..Data.APIMapInfo import APIMapInfo
-from . import MapGenerator
+from . import MapGenerator, MapGeneratorType
 
 logger = logging.getLogger(__name__)
 
 
 class TOTD(MapGenerator):
+    def __init__(self, app):
+        super().__init__(app)
+        self.map_generator_type = MapGeneratorType.TOTD
+
     def get_map(self) -> APIMapInfo:
         response = self.app.session.get(
             f'{self.search_map_packs_url}',

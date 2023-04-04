@@ -35,7 +35,7 @@ class MapHandler:
 
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
-        random_map = await self.await_next_map()
+        random_map = self._next_map or self.app.app_settings.map_generator.get_map()
         self._next_map = None
 
         map_to_remove = await self.app.instance.gbx("GetCurrentMapInfo")

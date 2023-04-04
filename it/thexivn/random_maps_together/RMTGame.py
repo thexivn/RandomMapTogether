@@ -14,7 +14,7 @@ from .Data.GameScore import GameScore
 from .Data.GameState import GameState
 from .Data.GameModes import GameModes
 from .Data.Medals import Medals
-from .map_generator import MapGenerator
+from .map_generator import MapGenerator, MapGeneratorType
 from .map_generator.map_pack import MapPack
 from .map_generator.totd import TOTD
 
@@ -105,18 +105,6 @@ class RMTGame:
 
         self._score_ui.subscribe("ui_toggle_player_settings", self.toggle_player_settings)
 
-        asyncio.ensure_future(self.update_ui_loop())
-
-    async def update_ui_loop(self):
-        while True:
-            await asyncio.sleep(0.25)
-            if self._game_state.game_is_in_progress:
-                if self._scoreboard_ui._is_global_shown:
-                    await self._scoreboard_ui.display()
-                elif len(self._scoreboard_ui._is_player_shown) > 0:
-                    await self._scoreboard_ui.display(self._scoreboard_ui._is_player_shown.keys())
-            self.app.app_settings.update_player_configs()
-
     async def command_start_rmt(self, player: Player, _, values, *args, **kwargs):
         if player.level < self.app.app_settings.min_level_to_start:
             await self._chat("You are not allowed to start the game", player)
@@ -194,7 +182,6 @@ class RMTGame:
             if self._map_handler.pre_patch_ice:
                 await self._chat("$o$FB0 This track was created before the ICE physics change $z"
                                  , self._rmt_starter_player)
-            Thread(target=background_loading_map, args=[self._map_handler]).start()
             self._game_state.set_new_map_in_game_state()
         else:
             await self.hide_timer()
@@ -336,7 +323,10 @@ class RMTGame:
         logging.info(f"Set paused: " + str(self._game_state.is_paused))
 
     async def command_toggle_scoreboard(self, player: Player, *args, **kw):
-        await self._scoreboard_ui.toggle_for(player.login)
+        if self._scoreboard_ui._is_player_shown.get(player.login) or self._scoreboard_ui._is_global_shown:
+            await self._scoreboard_ui.hide([player.login])
+        else:
+            await self._scoreboard_ui.display([player.login])
 
     async def respawn_player(self, player: Player):
         # first, force mode 1 (spectator), then force mode 2 (player), then force mode 0 (user selectable)
@@ -351,7 +341,7 @@ class RMTGame:
                 {"name": "3m", "value": 180},
                 {"name": "5m", "value": 300}
             ]
-            time_seconds = await prompt_for_input(player, "Goal bonus in seconds", buttons)
+            time_seconds = await prompt_for_input(player, "Goal bonus in seconds", buttons, default=self.app.app_settings.goal_bonus_seconds)
             self.app.app_settings.goal_bonus_seconds = int(time_seconds)
 
             await self._score_ui.display()
@@ -363,7 +353,7 @@ class RMTGame:
                 {"name": "1m", "value": 60},
                 {"name": "2m", "value": 120}
             ]
-            time_seconds = await prompt_for_input(player, "Skip penalty in seconds", buttons)
+            time_seconds = await prompt_for_input(player, "Skip penalty in seconds", buttons, default=self.app.app_settings.skip_penalty_seconds)
             self.app.app_settings.skip_penalty_seconds = int(time_seconds)
 
             await self._score_ui.display()
@@ -379,7 +369,7 @@ class RMTGame:
                 {"name": "30m", "value": 1800},
                 {"name": "1h", "value": 3600}
             ]
-            time_seconds = await prompt_for_input(player, "Game time in seconds", buttons)
+            time_seconds = await prompt_for_input(player, "Game time in seconds", buttons, default=self.app.app_settings.game_time_seconds)
             self.app.app_settings.game_time_seconds = int(time_seconds)
 
             await self._score_ui.display()
@@ -417,19 +407,18 @@ class RMTGame:
     async def set_map_generator(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
             map_generator_string = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1]
-            if map_generator_string == "random":
+            if map_generator_string == "random" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.RANDOM:
                 self.app.app_settings.map_generator = MapGenerator(self.app)
-            elif map_generator_string == "totd":
+            elif map_generator_string == "totd" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.TOTD:
                 self.app.app_settings.map_generator = TOTD(self.app)
-            elif map_generator_string == "map_pack":
+            elif map_generator_string == "map_pack" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.MAP_PACK:
                 self.app.app_settings.map_generator = MapPack(self.app)
                 await self.set_map_pack_id(player, caller, values, **kwargs)
-            Thread(target=background_loading_map, args=[self._map_handler]).start()
             await self._score_ui.display()
 
     async def set_map_pack_id(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            map_pack_id = await prompt_for_input(player, "Map Pack ID", default="")
+            map_pack_id = await prompt_for_input(player, "Map Pack ID", default=self.app.app_settings.map_generator.map_pack_id if self.app.app_settings.map_generator.map_pack_id else "")
             self.app.app_settings.map_generator.map_pack_id = int(map_pack_id)
             await self._score_ui.display()
 

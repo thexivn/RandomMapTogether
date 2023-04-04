@@ -143,13 +143,6 @@ class RMTScoreBoard(TemplateView):
 
         return data
 
-    async def toggle_for(self, login):
-        if login in self._is_player_shown or self._is_global_shown:
-            await self.hide([login])
-        else:
-            await self.display([login])
-
-
 class PlayerConfigsView(ManualListView):
     app = None
 
@@ -213,7 +206,7 @@ class PlayerConfigsView(ManualListView):
         ]
 
     async def action_toggle_enabled_player(self, player, values, row, **kwargs):
-        input_value = await prompt_for_input(player, "Enable or disable player, OK for default", [
+        input_value = await prompt_for_input(player, f"Enable or disable player, OK for global player enabled: {self.app.app_settings.enabled}", [
             {"name": "Enable", "value": True},
             {"name": "Disable", "value": False},
         ], entry=False, validator=lambda x: (True, ""))
@@ -246,7 +239,7 @@ class PlayerConfigsView(ManualListView):
             for medal in [Medals.AUTHOR, Medals.GOLD, Medals.SILVER]
         ]
 
-        medal = await prompt_for_input(player, "Goal Medal", buttons=buttons, entry=False, validator=lambda x: (True, ""))
+        medal = await prompt_for_input(player, f"Goal Medal, OK for global Goal Medal: {self.app.app_settings.goal_medal.name}", buttons=buttons, entry=False, validator=lambda x: (True, ""))
         self.app.app_settings.player_configs[row["player_login"]].goal_medal = medal
 
         await self.refresh(player=player)
@@ -257,7 +250,7 @@ class PlayerConfigsView(ManualListView):
             for medal in [Medals.GOLD, Medals.SILVER, Medals.BRONZE]
         ]
 
-        medal = await prompt_for_input(player, "Skip Medal", buttons=buttons, entry=False, validator=lambda x: (True, ""))
+        medal = await prompt_for_input(player, f"Skip Medal, OK for global Skip Medal: {self.app.app_settings.skip_medal.name}", buttons=buttons, entry=False, validator=lambda x: (True, ""))
         self.app.app_settings.player_configs[row["player_login"]].skip_medal = medal
 
         await self.refresh(player=player)

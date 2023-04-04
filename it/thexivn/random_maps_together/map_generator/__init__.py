@@ -1,11 +1,18 @@
+from enum import Enum
 import logging
 import requests
 from ..Data.APIMapInfo import APIMapInfo
 
 logger = logging.getLogger(__name__)
 
+class MapGeneratorType(Enum):
+    RANDOM = "RANDOM"
+    TOTD = "TOTD"
+    MAP_PACK = "MAP PACK"
+
 class MapGenerator:
     def __init__(self, app):
+        self.map_generator_type = MapGeneratorType.RANDOM
         self.app = app
         self.search_url = "https://trackmania.exchange/mapsearch2/search/"
         self.download_url = "https://trackmania.exchange/maps/download/"
