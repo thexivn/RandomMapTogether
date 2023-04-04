@@ -46,7 +46,6 @@ class GameState:
 
     def set_map_completed_state(self):
         self.current_map_completed = True
-        self.skip_medal = None
 
     def set_hub_state(self):
         self.stage = GameStage.HUB
