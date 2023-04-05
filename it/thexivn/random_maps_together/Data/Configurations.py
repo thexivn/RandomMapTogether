@@ -60,8 +60,7 @@ class RMCConfig(Configurations):
     allow_pausing = False
 
     def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
-        rmt_game._time_left -= int(py_time.time() - rmt_game._map_start_time + .5)
-        # rmt_game._scoreboard_ui.set_time_left(rmt_game._time_left)
+        rmt_game._time_left -= int(py_time.time() - rmt_game._game_state.map_start_time)
 
     def can_skip_map(self, rmt_game):
         return any([
@@ -92,9 +91,7 @@ class RMSConfig(Configurations):
         elif skip_medal:
             pass
 
-        rmt_game._time_left -= int(py_time.time() - rmt_game._map_start_time + .5)
-        rmt_game._time_left = max(0, rmt_game._time_left)
-        # rmt_game._scoreboard_ui.set_time_left(rmt_game._time_left)
+        rmt_game._time_left -= int(py_time.time() - rmt_game._game_state.map_start_time)
 
     def can_skip_map(self, rmt_game):
         return True

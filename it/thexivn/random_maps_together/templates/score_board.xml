@@ -46,10 +46,10 @@
             {% endif %}
         </frame>
         {% if settings.player_configs[player_score.player.login].goal_medal %}
-        <quad pos="121 -0.5" size="9 9" image="{{ medal_urls[settings.player_configs[player_score.player.login].goal_medal.name].value }}" autoscale="1" keepratio="Fit"/>
+        <quad pos="121 {{ -0.5 + (-10 * loop.index0) }}" size="9 9" image="{{ medal_urls[settings.player_configs[player_score.player.login].goal_medal.name].value }}" autoscale="1" keepratio="Fit"/>
         {% endif %}
         {% if settings.player_configs[player_score.player.login].skip_medal %}
-        <quad pos="130 -0.5" size="9 9" image="{{ medal_urls[settings.player_configs[player_score.player.login].skip_medal.name].value }}" autoscale="1" keepratio="Fit"/>
+        <quad pos="130 {{ -0.5 + (-10 * loop.index0) }}" size="9 9" image="{{ medal_urls[settings.player_configs[player_score.player.login].skip_medal.name].value }}" autoscale="1" keepratio="Fit"/>
         {% endif %}
     {% endfor %}
     </frame>

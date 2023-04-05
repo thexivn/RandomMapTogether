@@ -50,7 +50,6 @@ class RMTGame:
         self._chat = chat
         self._mode_manager = mode_manager
         self._mode_settings = None
-        self._map_start_time = py_time.time()
         self._time_left = self.app.app_settings.game_time_seconds
         self._score_ui = score_ui
         self._game_state = GameState()
@@ -107,11 +106,9 @@ class RMTGame:
 
     async def command_start_rmt(self, player: Player, _, values, *args, **kwargs):
         if player.level < self.app.app_settings.min_level_to_start:
-            await self._chat("You are not allowed to start the game", player)
-            return
+            return await self._chat("You are not allowed to start the game", player)
 
         await self._score_ui.hide()
-        await self._scoreboard_ui.display()
 
         if self._game_state.is_hub_stage():
             self.app.app_settings.update_player_configs()
@@ -161,12 +158,12 @@ class RMTGame:
 
     async def back_to_hub(self):
         if self._game_state.is_game_stage():
-            self._chat('Game over -- Returning to HUB')
+            await self._chat('Game over -- Returning to HUB')
             logger.info("Back to HUB ...")
             # self._time_left = 0
+            await self._scoreboard_ui.display()
             await self.hide_timer()
             self._game_state.set_hub_state()
-            await self._scoreboard_ui.display()
             self._score.rest()
             await self._score_ui.hide()
             await self._map_handler.load_hub()
@@ -214,8 +211,7 @@ class RMTGame:
         if self._game_state.is_game_stage():
             async with _lock: # lock to avoid multiple AT before next map is loaded
                 if self._game_state.current_map_completed:
-                    logger.info(f'[on_map_finish] Map was already completed')
-                    return
+                    return logger.info(f'[on_map_finish] Map was already completed')
 
                 if is_end_race:
                     logger.info(f'[on_map_finish] Final time check for {self.app.app_settings.goal_medal.value}')
@@ -255,21 +251,21 @@ class RMTGame:
     async def command_skip_medal(self, player: Player, *args, **kwargs):
         if self._game_state.is_paused:
             return await self._chat("Game currently paused", player)
+        if not await self._is_player_allowed_to_manage_running_game(player):
+            return
+
         if self._game_state.skip_command_allowed():
             if self._game_state.skip_medal:
-                if await self._is_player_allowed_to_manage_running_game(player):
-                    self.app.app_settings.update_time_left(self, skip_medal=True)
-                    self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal, skip_medal=True)
-                    self._game_state.set_map_completed_state()
-                    await self._chat(f'{player.nickname} decided to take {self._game_state.skip_medal.name} by {self._game_state.skip_medal_player.nickname} and skip')
-                    await self.hide_timer()
-                    if await self.load_with_retry():
-                        logging.info(f"Loading next map success")
-                        await self._scoreboard_ui.display()
-                        await self._score_ui.hide()
-                        logging.info(f"Loading next map UI updated")
-                    else:
-                        await self.back_to_hub()
+                await self._scoreboard_ui.display()
+                await self._score_ui.hide()
+
+                self.app.app_settings.update_time_left(self, skip_medal=True)
+                self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal, skip_medal=True)
+                self._game_state.set_map_completed_state()
+                await self._chat(f'{player.nickname} decided to take {self._game_state.skip_medal.name} by {self._game_state.skip_medal_player.nickname} and skip')
+                await self.hide_timer()
+                if not await self.load_with_retry():
+                    await self.back_to_hub()
             else:
                 await self._chat(f"{self.app.app_settings.skip_medal.name} skip is not available", player)
         else:
@@ -278,23 +274,27 @@ class RMTGame:
     async def command_free_skip(self, player: Player, *args, **kwargs):
         if self._game_state.is_paused:
             return await self._chat("Game currently paused", player)
+        if not await self._is_player_allowed_to_manage_running_game(player):
+            return
+
         if self._game_state.skip_command_allowed():
             if self.app.app_settings.can_skip_map(self):
-                if await self._is_player_allowed_to_manage_running_game(player):
-                    self.app.app_settings.update_time_left(self, free_skip=True)
-                    self._game_state.set_map_completed_state()
-                    if not self._map_handler.pre_patch_ice and self._game_state.free_skip_available:
-                        await self._chat(f'{player.nickname} decided to use free skip')
-                        self._game_state.free_skip_available = False
-                    else:
-                        await self._chat(f'{player.nickname} decided to skip the map')
-                    await self.hide_timer()
-                    await self._scoreboard_ui.display()
-                    await self._score_ui.hide()
-                    if not await self.load_with_retry():
-                        await self.back_to_hub()
-                    else:
-                        logging.info(f"Skipping map success")
+                await self._scoreboard_ui.display()
+                await self._score_ui.hide()
+
+                self.app.app_settings.update_time_left(self, free_skip=True)
+                self._game_state.set_map_completed_state()
+
+                if not self._map_handler.pre_patch_ice and self._game_state.free_skip_available:
+                    await self._chat(f'{player.nickname} decided to use free skip')
+                    self._game_state.free_skip_available = False
+                else:
+                    await self._chat(f'{player.nickname} decided to skip the map')
+                await self.hide_timer()
+                if not await self.load_with_retry():
+                    await self.back_to_hub()
+                else:
+                    logging.info(f"Skipping map success")
             else:
                 await self._chat("Free skip is not available", player)
         else:
@@ -310,7 +310,7 @@ class RMTGame:
             self._time_left_at_pause = self._time_left
             self._mode_settings[S_TIME_LIMIT] = -1
         else:
-            pause_duration = int(py_time.time() - self._time_at_pause + .5)
+            pause_duration = int(py_time.time() - self._time_at_pause)
             self._mode_settings[S_TIME_LIMIT] = self._time_left_at_pause + pause_duration
             self._time_left += pause_duration
             # respawn the player, this means the unpausing player's next run always starts after unpausing.
@@ -395,12 +395,12 @@ class RMTGame:
             await self._score_ui.display()
 
     async def set_game_mode_rmc(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
+        if await self._check_player_allowed_to_change_game_settings(player) and self.app.app_settings.game_mode != GameModes.RANDOM_MAP_CHALLENGE:
             self.app.app_settings = RMCConfig(self.app)
             await self._score_ui.display()
 
     async def set_game_mode_rms(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
+        if await self._check_player_allowed_to_change_game_settings(player) and self.app.app_settings.game_mode != GameModes.RANDOM_MAP_SURVIVAL:
             self.app.app_settings = RMSConfig(self.app)
             await self._score_ui.display()
 
@@ -461,15 +461,14 @@ class RMTGame:
             logger.info(f'ROUND_START {time} -- {count}')
             if not self._game_state.start_time:
                 self._game_state.start_time = py_time.time()
-            self._map_start_time = py_time.time()
+            self._game_state.map_start_time = py_time.time()
 
     def time_left_str(self):
         tl = self._time_left
         if tl == 0:
             return "00:00:00"
         if self._game_state.is_paused:
-            pause_duration = int(py_time.time() - self._time_at_pause + .5)
+            pause_duration = int(py_time.time() - self._time_at_pause)
             tl = self._time_left_at_pause + pause_duration
-        if not self._game_state.map_is_loading and not self._game_state.current_map_completed:
-            tl -= int(py_time.time() - self._map_start_time + .5)
+        tl -= self._game_state.map_played_time()
         return py_time.strftime('%H:%M:%S', py_time.gmtime(tl))

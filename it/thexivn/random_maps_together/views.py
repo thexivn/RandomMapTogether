@@ -132,11 +132,7 @@ class RMTScoreBoard(TemplateView):
 
         data["players"] = self._score.get_top_10(20)
         data["time_left"] = self._game.time_left_str()
-        time_played = self.app.app_settings.game_time_seconds - self._game._time_left + getattr(self.app.app_settings, "total_time_gained", 0)
-        if not self._game_state.current_map_completed and not self._game_state.map_is_loading:
-            time_played += int(py_time.time() - self._game._map_start_time + .5)
-
-        data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(time_played))
+        data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(self.app.app_settings.game_time_seconds - self._game._time_left + getattr(self.app.app_settings, "total_time_gained", 0) + self._game_state.map_played_time()))
 
         data["nb_players"] = len(data['players'])
         data["scroll_max"] = max(0, len(data['players']) * 10 - 100)

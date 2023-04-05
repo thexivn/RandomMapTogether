@@ -10,7 +10,8 @@ class GameStage(Enum):
 
 @dataclass
 class GameState:
-    start_time = py_time.time()
+    start_time = None
+    map_start_time = None
     stage: GameStage = GameStage.HUB
     current_map_completed: bool = False
     map_is_loading: bool = False
@@ -38,6 +39,7 @@ class GameState:
         self.game_is_in_progress = True
         self.is_paused = False
         self.start_time = None
+        self.map_start_time = None
 
     def set_new_map_in_game_state(self):
         self.current_map_completed = False
@@ -53,3 +55,8 @@ class GameState:
         self.free_skip_available = False
         self.skip_medal = False
         self.is_paused = False
+
+    def map_played_time(self):
+        if self.map_is_loading and self.current_map_completed:
+            return 0
+        return int(py_time.time() - self.map_start_time - 1)
