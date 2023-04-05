@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class MapPack(MapGenerator):
-    def __init__(self, app, map_pack_id=None):
+    def __init__(self, app):
         super().__init__(app)
         self.map_generator_type = MapGeneratorType.MAP_PACK
-        self.map_pack_id = map_pack_id
+        self.map_pack_id = None
 
     def get_map(self) -> APIMapInfo:
         response = self.app.session.get(f"{self.map_pack_url}{self.map_pack_id}").json()
@@ -29,3 +29,9 @@ class MapPack(MapGenerator):
             )
         else:
             return self.get_random_map()
+
+    def map_pack_id_validator(self, map_pack_id):
+        response = self.app.session.get(f"{self.map_pack_url}{map_pack_id}")
+        if isinstance(response.json(), dict):
+            return False, f"Map pack ID doesn't exist: {map_pack_id}"
+        return True, f"Map pack ID exists: {map_pack_id}"

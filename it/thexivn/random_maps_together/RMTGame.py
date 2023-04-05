@@ -417,7 +417,7 @@ class RMTGame:
 
     async def set_map_pack_id(self, player, caller, values, **kwargs):
         if await self._check_player_allowed_to_change_game_settings(player):
-            map_pack_id = await prompt_for_input(player, "Map Pack ID", default=self.app.app_settings.map_generator.map_pack_id if self.app.app_settings.map_generator.map_pack_id else "")
+            map_pack_id = await prompt_for_input(player, "Map Pack ID", default=self.app.app_settings.map_generator.map_pack_id if self.app.app_settings.map_generator.map_pack_id else "", validator=self.app.app_settings.map_generator.map_pack_id_validator)
             self.app.app_settings.map_generator.map_pack_id = int(map_pack_id)
             await self._score_ui.display()
 
