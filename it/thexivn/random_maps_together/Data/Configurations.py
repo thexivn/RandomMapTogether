@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import time as py_time
 from typing import Dict
 
 from .Medals import Medals
@@ -38,7 +37,7 @@ class Configurations:
 
         self.min_level_to_start = level
 
-    def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
+    async def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
         pass
 
     def update_player_configs(self):
@@ -59,8 +58,8 @@ class RMCConfig(Configurations):
     infinite_free_skips = False
     allow_pausing = False
 
-    def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
-        rmt_game._time_left -= int(py_time.time() - rmt_game._game_state.map_start_time)
+    async def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
+        rmt_game._time_left -= rmt_game._game_state.map_played_time()
 
     def can_skip_map(self, rmt_game):
         return any([
@@ -76,22 +75,20 @@ class RMSConfig(Configurations):
     goal_bonus_seconds = 180
     skip_penalty_seconds = 60
     allow_pausing = False
-    total_time_gained = 0
 
-    def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
+    async def update_time_left(self, rmt_game, free_skip=False, goal_medal=False, skip_medal=False):
         if free_skip:
             if rmt_game._map_handler.pre_patch_ice or rmt_game._game_state.free_skip_available:
                 pass
             else:
                 rmt_game._time_left -= self.skip_penalty_seconds
-                self.total_time_gained -= self.skip_penalty_seconds
+                rmt_game._game_state.total_time_gained -= self.skip_penalty_seconds
         elif goal_medal:
             rmt_game._time_left += self.goal_bonus_seconds
-            self.total_time_gained += self.goal_bonus_seconds
+            rmt_game._game_state.total_time_gained += self.goal_bonus_seconds
         elif skip_medal:
             pass
-
-        rmt_game._time_left -= int(py_time.time() - rmt_game._game_state.map_start_time)
+        rmt_game._time_left -= rmt_game._game_state.map_played_time()
 
     def can_skip_map(self, rmt_game):
         return True

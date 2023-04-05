@@ -24,7 +24,7 @@ class GameScore:
     total_skip_medals: int = 0
     player_finishes: Dict[str, PlayerScoreInfo] = field(default_factory=dict)
 
-    def inc_medal_count(self, player: Player, medal: Medals, goal_medal=False, skip_medal=False):
+    async def inc_medal_count(self, player: Player, medal: Medals, goal_medal=False, skip_medal=False):
         if not player.login in self.player_finishes:
             self.player_finishes[player.login] = PlayerScoreInfo(player)
 

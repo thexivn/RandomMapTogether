@@ -161,9 +161,10 @@ class RMTGame:
             await self._chat('Game over -- Returning to HUB')
             logger.info("Back to HUB ...")
             # self._time_left = 0
-            await self._scoreboard_ui.display()
+            await self.app.app_settings.update_time_left(self)
             await self.hide_timer()
             self._game_state.set_hub_state()
+            await self._scoreboard_ui.display()
             self._score.rest()
             await self._score_ui.hide()
             await self._map_handler.load_hub()
@@ -228,15 +229,14 @@ class RMTGame:
                             if not (self.app.app_settings.player_configs[player.login].enabled if self.app.app_settings.player_configs[player.login].enabled is not None else self.app.app_settings.enabled):
                                 return await self._chat(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
                             logger.info(f'[on_map_finish {self.app.app_settings.goal_medal.name} acquired')
-                            self.app.app_settings.update_time_left(self, goal_medal=True)
+                            await self.app.app_settings.update_time_left(self, goal_medal=True)
+                            await self._score.inc_medal_count(player, race_medal, goal_medal=True)
                             self._game_state.set_map_completed_state()
+                            await self._scoreboard_ui.display()
+                            await self._score_ui.hide()
                             await self.hide_timer()
                             await self._chat(f'{player.nickname} claimed {race_medal.name}, congratulations!')
-                            if await self.load_with_retry():
-                                self._score.inc_medal_count(player, race_medal, goal_medal=True)
-                                await self._scoreboard_ui.display()
-                                await self._score_ui.hide()
-                            else:
+                            if not await self.load_with_retry():
                                 await self.back_to_hub()
                         elif race_medal >= (self.app.app_settings.player_configs[player.login].skip_medal or self.app.app_settings.skip_medal) and not self._game_state.skip_medal:
                             if not (self.app.app_settings.player_configs[player.login].enabled if self.app.app_settings.player_configs[player.login].enabled is not None else self.app.app_settings.enabled):
@@ -256,12 +256,11 @@ class RMTGame:
 
         if self._game_state.skip_command_allowed():
             if self._game_state.skip_medal:
+                await self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal, skip_medal=True)
+                await self.app.app_settings.update_time_left(self, skip_medal=True)
+                self._game_state.set_map_completed_state()
                 await self._scoreboard_ui.display()
                 await self._score_ui.hide()
-
-                self.app.app_settings.update_time_left(self, skip_medal=True)
-                self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal, skip_medal=True)
-                self._game_state.set_map_completed_state()
                 await self._chat(f'{player.nickname} decided to take {self._game_state.skip_medal.name} by {self._game_state.skip_medal_player.nickname} and skip')
                 await self.hide_timer()
                 if not await self.load_with_retry():
@@ -279,11 +278,11 @@ class RMTGame:
 
         if self._game_state.skip_command_allowed():
             if self.app.app_settings.can_skip_map(self):
+                await self.app.app_settings.update_time_left(self, free_skip=True)
+                self._game_state.set_map_completed_state()
                 await self._scoreboard_ui.display()
                 await self._score_ui.hide()
 
-                self.app.app_settings.update_time_left(self, free_skip=True)
-                self._game_state.set_map_completed_state()
 
                 if not self._map_handler.pre_patch_ice and self._game_state.free_skip_available:
                     await self._chat(f'{player.nickname} decided to use free skip')
