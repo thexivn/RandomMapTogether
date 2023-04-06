@@ -5,14 +5,11 @@ from typing import Optional
 
 from pyplanet.apps.core.maniaplanet.models import Map
 from pyplanet.contrib.map import MapManager
-from pyplanet.contrib.map.exceptions import MapNotFound, MapException
 from pyplanet.core.storage.storage import Storage
-from pyplanet.core.instance import Instance
 
 from .Data.Constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
 from .Data.Medals import Medals
 from .Data.APIMapInfo import APIMapInfo
-from .map_generator import MapGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -40,18 +37,19 @@ class MapHandler:
 
         map_to_remove = await self.app.instance.gbx("GetCurrentMapInfo")
 
-        self.pre_patch_ice = (TAG_BOBSLEIGH in random_map.tags or TAG_ICE in random_map.tags) and random_map.last_update < ICE_CHANGE_DATE
-        logger.info(f'TAGS: {random_map.tags} UPDATE: {random_map.last_update}')
-        logger.info(f'uploading {random_map.uuid}.Map.Gbx to the server...')
+        self.pre_patch_ice = random_map.is_pre_patch_ice()
 
-        await self._map_manager.upload_map(io.BytesIO(random_map.content), f'{random_map.uuid}.Map.Gbx', overwrite=True)
+        logger.info(f'TAGS: {random_map.Tags} UPDATE: {random_map.UpdatedAt}')
+        logger.info(f'uploading {random_map.TrackUID}.Map.Gbx to the server...')
+
+        await self._map_manager.upload_map(io.BytesIO(self.app.app_settings.map_generator.get_map_content(random_map.TrackID)), f'{random_map.TrackUID}.Map.Gbx', overwrite=True)
         await self._map_manager.update_list(full_update=True, detach_fks=True)
         logger.info('UPLOAD COMPLETE')
-        await self._map_manager.set_current_map(random_map.uuid)
+        await self._map_manager.set_current_map(random_map.TrackUID)
 
         await self.remove_map(map_to_remove)
 
-        self.app.app_settings.map_generator.played_maps.append(random_map.uuid)
+        self.app.app_settings.map_generator.played_maps.append(random_map.TrackUID)
         logger.info('map loaded')
 
     def pre_load_next_map(self):
@@ -91,9 +89,9 @@ class MapHandler:
             elif race_time <= self.active_map.time_bronze:
                 return Medals.BRONZE
 
-    async def _map_exists_in_match_settings(self, uuid: str) -> bool:
+    async def _map_exists_in_match_settings(self, uid: str) -> bool:
         return next(
-            (map for map in await self.app.instance.gbx("GetMapList", -1, 0) if map["UId"] == uuid),
+            (map for map in await self.app.instance.gbx("GetMapList", -1, 0) if map["UId"] == uid),
             None
         )
 

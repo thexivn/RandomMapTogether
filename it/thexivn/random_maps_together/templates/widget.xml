@@ -62,12 +62,9 @@
                     <quad pos="0 0" size="{{size_x}} 52" z-index="0" bgcolor="44664770"/>
 
                     <label pos="0.6 -3.0" size="14 5" z-index="1" text="$sMap Generator:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
-                    <label pos="15 -3.0" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'MapGenerator' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
-                    <label pos="27 -3.0" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
-                    <label pos="39 -3.0" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'MapPack' %}$000{% endif %}Map Pack" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
-                    {% if settings.map_generator.__class__.__name__ == 'MapPack' %}
-                    <label pos="51.7 -3.0" z-index="1" textsize="1" size="14 5.2" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" text="{{ settings.map_generator.map_pack_id }}" action="{{ id }}__ui_set_map_pack_id"/>
-                    {% endif %}
+                    <label pos="15 -3.0" z-index="1" text="{% if settings.map_generator.map_generator_type.value == 'RANDOM' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
+                    <label pos="27 -3.0" z-index="1" text="{% if settings.map_generator.map_generator_type.value == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
+                    <label pos="39 -3.0" z-index="1" text="{% if settings.map_generator.map_generator_type.value == 'CUSTOM' %}$000{% endif %}Custom" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
 
                     <label pos="0.6 -10.4" size="14.0 5" z-index="1" text="$sTime Limit:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <label pos="15 -10.4" z-index="1" textsize="2.5" size="11.6 5.2" textfont="RajdhaniMono" style="CardButtonSmallXS" halign="left" valign="center" text="{{ settings.game_time_seconds }}" scriptevents="1" action="{{ id }}__ui_set_game_time_seconds"/>
@@ -100,12 +97,9 @@
                     <quad pos="0 0" size="{{size_x}} 60" z-index="0" bgcolor="44664770"/>
 
                     <label pos="0.6 -3" size="14 5" z-index="1" text="$sMap Generator:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
-                    <label pos="15 -3" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'MapGenerator' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
-                    <label pos="27 -3" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
-                    <label pos="39 -3" z-index="1" text="{% if settings.map_generator.__class__.__name__ == 'MapPack' %}$000{% endif %}Map Pack" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
-                    {% if settings.map_generator.__class__.__name__ == 'MapPack' %}
-                    <label pos="51.7 -3" z-index="1" texttextsize="1" size="14 5.2" textfont="RajdhaniMono" halign="left" valign="center" scriptevents="1" text="{{ settings.map_generator.map_pack_id }}" action="{{ id }}__ui_set_map_pack_id"/>
-                    {% endif %}
+                    <label pos="15 -3" z-index="1" text="{% if settings.map_generator.map_generator_type.value == 'RANDOM' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
+                    <label pos="27 -3" z-index="1" text="{% if settings.map_generator.map_generator_type.value == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
+                    <label pos="39 -3" z-index="1" text="{% if settings.map_generator.map_generator_type.value == 'CUSTOM' %}$000{% endif %}Custom" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
 
                     <label pos="0.6 -10.4" size="14 5" z-index="1" text="$sTime Limit:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
                     <label pos="15 -10.4" z-index="1" textsize="2.5" size="10.6 5.2" textfont="RajdhaniMono" halign="left" valign="center" text="{{ settings.game_time_seconds }}" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_game_time_seconds"/>

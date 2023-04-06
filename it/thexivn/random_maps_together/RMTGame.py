@@ -15,10 +15,10 @@ from .Data.GameState import GameState
 from .Data.GameModes import GameModes
 from .Data.Medals import Medals
 from .map_generator import MapGenerator, MapGeneratorType
-from .map_generator.map_pack import MapPack
+from .map_generator.custom import Custom
 from .map_generator.totd import TOTD
 
-from .views import RandomMapsTogetherView, RMTScoreBoard, PlayerConfigsView, prompt_for_input
+from .views import CustomMapsView, RandomMapsTogetherView, RMTScoreBoard, PlayerConfigsView, prompt_for_input
 
 BIG_MESSAGE = 'Race_BigMessage'
 
@@ -57,6 +57,7 @@ class RMTGame:
         self._score_ui.set_game_state(self._game_state)
         self._scoreboard_ui = RMTScoreBoard(app, self._score, self._game_state, self)
         self._player_configs_ui = PlayerConfigsView(app)
+        self._custom_maps_ui = CustomMapsView(app)
         self._tm_ui = tm_ui_manager
         self._time_left_at_pause = 83
         self._time_at_pause = py_time.time()
@@ -92,7 +93,6 @@ class RMTGame:
         self._score_ui.subscribe("ui_set_map_generator_random", self.set_map_generator)
         self._score_ui.subscribe("ui_set_map_generator_totd", self.set_map_generator)
         self._score_ui.subscribe("ui_set_map_generator_map_pack", self.set_map_generator)
-        self._score_ui.subscribe("ui_set_map_pack_id", self.set_map_pack_id)
 
         self._score_ui.subscribe("ui_toggle_infinite_skips", self.toggle_infinite_skips)
         self._score_ui.subscribe("ui_toggle_allow_pausing", self.toggle_allow_pausing)
@@ -421,15 +421,10 @@ class RMTGame:
                 self.app.app_settings.map_generator = MapGenerator(self.app)
             elif map_generator_string == "totd" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.TOTD:
                 self.app.app_settings.map_generator = TOTD(self.app)
-            elif map_generator_string == "map_pack" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.MAP_PACK:
-                self.app.app_settings.map_generator = MapPack(self.app)
-                await self.set_map_pack_id(player, caller, values, **kwargs)
-            await self._score_ui.display()
-
-    async def set_map_pack_id(self, player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            map_pack_id = await prompt_for_input(player, "Map Pack ID", default=self.app.app_settings.map_generator.map_pack_id if self.app.app_settings.map_generator.map_pack_id else "", validator=self.app.app_settings.map_generator.map_pack_id_validator)
-            self.app.app_settings.map_generator.map_pack_id = int(map_pack_id)
+            elif map_generator_string == "map_pack":
+                if self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.CUSTOM:
+                    self.app.app_settings.map_generator = Custom(self.app)
+                await self._custom_maps_ui.display(player)
             await self._score_ui.display()
 
     async def toggle_player_settings(self, player, caller, values, **kwargs):

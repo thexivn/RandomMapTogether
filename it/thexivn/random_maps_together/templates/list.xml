@@ -83,6 +83,7 @@
           {% for action in actions %}
             {% if action.type == 'quad' %}
               <quad pos="{{ 218 - actions_width + action.left }} 0" size="{{ action.width|default(5, True) }} 5" style="{{ action.style }}" substyle="{{ action.substyle }}"
+                    {% if action.attrs_renderer %}
                     {% for attr in action.attrs_renderer(row, action) %}
                         {% if attr.safe %}
                             {{ attr.key }}="{{ attr.value | safe }}"
@@ -90,6 +91,7 @@
                             {{ attr.key }}="{{ attr.value }}"
                         {% endif %}
                     {% endfor %}
+                    {% endif %}
                     {% if action.require_confirm %}data-{% endif %}action="{{ id }}__list_action_{{ outer_loop.index0 }}_{{ loop.index0 }}"
                     scriptevents="1"
                     class="{{ action.classes|join(' ') }} {% if action.needs_confirm %}needs-confirm{% endif %}"
