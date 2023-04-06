@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from threading import Thread
+import re
 import time as py_time
 
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -224,6 +224,16 @@ class RMTGame:
 
                     logger.info(f'[on_map_finish] Final time check for {self.app.app_settings.goal_medal.name}')
                     race_medal = self._map_handler.get_medal_by_time(race_time)
+                    if len(str(race_time)) <= 5:
+                        match = re.match(r"(?P<seconds>\d{1,2})(?P<milliseconds>\d{3})", str(race_time))
+                        formatted_race_time = f"{match.group('seconds')}.{match.group('milliseconds')}"
+                    elif len(str(race_time)) <= 7:
+                        match = re.match(r"(?P<minutes>\d{1,2})(?P<seconds>\d{2})(?P<milliseconds>\d{3})", str(race_time))
+                        formatted_race_time = f"{match.group('minutes')}:{match.group('seconds')}.{match.group('milliseconds')}"
+                    else:
+                        match = re.match(r"(?P<hours>\d+)(?P<minutes>\d{2})(?P<seconds>\d{2})(?P<milliseconds>\d{3})", str(race_time))
+                        formatted_race_time = f"{match.group('hours')}:{match.group('minutes')}:{match.group('seconds')}.{match.group('milliseconds')}"
+
                     if race_medal:
                         if race_medal >= (self.app.app_settings.player_configs[player.login].goal_medal or self.app.app_settings.goal_medal):
                             if not (self.app.app_settings.player_configs[player.login].enabled if self.app.app_settings.player_configs[player.login].enabled is not None else self.app.app_settings.enabled):
@@ -233,7 +243,7 @@ class RMTGame:
                             await self._score.inc_medal_count(player, race_medal, goal_medal=True)
                             self._game_state.set_map_completed_state()
                             await self.hide_timer()
-                            await self._chat(f'{player.nickname} claimed {race_medal.name}, congratulations!')
+                            await self._chat(f'{player.nickname} claimed {race_medal.name} with {formatted_race_time}, congratulations!')
                             if await self.load_with_retry():
                                 await self._scoreboard_ui.display()
                                 await self._score_ui.hide()
@@ -246,7 +256,7 @@ class RMTGame:
                             self._game_state.skip_medal_player = player
                             self._game_state.skip_medal = race_medal
                             await self._score_ui.display()
-                            await self._chat(f'First {race_medal.name} acquired, congrats to {player.nickname}')
+                            await self._chat(f'First {race_medal.name} acquired, congrats to {player.nickname} with {formatted_race_time}')
                             await self._chat(f'You are now allowed to take the {race_medal.name} and skip the map', self._rmt_starter_player)
 
     async def command_skip_medal(self, player: Player, *args, **kwargs):
