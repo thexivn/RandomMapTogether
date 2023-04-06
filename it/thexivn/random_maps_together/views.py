@@ -205,7 +205,7 @@ class PlayerConfigsView(ManualListView):
         input_value = await prompt_for_input(player, f"Enable or disable player, OK for global player enabled: {self.app.app_settings.enabled}", [
             {"name": "Enable", "value": True},
             {"name": "Disable", "value": False},
-        ], entry=False, validator=lambda x: (True, ""))
+        ], entry=False)
         self.app.app_settings.player_configs[row["player_login"]].enabled = input_value
         await self.refresh(player=player)
 
@@ -235,7 +235,7 @@ class PlayerConfigsView(ManualListView):
             for medal in [Medals.AUTHOR, Medals.GOLD, Medals.SILVER]
         ]
 
-        medal = await prompt_for_input(player, f"Goal Medal, OK for global Goal Medal: {self.app.app_settings.goal_medal.name}", buttons=buttons, entry=False, validator=lambda x: (True, ""))
+        medal = await prompt_for_input(player, f"Goal Medal, OK for global Goal Medal: {self.app.app_settings.goal_medal.name}", buttons=buttons, entry=False)
         self.app.app_settings.player_configs[row["player_login"]].goal_medal = medal
 
         await self.refresh(player=player)
@@ -246,7 +246,7 @@ class PlayerConfigsView(ManualListView):
             for medal in [Medals.GOLD, Medals.SILVER, Medals.BRONZE]
         ]
 
-        medal = await prompt_for_input(player, f"Skip Medal, OK for global Skip Medal: {self.app.app_settings.skip_medal.name}", buttons=buttons, entry=False, validator=lambda x: (True, ""))
+        medal = await prompt_for_input(player, f"Skip Medal, OK for global Skip Medal: {self.app.app_settings.skip_medal.name}", buttons=buttons, entry=False)
         self.app.app_settings.player_configs[row["player_login"]].skip_medal = medal
 
         await self.refresh(player=player)
@@ -274,9 +274,8 @@ class PlayerPromptView(AlertView):
         return await self.response_future
 
     def validate_input(self, value):  # pragma: no cover
-        if not value or len(value) == 0:
-            return False, 'Empty value given!'
-        return True, None
+        if self.entry and not value:
+            raise ValueError("Empty value given!")
 
     async def handle(self, player, action, values, **kwargs):  # pragma: no cover
         # Try to parse the button id instead of the whole action string.
@@ -292,25 +291,18 @@ class PlayerPromptView(AlertView):
             pass
 
         if button == "ok":
-            self.data['errors'] = ''
-            value = self.default
-            if 'prompt_value' in values:
-                value = values['prompt_value']
-
-            valid, message = self.validator(value)
-
-            if valid:
+            try:
+                value = values.get("prompt_value", self.default)
+                self.validator(value)
                 await self.close(player)
                 self.response_future.set_result(value)
-                return
+            except Exception as e:
+                self.data['errors'] = str(e)
+                await self.display([player.login])
 
-            self.data['errors'] = message
         elif button:
             await self.close(player)
             self.response_future.set_result(self.data["buttons"][int(button)])
-            return
-
-        await self.display([player.login])
 
 async def prompt_for_input(player, message, buttons=None, entry=True, validator=None, default=None):
     prompt_view = PlayerPromptView(message, buttons, entry=entry, validator=validator, default=default)

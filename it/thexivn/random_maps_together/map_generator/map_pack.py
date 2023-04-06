@@ -33,5 +33,4 @@ class MapPack(MapGenerator):
     def map_pack_id_validator(self, map_pack_id):
         response = self.app.session.get(f"{self.map_pack_url}{map_pack_id}")
         if isinstance(response.json(), dict):
-            return False, f"Map pack ID doesn't exist: {map_pack_id}"
-        return True, f"Map pack ID exists: {map_pack_id}"
+            raise ValueError(f"Map pack ID doesn't exist: {map_pack_id}")
