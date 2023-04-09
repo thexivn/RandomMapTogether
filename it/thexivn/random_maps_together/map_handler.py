@@ -1,4 +1,4 @@
-import asyncio
+
 import io
 import logging
 from typing import Optional
@@ -7,9 +7,8 @@ from pyplanet.apps.core.maniaplanet.models import Map
 from pyplanet.contrib.map import MapManager
 from pyplanet.core.storage.storage import Storage
 
-from .Data.Constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
-from .Data.Medals import Medals
-from .Data.APIMapInfo import APIMapInfo
+from .models.enums.medals import Medals
+from .models.api_response.api_map_info import APIMapInfo
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +24,9 @@ class MapHandler:
         self.pre_patch_ice = False
         self._next_map: Optional[APIMapInfo] = None
 
-    async def await_next_map(self):
-        while self._next_map is None:
-            await asyncio.sleep(0.05)
-        return self._next_map
-
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
-        random_map = self._next_map or self.app.app_settings.map_generator.get_map()
+        random_map = self._next_map or await self.app.app_settings.map_generator.get_map()
         self._next_map = None
 
         map_to_remove = await self.app.instance.gbx("GetCurrentMapInfo")
@@ -42,22 +36,24 @@ class MapHandler:
         logger.info(f'TAGS: {random_map.Tags} UPDATE: {random_map.UpdatedAt}')
         logger.info(f'uploading {random_map.TrackUID}.Map.Gbx to the server...')
 
-        await self._map_manager.upload_map(io.BytesIO(self.app.app_settings.map_generator.get_map_content(random_map.TrackID)), f'{random_map.TrackUID}.Map.Gbx', overwrite=True)
+        await self._map_manager.upload_map(io.BytesIO(await self.app.tmx_client.get_map_content(random_map.TrackID)), f'{random_map.TrackUID}.Map.Gbx', overwrite=True)
         await self._map_manager.update_list(full_update=True, detach_fks=True)
         logger.info('UPLOAD COMPLETE')
         await self._map_manager.set_current_map(random_map.TrackUID)
 
         await self.remove_map(map_to_remove)
 
-        self.app.app_settings.map_generator.played_maps.append(random_map.TrackUID)
+        self.app.app_settings.map_generator.played_maps.add(random_map)
         logger.info('map loaded')
 
-    def pre_load_next_map(self):
+    async def pre_load_next_map(self):
         try:
-            self._next_map = self.app.app_settings.map_generator.get_map()
-        except:
+            logger.info("STARTING PRELOAD")
+            self._next_map = await self.app.app_settings.map_generator.get_map()
+            logger.info("FINISHING PRELOAD")
+        except Exception as e:
             self._next_map = None
-            logger.warning('Preload failed')
+            logger.warning('Preload failed: %s', str(e))
 
     async def load_hub(self):
         logger.info('loading HUB map ...')
@@ -70,7 +66,7 @@ class MapHandler:
             logger.info('HUB map was already loaded')
             await self._map_manager.set_current_map(self._hub_map)
         else:
-            content = self.app.app_settings.map_generator.get_map_content(self._hub_id)
+            content = await self.app.tmx_client.get_map_content(self._hub_id)
             await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_map}.Map.Gbx', overwrite=True)
             await self._map_manager.update_list(full_update=True, detach_fks=True)
             await self._map_manager.set_current_map(self._hub_map)

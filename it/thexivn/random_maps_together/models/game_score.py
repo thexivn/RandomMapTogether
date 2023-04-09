@@ -1,32 +1,19 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
-
-from .Medals import Medals
-
 from pyplanet.apps.core.maniaplanet.models import Player
 
-
-@dataclass
-class PlayerScoreInfo:
-    player: Player
-    player_goal_medals: int = 0
-    player_skip_medals: int = 0
-    author_medals: int = 0
-    gold_medals: int = 0
-    silver_medals: int = 0
-    bronze_medals: int = 0
-    goal_medals: int = 0
-    skip_medals: int = 0
+from .enums.medals import Medals
+from .player_score import PlayerScore
 
 @dataclass
 class GameScore:
     total_goal_medals: int = 0
     total_skip_medals: int = 0
-    player_finishes: Dict[str, PlayerScoreInfo] = field(default_factory=dict)
+    player_finishes: Dict[str, PlayerScore] = field(default_factory=dict)
 
     async def inc_medal_count(self, player: Player, medal: Medals, goal_medal=False, skip_medal=False):
         if not player.login in self.player_finishes:
-            self.player_finishes[player.login] = PlayerScoreInfo(player)
+            self.player_finishes[player.login] = PlayerScore(player)
 
         if goal_medal:
             self.total_goal_medals += 1
@@ -44,7 +31,7 @@ class GameScore:
         elif medal == Medals.BRONZE:
             self.player_finishes[player.login].bronze_medals += 1
 
-    def get_top_10(self, max_length=10) -> List[PlayerScoreInfo]:
+    def get_top_10(self, max_length=10) -> List[PlayerScore]:
         return sorted(self.player_finishes.values(), key=lambda player_score: (player_score.goal_medals, player_score.skip_medals), reverse=True)[:min(len(self.player_finishes), max_length)]
 
     def rest(self):

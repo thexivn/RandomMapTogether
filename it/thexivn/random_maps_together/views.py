@@ -8,11 +8,11 @@ from pyplanet.views.generics.list import ManualListView
 from pyplanet.views.generics.widget import TimesWidgetView
 from pyplanet.views.generics.alert import AlertView
 
-from .Data.GameScore import GameScore
-from .Data.GameState import GameState
-from .Data.MedalURLs import MedalURLs
-from .Data.Medals import Medals
-from .Data.GameModes import GameModes
+from .models.game_score import GameScore
+from .models.game_state import GameState
+from .models.enums.medal_urls import MedalURLs
+from .models.enums.medals import Medals
+from .models.enums.game_modes import GameModes
 
 logger = logging.getLogger(__name__)
 
@@ -430,13 +430,13 @@ class CustomMapsView(ManualListView):
         await self.display(player)
 
     async def add_map(self, player, values, **kwargs):
-        map_id = await prompt_for_input(player, "Map ID", validator=self.app.app_settings.map_generator.map_id_validator)
-        self.app.app_settings.map_generator.add_map(map_id)
+        map_id = await prompt_for_input(player, "Map ID", validator=self.app.app_settings.map_generator.map_id_validator, default="")
+        await self.app.app_settings.map_generator.add_map(map_id)
         await self.display(player)
 
     async def add_map_pack(self, player, values, **kwargs):
-        map_pack_id = await prompt_for_input(player, "Map Pack ID", validator=self.app.app_settings.map_generator.map_pack_id_validator)
-        self.app.app_settings.map_generator.add_map_pack(map_pack_id)
+        map_pack_id = await prompt_for_input(player, "Map Pack ID", validator=self.app.app_settings.map_generator.map_pack_id_validator, default="")
+        await self.app.app_settings.map_generator.add_map_pack(map_pack_id)
         await self.display(player)
 
 

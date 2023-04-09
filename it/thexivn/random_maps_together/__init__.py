@@ -1,5 +1,4 @@
 import logging
-import requests
 
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -8,9 +7,11 @@ from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 from pyplanet.contrib.command import Command
 from pyplanet.contrib.setting import Setting
 
-from .Data.Configurations import Configurations, RMCConfig
-from .RMTGame import RMTGame
-from .MapHandler import MapHandler
+from .configuration import Configuration
+from .configuration.rmc_configuration import RMCConfig
+from .game import RMTGame
+from .map_handler import MapHandler
+from .client.tm_exchange_client import TMExchangeClient
 from .views import RandomMapsTogetherView
 
 logger = logging.getLogger(__name__)
@@ -22,8 +23,8 @@ class RandomMapsTogetherApp(AppConfig):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.session = requests.Session()
-        self.app_settings: Configurations = RMCConfig(self)
+        self.tmx_client: TMExchangeClient = TMExchangeClient()
+        self.app_settings: Configuration = RMCConfig(self)
         self.map_handler = MapHandler(self, self.instance.map_manager, self.instance.storage)
         self.instance.chat()
         self.widget = RandomMapsTogetherView(self)

@@ -1,11 +1,6 @@
 from dataclasses import dataclass
-from enum import Enum
 import time as py_time
-
-
-class GameStage(Enum):
-    HUB = 0,
-    RMT = 1
+from .enums.game_stage import GameStage
 
 
 @dataclass

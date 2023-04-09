@@ -8,12 +8,13 @@ from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
 
-from . import MapHandler
-from .Data.Configurations import RMCConfig, RMSConfig
-from .Data.GameScore import GameScore
-from .Data.GameState import GameState
-from .Data.GameModes import GameModes
-from .Data.Medals import Medals
+from .map_handler import MapHandler
+from .configuration.rmc_configuration import RMCConfig
+from .configuration.rms_configuration import RMSConfig
+from .models.game_score import GameScore
+from .models.game_state import GameState
+from .models.enums.game_modes import GameModes
+from .models.enums.medals import Medals
 from .map_generator import MapGenerator, MapGeneratorType
 from .map_generator.custom import Custom
 from .map_generator.totd import TOTD
@@ -32,12 +33,6 @@ _lock = asyncio.Lock()
 # pyplanet.conf.settings.DEBUG = True
 
 logger = logging.getLogger(__name__)
-
-
-def background_loading_map(map_handler: MapHandler):
-    logger.info("[background_loading_map] STARTED")
-    map_handler.pre_load_next_map()
-    logger.info("[background_loading_map] COMPLETED")
 
 
 class RMTGame:
@@ -181,6 +176,7 @@ class RMTGame:
                 await self._chat("$o$FB0 This track was created before the ICE physics change $z"
                                  , self._rmt_starter_player)
             self._game_state.set_new_map_in_game_state()
+            await self._map_handler.pre_load_next_map()
         else:
             await self.hide_timer()
             self._game_state.current_map_completed = True
@@ -419,12 +415,15 @@ class RMTGame:
             map_generator_string = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1]
             if map_generator_string == "random" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.RANDOM:
                 self.app.app_settings.map_generator = MapGenerator(self.app)
+                await self._map_handler.pre_load_next_map()
             elif map_generator_string == "totd" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.TOTD:
                 self.app.app_settings.map_generator = TOTD(self.app)
+                await self._map_handler.pre_load_next_map()
             elif map_generator_string == "map_pack":
                 if self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.CUSTOM:
                     self.app.app_settings.map_generator = Custom(self.app)
                 await self._custom_maps_ui.display(player)
+
             await self._score_ui.display()
 
     async def toggle_player_settings(self, player, caller, values, **kwargs):

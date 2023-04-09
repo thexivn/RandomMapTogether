@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Tuple
 
-from .map_tag import MapTag
+from ..map_tag import MapTag
 from datetime import datetime
-from .Constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
+from ...constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
 
 
 @dataclass(frozen=True)
@@ -19,7 +19,7 @@ class APIMapInfo:
         return (self.has_tag_id(TAG_BOBSLEIGH) or self.has_tag_id(TAG_ICE)) and self.UpdatedAt < ICE_CHANGE_DATE
 
     def has_tag_id(self, tag_id) -> bool:
-        if next((tag for tag in self.Tags if tag.ID == tag_id), None):
+        if next((tag for tag in self.Tags if tag.id == tag_id), None):
             return True
         return False
 
@@ -33,7 +33,7 @@ class APIMapInfo:
             datetime.fromisoformat(json["UpdatedAt"]).date(),
             json["Username"],
             json["Name"],
-            tuple(next(map_tag for map_tag in map_tags if map_tag.ID == int(tag_id) ) for tag_id in json["Tags"].split(",")),
+            tuple(next(map_tag for map_tag in map_tags if map_tag.id == int(tag_id) ) for tag_id in json["Tags"].split(",")),
         )
     # "UserID": 129732,
     # "GbxMapName": "Toybox Garden",
