@@ -1,6 +1,7 @@
 import logging
 import re
 import time as py_time
+import asyncio
 
 from pyplanet.views import TemplateView
 from pyplanet.views.generics.list import ManualListView
@@ -118,6 +119,7 @@ class RMTScoreBoard(TemplateView):
         self._score: GameScore = score
         self._game_state = game_state
         self._game = game
+        self._player_loops = {}
 
     async def get_context_data(self):
         data = await super().get_context_data()
@@ -136,6 +138,30 @@ class RMTScoreBoard(TemplateView):
         data["scroll_max"] = max(0, len(data['players']) * 10 - 100)
 
         return data
+
+    async def display(self, player_logins=None):
+        if player_logins:
+            for player_login in player_logins:
+                self._player_loops[player_login] = asyncio.create_task(self.display_and_update_until_hide(player_login))
+        else:
+            await super().display()
+
+    async def hide(self, player_logins=None):
+        if player_logins:
+            for player_login in player_logins:
+                self._player_loops[player_login].cancel()
+                del self._player_loops[player_login]
+                await super().hide([player_login])
+        else:
+            await super().hide()
+
+    async def display_and_update_until_hide(self, player_login=None):
+        if player_login:
+            await super().display([player_login])
+            while player_login in self._is_player_shown:
+                await asyncio.sleep(1)
+                await super().display([player_login])
+
 
 class PlayerConfigsView(ManualListView):
     app = None
