@@ -19,7 +19,11 @@ from .map_generator import MapGenerator, MapGeneratorType
 from .map_generator.custom import Custom
 from .map_generator.totd import TOTD
 
-from .views import CustomMapsView, RandomMapsTogetherView, RMTScoreBoard, PlayerConfigsView, prompt_for_input
+from .views.custom_maps_view import CustomMapsView
+from .views.random_maps_together_view import RandomMapsTogetherView
+from .views.rmt_scoreboard_view import RMTScoreBoardView
+from .views.player_config_view import PlayerConfigView
+from .views.player_prompt_view import PlayerPromptView
 
 BIG_MESSAGE = 'Race_BigMessage'
 
@@ -50,8 +54,8 @@ class RMTGame:
         self._game_state = GameState()
         self._score_ui.set_score(self._score)
         self._score_ui.set_game_state(self._game_state)
-        self._scoreboard_ui = RMTScoreBoard(app, self._score, self._game_state, self)
-        self._player_configs_ui = PlayerConfigsView(app)
+        self._scoreboard_ui = RMTScoreBoardView(app, self._score, self._game_state, self)
+        self._player_configs_ui = PlayerConfigView(app)
         self._custom_maps_ui = CustomMapsView(app)
         self._tm_ui = tm_ui_manager
         self._time_left_at_pause = 83
@@ -347,7 +351,7 @@ class RMTGame:
                 {"name": "3m", "value": 180},
                 {"name": "5m", "value": 300}
             ]
-            time_seconds = await prompt_for_input(player, "Goal bonus in seconds", buttons, default=self.app.app_settings.goal_bonus_seconds)
+            time_seconds = await PlayerPromptView.prompt_for_input(player, "Goal bonus in seconds", buttons, default=self.app.app_settings.goal_bonus_seconds)
             self.app.app_settings.goal_bonus_seconds = int(time_seconds)
 
             await self._score_ui.display()
@@ -359,7 +363,7 @@ class RMTGame:
                 {"name": "1m", "value": 60},
                 {"name": "2m", "value": 120}
             ]
-            time_seconds = await prompt_for_input(player, "Skip penalty in seconds", buttons, default=self.app.app_settings.skip_penalty_seconds)
+            time_seconds = await PlayerPromptView.prompt_for_input(player, "Skip penalty in seconds", buttons, default=self.app.app_settings.skip_penalty_seconds)
             self.app.app_settings.skip_penalty_seconds = int(time_seconds)
 
             await self._score_ui.display()
@@ -375,7 +379,7 @@ class RMTGame:
                 {"name": "30m", "value": 1800},
                 {"name": "1h", "value": 3600}
             ]
-            time_seconds = await prompt_for_input(player, "Game time in seconds", buttons, default=self.app.app_settings.game_time_seconds)
+            time_seconds = await PlayerPromptView.prompt_for_input(player, "Game time in seconds", buttons, default=self.app.app_settings.game_time_seconds)
             self.app.app_settings.game_time_seconds = int(time_seconds)
 
             await self._score_ui.display()

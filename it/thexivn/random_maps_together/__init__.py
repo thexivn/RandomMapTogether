@@ -9,10 +9,10 @@ from pyplanet.contrib.setting import Setting
 
 from .configuration import Configuration
 from .configuration.rmc_configuration import RMCConfig
-from .game import RMTGame
+from .rmt_game import RMTGame
 from .map_handler import MapHandler
 from .client.tm_exchange_client import TMExchangeClient
-from .views import RandomMapsTogetherView
+from .views.random_maps_together_view import RandomMapsTogetherView
 
 logger = logging.getLogger(__name__)
 
