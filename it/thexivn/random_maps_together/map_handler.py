@@ -66,8 +66,7 @@ class MapHandler:
             logger.info('HUB map was already loaded')
             await self._map_manager.set_current_map(self._hub_map)
         else:
-            content = await self.app.tmx_client.get_map_content(self._hub_id)
-            await self._map_manager.upload_map(io.BytesIO(content), f'{self._hub_map}.Map.Gbx', overwrite=True)
+            await self._map_manager.upload_map(io.BytesIO(await self.app.tmx_client.get_map_content(self._hub_id)), f'{self._hub_map}.Map.Gbx', overwrite=True)
             await self._map_manager.update_list(full_update=True, detach_fks=True)
             await self._map_manager.set_current_map(self._hub_map)
 

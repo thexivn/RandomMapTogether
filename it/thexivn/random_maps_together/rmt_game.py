@@ -38,6 +38,19 @@ _lock = asyncio.Lock()
 
 logger = logging.getLogger(__name__)
 
+def _check_player_allowed_to_manage_running_game(f):
+    async def wrapper(self, player: Player, *args, **kwargs) -> bool:
+        if player.level == Player.LEVEL_MASTER or player == self._rmt_starter_player:
+            return await f(self, player, *args, **kwargs)
+        await self._chat("You are not allowed manage running game", player)
+    return wrapper
+
+def _check_player_allowed_to_change_game_settings(f):
+    async def wrapper(self, player: Player, *args, **kwargs) -> bool:
+        if player.level < self.app.app_settings.min_level_to_start:
+            return await self._chat("You are not allowed to change game settings", player)
+        return await f(self, player, *args, **kwargs)
+    return wrapper
 
 class RMTGame:
     def __init__(self, app, map_handler: MapHandler, chat: ChatManager, mode_manager: ModeManager,
@@ -145,13 +158,11 @@ class RMTGame:
         # await self._score_ui.hide()
         return retry < max_retry
 
+    @_check_player_allowed_to_manage_running_game
     async def command_stop_rmt(self, player: Player, *args, **kwargs):
         if self._game_state.is_game_stage():
-            if await self._is_player_allowed_to_manage_running_game(player):
-                await self._chat(f'{player.nickname} stopped the current session')
-                await self.back_to_hub()
-            else:
-                await self._chat(f"You can't stop the {self.app.app_settings.game_mode.value}", player)
+            await self._chat(f'{player.nickname} stopped the current session')
+            await self.back_to_hub()
         else:
             await self._chat(f"{self.app.app_settings.game_mode.value} is not started yet", player)
 
@@ -258,12 +269,10 @@ class RMTGame:
                             await self._score_ui.display()
                             await self._chat(f'First {race_medal.name} acquired, congrats to {player.nickname} with {formatted_race_time}')
                             await self._chat(f'You are now allowed to take the {race_medal.name} and skip the map', self._rmt_starter_player)
-
+    @_check_player_allowed_to_manage_running_game
     async def command_skip_medal(self, player: Player, *args, **kwargs):
         if self._game_state.is_paused:
             return await self._chat("Game currently paused", player)
-        if not await self._is_player_allowed_to_manage_running_game(player):
-            return
 
         if self._game_state.skip_command_allowed():
             if self._game_state.skip_medal:
@@ -282,11 +291,10 @@ class RMTGame:
         else:
             await self._chat("You are not allowed to skip", player)
 
+    @_check_player_allowed_to_manage_running_game
     async def command_free_skip(self, player: Player, *args, **kwargs):
         if self._game_state.is_paused:
             return await self._chat("Game currently paused", player)
-        if not await self._is_player_allowed_to_manage_running_game(player):
-            return
 
         if self._game_state.skip_command_allowed():
             if self.app.app_settings.can_skip_map(self):
@@ -310,9 +318,8 @@ class RMTGame:
         else:
             await self._chat("You are not allowed to skip", player)
 
+    @_check_player_allowed_to_manage_running_game
     async def command_toggle_pause(self, player: Player, *args, **kwargs):
-        if not self.app.app_settings.allow_pausing or not await self._is_player_allowed_to_manage_running_game(player):
-            return await self._chat("Cannot toggle pause", player)
         self._game_state.is_paused ^= True
         pause_duration = 0
         if self._game_state.is_paused:
@@ -344,116 +351,106 @@ class RMTGame:
         await self._mode_manager._instance.gbx('ForceSpectator', player.login, 2)
         await self._mode_manager._instance.gbx('ForceSpectator', player.login, 0)
 
+    @_check_player_allowed_to_change_game_settings
     async def set_goal_bonus_seconds(self, player: Player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            buttons = [
-                {"name": "1m", "value": 60},
-                {"name": "3m", "value": 180},
-                {"name": "5m", "value": 300}
-            ]
-            time_seconds = await PlayerPromptView.prompt_for_input(player, "Goal bonus in seconds", buttons, default=self.app.app_settings.goal_bonus_seconds)
-            self.app.app_settings.goal_bonus_seconds = int(time_seconds)
+        buttons = [
+            {"name": "1m", "value": 60},
+            {"name": "3m", "value": 180},
+            {"name": "5m", "value": 300}
+        ]
+        time_seconds = await PlayerPromptView.prompt_for_input(player, "Goal bonus in seconds", buttons, default=self.app.app_settings.goal_bonus_seconds)
+        self.app.app_settings.goal_bonus_seconds = int(time_seconds)
 
-            await self._score_ui.display()
+        await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def set_skip_penalty_seconds(self, player: Player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            buttons = [
-                {"name": "30s", "value": 30},
-                {"name": "1m", "value": 60},
-                {"name": "2m", "value": 120}
-            ]
-            time_seconds = await PlayerPromptView.prompt_for_input(player, "Skip penalty in seconds", buttons, default=self.app.app_settings.skip_penalty_seconds)
-            self.app.app_settings.skip_penalty_seconds = int(time_seconds)
+        buttons = [
+            {"name": "30s", "value": 30},
+            {"name": "1m", "value": 60},
+            {"name": "2m", "value": 120}
+        ]
+        time_seconds = await PlayerPromptView.prompt_for_input(player, "Skip penalty in seconds", buttons, default=self.app.app_settings.skip_penalty_seconds)
+        self.app.app_settings.skip_penalty_seconds = int(time_seconds)
 
-            await self._score_ui.display()
+        await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def set_game_time_seconds(self, player: Player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            buttons = [
-                {"name": "30m", "value": 1800},
-                {"name": "1h", "value": 3600},
-                {"name": "2h", "value": 7200}
-            ] if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE else [
-                {"name": "15m", "value": 900},
-                {"name": "30m", "value": 1800},
-                {"name": "1h", "value": 3600}
-            ]
-            time_seconds = await PlayerPromptView.prompt_for_input(player, "Game time in seconds", buttons, default=self.app.app_settings.game_time_seconds)
-            self.app.app_settings.game_time_seconds = int(time_seconds)
+        buttons = [
+            {"name": "30m", "value": 1800},
+            {"name": "1h", "value": 3600},
+            {"name": "2h", "value": 7200}
+        ] if self.app.app_settings.game_mode == GameModes.RANDOM_MAP_CHALLENGE else [
+            {"name": "15m", "value": 900},
+            {"name": "30m", "value": 1800},
+            {"name": "1h", "value": 3600}
+        ]
+        time_seconds = await PlayerPromptView.prompt_for_input(player, "Game time in seconds", buttons, default=self.app.app_settings.game_time_seconds)
+        self.app.app_settings.game_time_seconds = int(time_seconds)
 
-            await self._score_ui.display()
+        await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def set_goal_medal(self, player: Player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.goal_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_medal_")[1].upper()]
-            await self._score_ui.display()
+        self.app.app_settings.goal_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_goal_medal_")[1].upper()]
+        await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def set_skip_medal(self, player: Player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.skip_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_medal_")[1].upper()]
-            await self._score_ui.display()
+        self.app.app_settings.skip_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_skip_medal_")[1].upper()]
+        await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def toggle_infinite_skips(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.infinite_free_skips ^= True
-            await self._score_ui.display()
+        self.app.app_settings.infinite_free_skips ^= True
+        await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def toggle_allow_pausing(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.allow_pausing ^= True
-            await self._score_ui.display()
+        self.app.app_settings.allow_pausing ^= True
+        await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def set_game_mode_rmc(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player) and self.app.app_settings.game_mode != GameModes.RANDOM_MAP_CHALLENGE:
+        if self.app.app_settings.game_mode != GameModes.RANDOM_MAP_CHALLENGE:
             self.app.app_settings = RMCConfig(self.app)
             await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def set_game_mode_rms(self, player: Player, *args, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player) and self.app.app_settings.game_mode != GameModes.RANDOM_MAP_SURVIVAL:
+        if self.app.app_settings.game_mode != GameModes.RANDOM_MAP_SURVIVAL:
             self.app.app_settings = RMSConfig(self.app)
             await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def set_map_generator(self, player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            map_generator_string = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1]
-            if map_generator_string == "random" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.RANDOM:
-                self.app.app_settings.map_generator = MapGenerator(self.app)
-                await self._map_handler.pre_load_next_map()
-            elif map_generator_string == "totd" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.TOTD:
-                self.app.app_settings.map_generator = TOTD(self.app)
-                await self._map_handler.pre_load_next_map()
-            elif map_generator_string == "map_pack":
-                if self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.CUSTOM:
-                    self.app.app_settings.map_generator = Custom(self.app)
-                await self._custom_maps_ui.display(player)
+        map_generator_string = caller.split("it_thexivn_RandomMapsTogether_widget__ui_set_map_generator_")[1]
+        if map_generator_string == "random" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.RANDOM:
+            self.app.app_settings.map_generator = MapGenerator(self.app)
+            await self._map_handler.pre_load_next_map()
+        elif map_generator_string == "totd" and self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.TOTD:
+            self.app.app_settings.map_generator = TOTD(self.app)
+            await self._map_handler.pre_load_next_map()
+        elif map_generator_string == "map_pack":
+            if self.app.app_settings.map_generator.map_generator_type != MapGeneratorType.CUSTOM:
+                self.app.app_settings.map_generator = Custom(self.app)
+            await self._custom_maps_ui.display(player)
 
-            await self._score_ui.display()
+        await self._score_ui.display()
 
+    @_check_player_allowed_to_change_game_settings
     async def toggle_player_settings(self, player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            await self._player_configs_ui.display(player)
+        await self._player_configs_ui.display(player)
 
+    @_check_player_allowed_to_change_game_settings
     async def toggle_enabled_players(self, player, caller, values, **kwargs):
-        if await self._check_player_allowed_to_change_game_settings(player):
-            self.app.app_settings.enabled ^= True
-            await self._score_ui.display()
+        self.app.app_settings.enabled ^= True
+        await self._score_ui.display()
 
     async def hide_timer(self):
         self._mode_settings[S_TIME_LIMIT] = 0
         await self._mode_manager.update_settings(self._mode_settings)
-
-    async def _is_player_allowed_to_manage_running_game(self, player: Player) -> bool:
-        if player.level == Player.LEVEL_MASTER or player == self._rmt_starter_player:
-            return True
-        await self._chat("You are not allowed manage running game", player)
-        return False
-
-    async def _check_player_allowed_to_change_game_settings(self, player: Player) -> bool:
-        if player.level < self.app.app_settings.min_level_to_start:
-            await self._chat("You are not allowed to change game settings", player)
-            return False
-        return True
 
     async def hide_custom_scoreboard(self, count, time, *args, **kwargs):
         await self._scoreboard_ui.hide()
