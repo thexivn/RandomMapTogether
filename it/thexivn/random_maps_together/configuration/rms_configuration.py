@@ -26,6 +26,7 @@ class RMSConfig(Configuration):
         elif skip_medal:
             pass
         self.app.game._time_left -= self.app.game._game_state.map_played_time()
+        self.app.game._time_left = max(0, self.app.game._time_left)
 
     def can_skip_map(self):
         return True

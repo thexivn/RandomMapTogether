@@ -67,6 +67,7 @@ class RMTGame(Game):
 
     async def __aexit__(self, *err):
         await self.config.update_time_left()
+        self._game_state.current_map_completed = True
         await self.hide_timer()
         await self.views.scoreboard_view.display()
         await self.views.ingame_view.hide()

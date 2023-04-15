@@ -1,9 +1,12 @@
 from dataclasses import dataclass
+import logging
 
 from pyplanet.apps.core.maniaplanet.models import Player
 from . import Configuration
 from ..games import check_player_allowed_to_change_game_settings
 from ..views.player_prompt_view import PlayerPromptView
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class RMCConfig(Configuration):
@@ -13,6 +16,7 @@ class RMCConfig(Configuration):
 
     async def update_time_left(self, free_skip=False, goal_medal=False, skip_medal=False):
         self.app.game._time_left -= self.app.game._game_state.map_played_time()
+        self.app.game._time_left = max(0, self.app.game._time_left)
 
     def can_skip_map(self):
         return any([
