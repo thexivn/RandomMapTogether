@@ -15,18 +15,34 @@ logger = logging.getLogger(__name__)
 
 class MapHandler:
     def __init__(self, app, map_manager: MapManager, storage: Storage):
+        self._next_map: Optional[APIMapInfo] = None
         self._hub_map = '7E1heauBgOUsqlhliGDY8DoOZbm'
         self._hub_id = '63710'
+        self.app = app
         self._map_manager = map_manager
         self._storage = storage
-        self.app = app
         self.active_map: Map = None
         self.pre_patch_ice = False
-        self._next_map: Optional[APIMapInfo] = None
+        self.map_is_loading = False
+
+    async def load_with_retry(self, max_retry=3) -> bool:
+        self.map_is_loading = True
+
+        for _ in range(max_retry):
+            try:
+                await self.load_next_map()
+                break
+            except Exception as e:
+                logger.error("failed to load map...", exc_info=e)
+        else:
+            raise RuntimeError("Failed to load map")
+
+        self.map_is_loading = False
 
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
-        random_map = self._next_map or await self.app.app_settings.map_generator.get_map()
+        self.map_is_loading = True
+        random_map = self._next_map or await self.app.game.config.map_generator.get_map()
         self._next_map = None
 
         map_to_remove = await self.app.instance.gbx("GetCurrentMapInfo")
@@ -43,14 +59,14 @@ class MapHandler:
 
         await self.remove_map(map_to_remove)
 
-        self.app.app_settings.map_generator.played_maps.add(random_map)
+        self.app.game.config.map_generator.played_maps.add(random_map)
+
+        self.map_is_loading = False
         logger.info('map loaded')
 
     async def pre_load_next_map(self):
         try:
-            logger.info("STARTING PRELOAD")
-            self._next_map = await self.app.app_settings.map_generator.get_map()
-            logger.info("FINISHING PRELOAD")
+            self._next_map = await self.app.game.config.map_generator.get_map()
         except Exception as e:
             self._next_map = None
             logger.warning('Preload failed: %s', str(e))
@@ -112,3 +128,6 @@ class MapHandler:
         for map in await self.app.instance.gbx("GetMapList", 100, 0):
             if map["UId"] != self._hub_map:
                 await self.remove_map(map)
+
+    async def map_begin_event(self, map: Map, *args, **kwargs):
+        self.active_map = map

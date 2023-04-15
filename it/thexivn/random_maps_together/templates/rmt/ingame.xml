@@ -1,0 +1,43 @@
+{% extends 'core.views/generics/widget.xml' %}
+
+{% block content %}
+    <frame pos="0 0" size="{{size_x}} {{size_y}}">
+        <quad pos="0 0" size="{{size_x}} {{size_y}}" z-index="0" bgcolor="10101070"/>
+            <quad pos="10 -0.5" size="{{size_y - 1}} {{size_y - 1 }}" z-index="1" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
+            <label pos="25 -2.2" z-index="1" text="$s{{ total_goal_medals }}" textsize="3.5" textfont="RajdhaniMono" halign="center" />
+            <quad pos="40 -0.5" size="{{size_y - 1}} {{size_y - 1}}" z-index="1" image="{{ skip_medal_url }}" autoscale="1" keepratio="Fit"/>
+            <label pos="55 -2.2" z-index="1" text="$s{{ total_skip_medals }}" textsize="3.5" textfont="RajdhaniMono" halign="center" />
+    </frame>
+    <frame pos="0 -{{size_y}}" size="{{size_x}} 6">
+        <quad pos="0 0" size="{{size_x}} 6" z-index="0" bgcolor="44664770"/>
+        {% if map_loading %}
+            <label pos="0 -3" size="{{size_x}} 5" z-index="1" text="$s LOADING NEXT MAP..."
+                    textsize="3" textfont="RajdhaniMono" halign="left" valign="center" />
+        {% else %}
+            <label {{btn_pos_size(0) | safe}} z-index="1" text="$sStop" textsize="2.5" textfont="RajdhaniMono"
+                    halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_stop" />
+            {% if skip_medal %}
+                <label pos="35 -3" size="25 5" z-index="1" text="Take {{skip_medal.name}} Medal" textsize="2.5" textfont="RajdhaniMono"
+                        halign="left" valign="center" style="CardButtonSmallS"
+                        id="rmt_gold_btn" scriptevents="1" action="{{ id }}__ui_skip_medal" />
+            {% elif skip_pre_patch_ice_visible %}
+                <label {{btn_pos_size(1) | safe}} z-index="1" text="$sSkip Pre Patch Ice" textsize="2.5" textfont="RajdhaniMono"
+                        halign="left" valign="center" style="CardButtonSmallS"
+                        id="rmt_skip_btn" scriptevents="1" action="{{ id }}__ui_free_skip" />
+            {% elif free_skip_visible %}
+                <label {{btn_pos_size(1) | safe}} z-index="1" text="$sSkip" textsize="2.5" textfont="RajdhaniMono"
+                        halign="left" valign="center" style="CardButtonSmallS"
+                        id="rmt_skip_btn" scriptevents="1" action="{{ id }}__ui_free_skip" />
+            {% endif %}
+        {% endif %}
+    </frame>
+    {% if not map_loading %}
+        <label pos="70 -2.5" z-index="1" text="$sPlayer Configs" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_toggle_player_settings" />
+        <label pos="70 -10" text="$sToggle Scoreboard" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_toggle_scoreboard" z-index="1"/>
+        {% if allow_pausing %}
+            <label pos="3 -{{size_y+9}}" z-index="2" text="$s{% if is_paused %}Unpause{% else %}Pause{% endif %}" textsize="2.5" textfont="RajdhaniMono"
+                    halign="left" valign="center" style="CardButtonSmallS"
+                    id="rmt_pause_btn" scriptevents="1" action="{{ id }}__ui_toggle_pause" />
+        {% endif %}
+    {% endif %}
+{% endblock %}

@@ -97,21 +97,21 @@ class CustomMapsView(ManualListView):
                 "id": map.TrackID,
                 "uid": map.TrackUID,
             }
-            for map in self.app.app_settings.map_generator.maps
+            for map in self.app.game.config.map_generator.maps
         ]
         logger.info(data)
         return data
 
     async def remove_map(self, player, values, map, **kwargs):
-        await self.app.app_settings.map_generator.remove_map(map["id"])
+        await self.app.game.config.map_generator.remove_map(map["id"])
         await self.display(player)
 
     async def add_map(self, player, values, **kwargs):
-        map_id = await PlayerPromptView.prompt_for_input(player, "Map ID", validator=self.app.app_settings.map_generator.map_id_validator, default="")
-        await self.app.app_settings.map_generator.add_map(map_id)
+        map_id = await PlayerPromptView.prompt_for_input(player, "Map ID", validator=self.app.game.config.map_generator.map_id_validator, default="")
+        await self.app.game.config.map_generator.add_map(map_id)
         await self.display(player)
 
     async def add_map_pack(self, player, values, **kwargs):
-        map_pack_id = await PlayerPromptView.prompt_for_input(player, "Map Pack ID", validator=self.app.app_settings.map_generator.map_pack_id_validator, default="")
-        await self.app.app_settings.map_generator.add_map_pack(map_pack_id)
+        map_pack_id = await PlayerPromptView.prompt_for_input(player, "Map Pack ID", validator=self.app.game.config.map_generator.map_pack_id_validator, default="")
+        await self.app.game.config.map_generator.add_map_pack(map_pack_id)
         await self.display(player)

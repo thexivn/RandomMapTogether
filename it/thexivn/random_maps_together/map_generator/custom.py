@@ -3,8 +3,10 @@ import logging
 import random
 from typing import Set
 
-from ..models.api_response.api_map_info import APIMapInfo
+
 from . import MapGenerator, MapGeneratorType
+from ..models.api_response.api_map_info import APIMapInfo
+from ..views.custom_maps_view import CustomMapsView
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,7 @@ class Custom(MapGenerator):
         super().__init__(app)
         self.map_generator_type = MapGeneratorType.CUSTOM
         self.maps: Set[APIMapInfo] = set()
+        self.maps_ui = CustomMapsView(app)
 
     async def add_map(self, map_id):
         self.maps.add(await self.app.tmx_client.get_map_info_by_id(map_id))

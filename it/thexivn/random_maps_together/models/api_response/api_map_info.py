@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import Tuple
-
-from ..map_tag import MapTag
 from datetime import datetime
+
+from pyplanet.apps.core.maniaplanet.models import Map
+from ..map_tag import MapTag
 from ...constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
+from ...models.enums.medals import Medals
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,7 @@ class APIMapInfo:
             json["Name"],
             tuple(next(map_tag for map_tag in map_tags if map_tag.id == int(tag_id) ) for tag_id in json["Tags"].split(",")),
         )
+
     # "UserID": 129732,
     # "GbxMapName": "Toybox Garden",
     # "AuthorLogin": "v9utFEe5Tx6XA_axE2iU3g",

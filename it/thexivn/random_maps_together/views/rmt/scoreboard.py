@@ -1,40 +1,38 @@
 import asyncio
 import logging
 import time as py_time
-from pyplanet.views import TemplateView
 
-from ..models.enums.medal_urls import MedalURLs
-from ..models.game_score import GameScore
-from ..models.game_state import GameState
+from pyplanet.views import TemplateView
+from pyplanet.apps.core.maniaplanet.models import Player
+
+from ...models.enums.medal_urls import MedalURLs
 
 logger = logging.getLogger(__name__)
 
-class RMTScoreBoardView(TemplateView):
-    template_name = "random_maps_together/score_board.xml"
+class RandomMapsTogetherScoreBoardView(TemplateView):
+    template_name = "random_maps_together/rmt/scoreboard.xml"
 
-    def __init__(self, app, score: GameScore, game_state: GameState, game):
+    def __init__(self, game):
         super().__init__(self)
         logger.info("Loading VIEW")
-        self.app = app
-        self.manager = app.context.ui
-        self.id = "it_thexivn_RandomMapsTogether_score_board"
-        self._score: GameScore = score
-        self._game_state = game_state
-        self._game = game
+        self.game = game
+        self.manager = game.app.context.ui
+        self.id = "it_thexivn_RandomMapsTogether_scoreboard"
         self._player_loops = {}
+        self.subscribe("ui_toggle_scoreboard", self.command_toggle_scoreboard)
 
     async def get_context_data(self):
         data = await super().get_context_data()
-        data["settings"] = self.app.app_settings
-        data["total_goal_medals"] = self._score.total_goal_medals
-        data["total_skip_medals"] = self._score.total_skip_medals
-        data["goal_medal_url"] = MedalURLs[self.app.app_settings.goal_medal.name].value
-        data["skip_medal_url"] = MedalURLs[self.app.app_settings.skip_medal.name].value
+        data["game"] = self.game
+        data["total_goal_medals"] = self.game._score.total_goal_medals
+        data["total_skip_medals"] = self.game._score.total_skip_medals
+        data["goal_medal_url"] = MedalURLs[self.game.config.goal_medal.name].value
+        data["skip_medal_url"] = MedalURLs[self.game.config.skip_medal.name].value
         data["medal_urls"] = MedalURLs
 
-        data["players"] = self._score.get_top_10(20)
-        data["time_left"] = self._game.time_left_str()
-        data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(self.app.app_settings.game_time_seconds + self._game_state.total_time_gained - self._game._time_left + self._game_state.map_played_time()))
+        data["players"] = self.game._score.get_top_10(20)
+        data["time_left"] = self.game.time_left_str()
+        data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(self.game.config.game_time_seconds + self.game._game_state.total_time_gained - self.game._time_left + self.game._game_state.map_played_time()))
 
         data["nb_players"] = len(data['players'])
         data["scroll_max"] = max(0, len(data['players']) * 10 - 100)
@@ -63,3 +61,9 @@ class RMTScoreBoardView(TemplateView):
             while player_login in self._is_player_shown:
                 await asyncio.sleep(1)
                 await super().display([player_login])
+
+    async def command_toggle_scoreboard(self, player: Player, *args, **kw):
+        if self._is_player_shown.get(player.login) or self._is_global_shown:
+            await self.hide([player.login])
+        else:
+            await self.display([player.login])

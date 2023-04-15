@@ -1,7 +1,7 @@
 from enum import Enum
 
 class MedalURLs(Enum):
-    AUTHOR = "http://maniacdn.net/marwinfaiter/AT.png"
-    GOLD = "http://maniacdn.net/marwinfaiter/GOLD.png"
-    SILVER = "http://maniacdn.net/marwinfaiter/Silver.png"
-    BRONZE = "http://maniacdn.net/marwinfaiter/Bronze.png"
+    AUTHOR = "http://buddaphest.se/resources/Author.png"
+    GOLD = "http://buddaphest.se/resources/Gold.png"
+    SILVER = "http://buddaphest.se/resources/Silver.png"
+    BRONZE = "http://buddaphest.se/resources/Bronze.png"

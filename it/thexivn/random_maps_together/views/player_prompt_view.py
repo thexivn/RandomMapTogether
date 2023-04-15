@@ -1,6 +1,7 @@
 import re
 import logging
 from pyplanet.views.generics.alert import AlertView
+from pyplanet.apps.core.maniaplanet.models import Player
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class PlayerPromptView(AlertView):
             await self.close(player)
 
     @classmethod
-    async def prompt_for_input(cls, player, message, buttons=None, entry=True, validator=None, default=None):
+    async def prompt_for_input(cls, player: Player, message: str, buttons=None, entry=True, validator=None, default=None):
         prompt_view = cls(message, buttons, entry=entry, validator=validator, default=default)
         await prompt_view.display([player])
         player_input = await prompt_view.wait_for_input()

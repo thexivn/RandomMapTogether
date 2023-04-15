@@ -1,0 +1,8 @@
+{% extends 'core.views/generics/widget.xml' %}
+
+{% block content %}
+<frame pos="0 0" size="{{size_x}} {{size_y}}">
+    <quad pos="0 0" size="{{size_x}} {{size_y}}" z-index="0" bgcolor="10101010"/>
+    <label pos="17.5 0" z-index="1" text="{{ game_mode }}" textsize="2.5" textfont="RajdhaniMono" halign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_set_game_mode"/>
+</frame>
+{% endblock %}
