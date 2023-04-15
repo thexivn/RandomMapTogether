@@ -49,8 +49,9 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
     async def hide(self, player_logins=None):
         if player_logins:
             for player_login in player_logins:
-                self._player_loops[player_login].cancel()
-                del self._player_loops[player_login]
+                if self._player_loops.get(player_login):
+                    self._player_loops[player_login].cancel()
+                    del self._player_loops[player_login]
                 await super().hide([player_login])
         else:
             await super().hide()
