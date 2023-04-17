@@ -23,15 +23,6 @@ class LeaderboardView(ManualListView):
     async def get_fields(self):
         return [
             {
-                'name': 'Game ID',
-                'index': 'id',
-                'sorting': True,
-                'searching': True,
-                'width': 10,
-                'type': 'label',
-                'action': self.display_score_board,
-            },
-            {
                 'name': 'Game mode',
                 'index': 'game_mode',
                 'sorting': True,
@@ -108,7 +99,7 @@ class LeaderboardView(ManualListView):
 
 
     async def get_data(self):
-        return await RandomMapsTogetherScore.execute(
+        return list(await RandomMapsTogetherScore.execute(
             RandomMapsTogetherScore.select()
             .where(RandomMapsTogetherScore.game_mode == self.app.game.game_mode.value)
             .order_by(
@@ -116,7 +107,7 @@ class LeaderboardView(ManualListView):
                 RandomMapsTogetherScore.total_goal_medals.desc(),
                 RandomMapsTogetherScore.total_skip_medals.desc()
             )
-        )
+        ))
 
     async def display_score_board(self, player, values, row, **kwargs):
         self.app.game.views.scoreboard_view.game_score = row

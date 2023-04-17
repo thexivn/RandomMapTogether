@@ -10,7 +10,6 @@ from ...map_generator.totd import TOTD
 from ...models.player_configuration import PlayerConfiguration
 from ...games import check_player_allowed_to_change_game_settings
 from ...views.player_config_view import PlayerConfigView
-from ...views.player_prompt_view import PlayerPromptView
 from ...views.leaderboard_view import LeaderboardView
 
 @dataclass
@@ -39,28 +38,6 @@ class Configuration:
             for player in self.app.instance.player_manager.online:
                 if not player.login in self.player_configs:
                     self.player_configs[player.login] = PlayerConfiguration(player)
-
-    @check_player_allowed_to_change_game_settings
-    async def set_goal_bonus_seconds(self, player: Player, caller, values, **kwargs):
-        buttons = [
-            {"name": "1m", "value": 60},
-            {"name": "3m", "value": 180},
-            {"name": "5m", "value": 300}
-        ]
-        time_seconds = await PlayerPromptView.prompt_for_input(player, "Goal bonus in seconds", buttons, default=self.goal_bonus_seconds)
-        self.goal_bonus_seconds = int(time_seconds)
-        await self.app.game.views.settings_view.display()
-
-    @check_player_allowed_to_change_game_settings
-    async def set_skip_penalty_seconds(self, player: Player, caller, values, **kwargs):
-        buttons = [
-            {"name": "30s", "value": 30},
-            {"name": "1m", "value": 60},
-            {"name": "2m", "value": 120}
-        ]
-        time_seconds = await PlayerPromptView.prompt_for_input(player, "Skip penalty in seconds", buttons, default=self.skip_penalty_seconds)
-        self.skip_penalty_seconds = int(time_seconds)
-        await self.app.game.views.settings_view.display()
 
 
     @check_player_allowed_to_change_game_settings

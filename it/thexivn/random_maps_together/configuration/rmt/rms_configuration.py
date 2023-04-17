@@ -41,3 +41,25 @@ class RMSConfig(Configuration):
         self.game_time_seconds = int(time_seconds)
 
         await self.app.game.views.settings_view.display()
+
+    @check_player_allowed_to_change_game_settings
+    async def set_goal_bonus_seconds(self, player: Player, caller, values, **kwargs):
+        buttons = [
+            {"name": "1m", "value": 60},
+            {"name": "3m", "value": 180},
+            {"name": "5m", "value": 300}
+        ]
+        time_seconds = await PlayerPromptView.prompt_for_input(player, "Goal bonus in seconds", buttons, default=self.goal_bonus_seconds)
+        self.goal_bonus_seconds = int(time_seconds)
+        await self.app.game.views.settings_view.display()
+
+    @check_player_allowed_to_change_game_settings
+    async def set_skip_penalty_seconds(self, player: Player, caller, values, **kwargs):
+        buttons = [
+            {"name": "30s", "value": 30},
+            {"name": "1m", "value": 60},
+            {"name": "2m", "value": 120}
+        ]
+        time_seconds = await PlayerPromptView.prompt_for_input(player, "Skip penalty in seconds", buttons, default=self.skip_penalty_seconds)
+        self.skip_penalty_seconds = int(time_seconds)
+        await self.app.game.views.settings_view.display()

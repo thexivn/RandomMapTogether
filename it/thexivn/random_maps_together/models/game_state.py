@@ -12,9 +12,6 @@ class GameState:
     skip_medal = None
     is_paused = False
 
-    def skip_command_allowed(self):
-        return self.current_map_completed
-
     def map_played_time(self):
         if self.current_map_completed:
             return 0
