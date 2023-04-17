@@ -106,9 +106,9 @@ class LeaderboardView(ManualListView):
                 RandomMapsTogetherScore.modified_player_settings,
                 RandomMapsTogetherScore.total_goal_medals.desc(),
                 RandomMapsTogetherScore.total_skip_medals.desc()
-            )
+            ).dicts()
         ))
 
     async def display_score_board(self, player, values, row, **kwargs):
-        self.app.game.views.scoreboard_view.game_score = row
+        self.app.game.views.scoreboard_view.game_score = await RandomMapsTogetherScore.get_by_id(row["id"])
         await self.app.game.views.scoreboard_view.display()
