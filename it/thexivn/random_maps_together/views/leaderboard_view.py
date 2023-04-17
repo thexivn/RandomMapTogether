@@ -110,5 +110,5 @@ class LeaderboardView(ManualListView):
         ))
 
     async def display_score_board(self, player, values, row, **kwargs):
-        self.app.game.views.scoreboard_view.game_score = await RandomMapsTogetherScore.get_by_id(row["id"])
+        self.app.game.views.scoreboard_view.game_score = await RandomMapsTogetherScore.get(RandomMapsTogetherScore.id == row["id"])
         await self.app.game.views.scoreboard_view.display()
