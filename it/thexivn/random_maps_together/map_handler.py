@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class MapHandler:
     def __init__(self, app, map_manager: MapManager, storage: Storage):
-        self._next_map: Optional[APIMapInfo] = None
+        self.next_map: Optional[APIMapInfo] = None
         self._hub_map = '7E1heauBgOUsqlhliGDY8DoOZbm'
         self._hub_id = '63710'
         self.app = app
@@ -42,8 +42,8 @@ class MapHandler:
     async def load_next_map(self):
         logger.info('Trying to load next map ...')
         self.map_is_loading = True
-        random_map = self._next_map or await self.app.game.config.map_generator.get_map()
-        self._next_map = None
+        random_map = self.next_map or await self.app.game.config.map_generator.get_map()
+        self.next_map = None
 
         map_to_remove = await self.app.instance.gbx("GetCurrentMapInfo")
 
@@ -66,9 +66,9 @@ class MapHandler:
 
     async def pre_load_next_map(self):
         try:
-            self._next_map = await self.app.game.config.map_generator.get_map()
+            self.next_map = await self.app.game.config.map_generator.get_map()
         except Exception as e:
-            self._next_map = None
+            self.next_map = None
             logger.warning('Preload failed: %s', str(e))
 
     async def load_hub(self):

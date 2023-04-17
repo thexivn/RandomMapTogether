@@ -49,7 +49,8 @@ class RMTGame(Game):
 
         await self.views.settings_view.hide()
 
-        self._score = GameScore()
+        self.config.map_generator.played_maps.clear()
+        self.app.map_handler.next_map = None
         self._game_state = GameState()
 
         self.config.update_player_configs()

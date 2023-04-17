@@ -101,7 +101,7 @@ class RandomMapsTogetherApp(AppConfig):
                     await asyncio.sleep(1)
         except Exception as e:
             await self.chat_manager(f"An error has occurred, exiting the game: {str(e)}")
-            raise
+            logger.error("An error has occurred, exiting the game", exc_info=e)
 
         await self.chat_manager(f"{self.game.game_mode.value} ended")
         await self.map_handler.load_hub()

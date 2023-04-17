@@ -1,5 +1,6 @@
 import re
 import logging
+import inspect
 from pyplanet.views.generics.alert import AlertView
 from pyplanet.apps.core.maniaplanet.models import Player
 
@@ -47,7 +48,10 @@ class PlayerPromptView(AlertView):
         if button == "ok":
             try:
                 value = values.get("prompt_value", self.default)
-                self.validator(value)
+                if inspect.iscoroutinefunction(self.validator):
+                    await self.validator(value)
+                else:
+                    self.validator(value)
                 self.response_future.set_result(value)
                 await self.close(player)
             except Exception as e:

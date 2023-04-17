@@ -15,4 +15,7 @@ class MapGenerator:
         self.played_maps = set()
 
     async def get_map(self):
+        return await self.get_random_map()
+
+    async def get_random_map(self):
         return await self.app.tmx_client.search_random_map()
