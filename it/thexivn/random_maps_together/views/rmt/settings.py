@@ -1,7 +1,7 @@
 import logging
 
 from pyplanet.views.generics.widget import WidgetView
-from ...configuration.rmc_configuration import Configuration
+from ...configuration.rmt.rmc_configuration import Configuration
 
 logger = logging.getLogger(__name__)
 
@@ -62,15 +62,14 @@ class RandomMapsTogetherSettingsView(WidgetView):
 
         self.subscribe("ui_toggle_enabled_players", self.config.toggle_enabled_players)
 
-        self.subscribe("ui_toggle_player_settings", self.config.toggle_player_settings)
+        self.subscribe("ui_display_player_settings", self.config.display_player_settings)
+        self.subscribe("ui_display_leaderboard", self.config.display_leaderboard)
 
     async def get_context_data(self):
         logger.info("Context Data")
         data = await super().get_context_data()
 
-        data["game"] = self.app.game
-
-        data["game_started"] = False
+        data["config"] = self.config
 
         data['cb_pos'] = cb_pos
         data['cbl_pos'] = cbl_pos

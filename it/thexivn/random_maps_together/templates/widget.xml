@@ -15,7 +15,7 @@
     {% if ui_tools_enabled %}
             <label pos="70 -2.5" z-index="1" text="$sPlayer Configs" textsize="2.5" textfont="RajdhaniMono"
                     halign="left" valign="center" style="CardButtonSmallS"
-                    id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_toggle_player_settings" />
+                    id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_display_player_settings" />
         {% if game_started %}
             <frame pos="0 -{{size_y}}" size="{{size_x}} 6">
                 <quad pos="0 0" size="{{size_x}} 6" z-index="0" bgcolor="44664770"/>

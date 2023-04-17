@@ -9,8 +9,9 @@ from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 
 
 from .. import Game, check_player_allowed_to_manage_running_game
-from ...models.game_score import GameScore
 from ...models.game_state import GameState
+from ...models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
+from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
 from ...models.game_views.rmt import RandomMapsTogetherViews
 from ...views.rmt.scoreboard import RandomMapsTogetherScoreBoardView
 from ...constants import BIG_MESSAGE, RACE_SCORES_TABLE, S_FORCE_LAPS_NB, S_TIME_LIMIT
@@ -29,8 +30,9 @@ class RMTGame(Game):
         self.app.mode_settings[S_FORCE_LAPS_NB] = -1
 
         self.views.scoreboard_view = RandomMapsTogetherScoreBoardView(self)
+        self._game_state = GameState()
 
-        self._time_left = None
+        self._time_left = 0
         self._time_left_at_pause = 83
         self._time_at_pause = py_time.time()
         logger.info("RMT Game initialized")
@@ -51,6 +53,13 @@ class RMTGame(Game):
 
         self.config.map_generator.played_maps.clear()
         self.app.map_handler.next_map = None
+
+        self._score = self.views.scoreboard_view.game_score = await RandomMapsTogetherScore.create(
+            game_mode=self.game_mode.value,
+            game_time_seconds=self.config.game_time_seconds,
+            goal_medal=self.config.goal_medal.name,
+            skip_medal=self.config.skip_medal.name,
+        )
         self._game_state = GameState()
 
         self.config.update_player_configs()
@@ -68,6 +77,10 @@ class RMTGame(Game):
 
     async def __aexit__(self, *err):
         await self.config.update_time_left()
+        if self._time_left == 0:
+            await self._score.save()
+        else:
+            await self._score.destroy(recursive=True)
         self._game_state.current_map_completed = True
         await self.hide_timer()
         await self.views.scoreboard_view.display()
@@ -92,16 +105,18 @@ class RMTGame(Game):
         if self.app.map_handler.pre_patch_ice:
             await self.app.chat_manager("$o$FB0 This track was created before the ICE physics change $z")
         self._game_state.current_map_completed = False
-        await self.app.map_handler.pre_load_next_map()
-        await self.views.ingame_view.display()
-        await self.views.scoreboard_view.hide()
+        asyncio.gather(
+            self.app.map_handler.pre_load_next_map(),
+            self.views.ingame_view.display(),
+            self.views.scoreboard_view.hide(),
+        )
         logger.info("[map_begin_event] ENDED")
 
     async def map_end_event(self, time, count, *args, **kwargs):
         logger.info("MAP end")
         self._game_state.skip_medal_player = None
         self._game_state.skip_medal = None
-        if not self._game_state.current_map_completed:
+        if not self._game_state.current_map_completed or self._time_left == 0:
             logger.info(f"{self.game_mode.value} finished successfully")
             await self.app.chat_manager(
                 f'Challenge completed {self.config.goal_medal.name}: {self._score.total_goal_medals} {self.config.skip_medal.name}: {self._score.total_skip_medals}')
@@ -148,7 +163,22 @@ class RMTGame(Game):
 
                 logger.info(f'[on_map_finish {self.config.goal_medal.name} acquired')
                 await self.config.update_time_left(goal_medal=True)
-                await self._score.inc_medal_count(player, race_medal, goal_medal=True)
+
+                self._score.total_goal_medals += 1
+                self._score.medal_sum += race_medal.value
+
+                player_score, _ = await RandomMapsTogetherPlayerScore.get_or_create(
+                    game_score=self._score.id,
+                    player=player.id,
+                    defaults={
+                        "goal_medal": self.config.player_configs[player.login].goal_medal,
+                        "skip_medal": self.config.player_configs[player.login].skip_medal,
+                    }
+                )
+                await player_score.increase_medal_count(race_medal)
+                player_score.total_goal_medals += 1
+                await player_score.save()
+
                 self._game_state.current_map_completed = True
                 await self.hide_timer()
                 await self.app.chat_manager(f'{player.nickname} claimed {race_medal.name} with {formatted_race_time}, congratulations!')
@@ -178,8 +208,23 @@ class RMTGame(Game):
         if not self._game_state.skip_medal:
             return await self.app.chat_manager(f"{self.config.skip_medal.name} skip is not available", player)
 
-        await self._score.inc_medal_count(self._game_state.skip_medal_player, self._game_state.skip_medal, skip_medal=True)
         await self.config.update_time_left(skip_medal=True)
+
+        self._score.total_skip_medals += 1
+        self._score.medal_sum += self._game_state.skip_medal.value
+
+        player_score, _ = await RandomMapsTogetherPlayerScore.get_or_create(
+            game_score=self._score.id,
+            player=self._game_state.skip_medal_player.id,
+            defaults={
+                "goal_medal": self.config.player_configs[self._game_state.skip_medal_player.login].goal_medal,
+                "skip_medal": self.config.player_configs[self._game_state.skip_medal_player.login].skip_medal,
+            }
+        )
+        player_score.total_skip_medals += 1
+        await player_score.increase_medal_count(self._game_state.skip_medal)
+        await player_score.save()
+
         self._game_state.current_map_completed = True
         await self.app.chat_manager(f'{player.nickname} decided to take {self._game_state.skip_medal.name} by {self._game_state.skip_medal_player.nickname} and skip')
 

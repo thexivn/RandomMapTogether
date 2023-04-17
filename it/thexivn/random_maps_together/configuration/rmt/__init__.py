@@ -11,6 +11,7 @@ from ...models.player_configuration import PlayerConfiguration
 from ...games import check_player_allowed_to_change_game_settings
 from ...views.player_config_view import PlayerConfigView
 from ...views.player_prompt_view import PlayerPromptView
+from ...views.leaderboard_view import LeaderboardView
 
 @dataclass
 class Configuration:
@@ -99,8 +100,11 @@ class Configuration:
         await self.app.game.views.settings_view.display()
 
     @check_player_allowed_to_change_game_settings
-    async def toggle_player_settings(self, player, caller, values, **kwargs):
+    async def display_player_settings(self, player, caller, values, **kwargs):
         await PlayerConfigView(self.app).display(player)
+
+    async def display_leaderboard(self, player, caller, values, **kwargs):
+        await LeaderboardView(self.app).display(player)
 
     @check_player_allowed_to_change_game_settings
     async def toggle_enabled_players(self, player, caller, values, **kwargs):

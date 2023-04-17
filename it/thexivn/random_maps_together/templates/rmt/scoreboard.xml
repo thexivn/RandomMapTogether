@@ -1,6 +1,6 @@
-<frame pos="-80 80" size="160 160" z-index="6">
+<frame pos="-80 80" size="160 160" z-index="999">
     <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
-    <quad pos="149 0" size="10 10" style="Icons128x32_1" substyle="Close" scriptevents="1" action="{{ id }}__ui_toggle_scoreboard"/>
+    <quad pos="149 0" size="10 10" style="Icons128x32_1" substyle="Close" scriptevents="1" action="{{ id }}__ui_hide_scoreboard"/>
 
     <frame pos="20 -5" size="120 50" z-index="4">
         <label pos="60 -5" size="90 10" text="{{game.game_mode.value}}" textsize="10" halign="center" valign="center" style="ManiaPlanetLogos" />

@@ -1,13 +1,11 @@
 from dataclasses import dataclass
 import time as py_time
-from .enums.game_stage import GameStage
 
 
 @dataclass
 class GameState:
     start_time = None
     map_start_time = None
-    total_time_gained = 0
     current_map_completed: bool = True
     free_skip_available: bool = True
     skip_medal_player = None
