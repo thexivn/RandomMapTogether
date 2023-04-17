@@ -4,7 +4,7 @@ import asyncio
 
 from . import RMTGame
 from ...models.enums.game_modes import GameModes
-from ...configuration.rmc_configuration import RMCConfig
+from ...configuration.rmt.rmc_configuration import RMCConfig
 from ...views.rmt.random_map_challenge.settings import RandomMapChallengeSettingsView
 from ...views.rmt.random_map_challenge.ingame import RandomMapChallengeIngameView
 

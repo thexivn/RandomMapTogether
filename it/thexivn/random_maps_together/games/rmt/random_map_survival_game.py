@@ -2,7 +2,7 @@ import asyncio
 
 from . import RMTGame
 from ...models.enums.game_modes import GameModes
-from ...configuration.rms_configuration import RMSConfig
+from ...configuration.rmt.rms_configuration import RMSConfig
 from ...views.rmt.random_map_survival.settings import RandomMapSurvivalSettingsView
 from ...views.rmt.random_map_survival.ingame import RandomMapSurvivalIngameView
 
