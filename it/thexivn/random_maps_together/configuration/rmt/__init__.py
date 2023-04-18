@@ -3,6 +3,7 @@ from typing import Dict
 from pyplanet.apps import AppConfig
 from pyplanet.apps.core.maniaplanet.models import Player
 
+from .. import Configuration
 from ...models.enums.medals import Medals
 from ...map_generator import MapGenerator, MapGeneratorType
 from ...map_generator.custom import Custom
@@ -13,7 +14,7 @@ from ...views.player_config_view import PlayerConfigView
 from ...views.leaderboard_view import LeaderboardView
 
 @dataclass
-class Configuration:
+class RandomMapsTogetherConfiguration(Configuration):
     app: AppConfig
     goal_medal = Medals.AUTHOR
     skip_medal = Medals.GOLD

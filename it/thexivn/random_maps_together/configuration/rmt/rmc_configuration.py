@@ -2,14 +2,14 @@ from dataclasses import dataclass
 import logging
 
 from pyplanet.apps.core.maniaplanet.models import Player
-from . import Configuration
+from . import RandomMapsTogetherConfiguration
 from ...games import check_player_allowed_to_change_game_settings
 from ...views.player_prompt_view import PlayerPromptView
 
 logger = logging.getLogger(__name__)
 
 @dataclass
-class RMCConfig(Configuration):
+class RandomMapChallengeConfiguration(RandomMapsTogetherConfiguration):
     game_time_seconds = 3600
     infinite_free_skips = False
     allow_pausing = False

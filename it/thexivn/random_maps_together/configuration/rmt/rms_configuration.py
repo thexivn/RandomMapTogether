@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from pyplanet.apps.core.maniaplanet.models import Player
-from . import Configuration
+from . import RandomMapsTogetherConfiguration
 from ...games import check_player_allowed_to_change_game_settings
 from ...views.player_prompt_view import PlayerPromptView
 
 
 @dataclass
-class RMSConfig(Configuration):
+class RandomMapSurvivalConfiguration(RandomMapsTogetherConfiguration):
     game_time_seconds = 900
     goal_bonus_seconds = 180
     skip_penalty_seconds = 60

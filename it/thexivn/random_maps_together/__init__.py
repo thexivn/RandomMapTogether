@@ -2,9 +2,7 @@ import asyncio
 import logging
 
 from pyplanet.apps.config import AppConfig
-from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
-from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 from pyplanet.contrib.setting import Setting
 from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
@@ -19,6 +17,7 @@ from .constants import S_TIME_LIMIT
 
 logger = logging.getLogger(__name__)
 
+# TODO: Can't close scoreboard
 
 class RandomMapsTogetherApp(AppConfig):
     app_dependencies = ['core.maniaplanet', 'core.trackmania']

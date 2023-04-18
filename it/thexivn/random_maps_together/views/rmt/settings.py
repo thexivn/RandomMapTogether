@@ -1,7 +1,7 @@
 import logging
 
 from pyplanet.views.generics.widget import WidgetView
-from ...configuration.rmt.rmc_configuration import Configuration
+from ...configuration.rmt.rmc_configuration import RandomMapsTogetherConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class RandomMapsTogetherSettingsView(WidgetView):
 
     template_name = "random_maps_together/widget.xml"
 
-    def __init__(self, app, config: Configuration):
+    def __init__(self, app, config: RandomMapsTogetherConfiguration):
         super().__init__()
         logger.info("Loading VIEW")
         self.id = "it_thexivn_RandomMapsTogether_settings"
