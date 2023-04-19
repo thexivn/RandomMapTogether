@@ -3,6 +3,7 @@ from pyplanet.views.generics.list import ManualListView
 
 from ..models.enums.medals import Medals
 from .player_prompt_view import PlayerPromptView
+from ..games import check_player_allowed_to_change_game_settings
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class PlayerConfigView(ManualListView):
                 'sorting': True,
                 'searching': False,
                 'width': 30,
-                'action': self._prompt_for_goal_medal
+                'action': self.prompt_for_goal_medal
             },
             {
                 'name': 'Skip Medal',
@@ -53,7 +54,7 @@ class PlayerConfigView(ManualListView):
                 'sorting': True,
                 'searching': False,
                 'width': 30,
-                'action': self._prompt_for_skip_medal
+                'action': self.prompt_for_skip_medal
             },
         ]
 
@@ -67,14 +68,6 @@ class PlayerConfigView(ManualListView):
                     'attrs_renderer': self._render_action_attr,
             },
         ]
-
-    async def action_toggle_enabled_player(self, player, values, row, **kwargs):
-        input_value = await PlayerPromptView.prompt_for_input(player, f"Enable or disable player, OK for global player enabled: {self.app.game.config.enabled}", [
-            {"name": "Enable", "value": True},
-            {"name": "Disable", "value": False},
-        ], entry=False)
-        self.app.game.config.player_configs[row["player_login"]].enabled = input_value
-        await self.refresh(player=player)
 
     async def get_data(self):
         self.app.game.config.update_player_configs()
@@ -96,7 +89,17 @@ class PlayerConfigView(ManualListView):
             }
         ]
 
-    async def _prompt_for_goal_medal(self, player, values, row, **kwargs):
+    @check_player_allowed_to_change_game_settings
+    async def action_toggle_enabled_player(self, player, values, row, **kwargs):
+        input_value = await PlayerPromptView.prompt_for_input(player, f"Enable or disable player, OK for global player enabled: {self.app.game.config.enabled}", [
+            {"name": "Enable", "value": True},
+            {"name": "Disable", "value": False},
+        ], entry=False)
+        self.app.game.config.player_configs[row["player_login"]].enabled = input_value
+        await self.refresh(player=player)
+
+    @check_player_allowed_to_change_game_settings
+    async def prompt_for_goal_medal(self, player, values, row, **kwargs):
         buttons = [
             {"name": medal.name, "value": medal}
             for medal in [Medals.AUTHOR, Medals.GOLD, Medals.SILVER]
@@ -107,7 +110,8 @@ class PlayerConfigView(ManualListView):
 
         await self.refresh(player=player)
 
-    async def _prompt_for_skip_medal(self, player, values, row, **kwargs):
+    @check_player_allowed_to_change_game_settings
+    async def prompt_for_skip_medal(self, player, values, row, **kwargs):
         buttons = [
             {"name": medal.name, "value": medal}
             for medal in [Medals.GOLD, Medals.SILVER, Medals.BRONZE]

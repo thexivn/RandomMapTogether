@@ -3,7 +3,6 @@ import logging
 
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
-from pyplanet.contrib.setting import Setting
 from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
@@ -14,14 +13,16 @@ from .views.game_selector_view import GameSelectorView
 from .games import Game, check_player_allowed_to_change_game_settings, check_player_allowed_to_manage_running_game
 from .games.rmt.random_map_challenge_game import RandomMapChallengeGame
 from .constants import S_TIME_LIMIT
+from .settings import MIN_PLAYER_LEVEL_SETTINGS
 
 logger = logging.getLogger(__name__)
 
+# maniaplanet://#join=i-XjZRVESdql3RnRsnTBGg@Trackmania
 # TODO: Enable players in lobby, players who join during game follow default config
 # TODO: Voting for skip
 # TODO: One database transaction for the game
 # TODO: Global app variable
-# TODO: Global min level to start
+# TODO: Player connect and disconnect management
 
 class RandomMapsTogetherApp(AppConfig):
     app_dependencies = ['core.maniaplanet', 'core.trackmania']
@@ -47,19 +48,7 @@ class RandomMapsTogetherApp(AppConfig):
         await self.map_handler.load_hub()
         logger.info("HUB loaded")
 
-        perm: Setting = Setting(
-            'it.thexivn.RMT.min_perm_start', 'min_perm_start',
-            Setting.CAT_BEHAVIOUR, int,
-            'permission level to start the RMT',
-            default=2,
-            change_target=self.set_min_level_to_start
-        )
-
-        await self.context.setting.register(
-            perm
-        )
-
-        self.set_min_level_to_start(2, await perm.get_value())
+        await self.context.setting.register(MIN_PLAYER_LEVEL_SETTINGS)
 
         await self.game_selector.display()
 
@@ -86,9 +75,6 @@ class RandomMapsTogetherApp(AppConfig):
 
     async def on_destroy(self):
         await super().on_destroy()
-
-    def set_min_level_to_start(self, old, new):
-        self._min_level_to_start = int(new)
 
     @check_player_allowed_to_change_game_settings
     async def start_game(self, player, *args, **kwargs):

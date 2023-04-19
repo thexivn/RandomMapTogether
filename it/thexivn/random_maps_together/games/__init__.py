@@ -3,6 +3,7 @@ import logging
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.apps.config import AppConfig
 from ..configuration import Configuration
+from ..settings import MIN_PLAYER_LEVEL_SETTINGS
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +22,10 @@ def check_player_allowed_to_manage_running_game(f):
 def check_player_allowed_to_change_game_settings(f):
     async def wrapper(self, player: Player, *args, **kwargs) -> bool:
         if isinstance(self, AppConfig):
-            if player.level < self._min_level_to_start:
+            if player.level < await MIN_PLAYER_LEVEL_SETTINGS.get_value():
                 return await self.chat("You are not allowed to change game settings", player)
-        elif isinstance(self, Game) or isinstance(self, Configuration):
-            if player.level < self.app._min_level_to_start:
+        else:
+            if player.level < await MIN_PLAYER_LEVEL_SETTINGS.get_value():
                 return await self.app.chat("You are not allowed to change game settings", player)
         return await f(self, player, *args, **kwargs)
     return wrapper
