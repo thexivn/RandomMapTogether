@@ -103,7 +103,7 @@ class RMTGame(Game):
     async def map_begin_event(self, map, *args, **kwargs):
         logger.info("[map_begin_event] STARTED")
         if self.app.map_handler.pre_patch_ice:
-            await self.app.chat_manager("$o$FB0 This track was created before the ICE physics change $z")
+            await self.app.chat("$o$FB0 This track was created before the ICE physics change $z")
         self._game_state.current_map_completed = False
         asyncio.gather(
             self.app.map_handler.pre_load_next_map(),
@@ -118,7 +118,7 @@ class RMTGame(Game):
         self._game_state.skip_medal = None
         if not self._game_state.current_map_completed or self._time_left == 0:
             logger.info(f"{self.game_mode.value} finished successfully")
-            await self.app.chat_manager(
+            await self.app.chat(
                 f'Challenge completed {self.config.goal_medal.name}: {self._score.total_goal_medals} {self.config.skip_medal.name}: {self._score.total_skip_medals}')
             self.game_is_in_progress = False
         else:
@@ -138,9 +138,9 @@ class RMTGame(Game):
                 return
 
             if self._game_state.is_paused:
-                return await self.app.chat_manager("Time doesn't count because game is paused", player)
+                return await self.app.chat("Time doesn't count because game is paused", player)
             if (py_time.time() - (race_time * 0.001)) < self._time_at_pause:
-                return await self.app.chat_manager(f"Time doesn't count because game was paused ({race_time}ms / cur time: {py_time.time()} / paused at time: {self._time_at_pause})", player)
+                return await self.app.chat(f"Time doesn't count because game was paused ({race_time}ms / cur time: {py_time.time()} / paused at time: {self._time_at_pause})", player)
 
             logger.info(f'[on_map_finish] Final time check for {self.config.goal_medal.name}')
             race_medal = self.app.map_handler.get_medal_by_time(race_time)
@@ -159,7 +159,7 @@ class RMTGame(Game):
 
             if race_medal >= (self.config.player_configs[player.login].goal_medal or self.config.goal_medal):
                 if not (self.config.player_configs[player.login].enabled if self.config.player_configs[player.login].enabled is not None else self.config.enabled):
-                    return await self.app.chat_manager(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
+                    return await self.app.chat(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
 
                 logger.info(f'[on_map_finish {self.config.goal_medal.name} acquired')
                 await self.config.update_time_left(goal_medal=True)
@@ -181,7 +181,7 @@ class RMTGame(Game):
 
                 self._game_state.current_map_completed = True
                 await self.hide_timer()
-                await self.app.chat_manager(f'{player.nickname} claimed {race_medal.name} with {formatted_race_time}, congratulations!')
+                await self.app.chat(f'{player.nickname} claimed {race_medal.name} with {formatted_race_time}, congratulations!')
                 await asyncio.gather(
                     self.app.map_handler.load_with_retry(),
                     self.views.ingame_view.display()
@@ -190,23 +190,23 @@ class RMTGame(Game):
                 await self.views.ingame_view.hide()
             elif race_medal >= (self.config.player_configs[player.login].skip_medal or self.config.skip_medal) and not self._game_state.skip_medal:
                 if not (self.config.player_configs[player.login].enabled if self.config.player_configs[player.login].enabled is not None else self.config.enabled):
-                    return await self.app.chat_manager(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
+                    return await self.app.chat(f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count..")
 
                 logger.info(f'[on_map_finish] {race_medal.name} acquired')
                 self._game_state.skip_medal_player = player
                 self._game_state.skip_medal = race_medal
                 await self.views.ingame_view.display()
-                await self.app.chat_manager(f'First {race_medal.name} acquired, congrats to {player.nickname} with {formatted_race_time}')
-                await self.app.chat_manager(f'You are now allowed to take the {race_medal.name} and skip the map')
+                await self.app.chat(f'First {race_medal.name} acquired, congrats to {player.nickname} with {formatted_race_time}')
+                await self.app.chat(f'You are now allowed to take the {race_medal.name} and skip the map')
 
     @check_player_allowed_to_manage_running_game
     async def command_skip_medal(self, player: Player, *args, **kwargs):
         if self._game_state.is_paused:
-            return await self.app.chat_manager("Game currently paused", player)
+            return await self.app.chat("Game currently paused", player)
         if self._game_state.current_map_completed:
-            return await self.app.chat_manager("You are not allowed to skip", player)
+            return await self.app.chat("You are not allowed to skip", player)
         if not self._game_state.skip_medal:
-            return await self.app.chat_manager(f"{self.config.skip_medal.name} skip is not available", player)
+            return await self.app.chat(f"{self.config.skip_medal.name} skip is not available", player)
 
         await self.config.update_time_left(skip_medal=True)
 
@@ -226,7 +226,7 @@ class RMTGame(Game):
         await player_score.save()
 
         self._game_state.current_map_completed = True
-        await self.app.chat_manager(f'{player.nickname} decided to take {self._game_state.skip_medal.name} by {self._game_state.skip_medal_player.nickname} and skip')
+        await self.app.chat(f'{player.nickname} decided to take {self._game_state.skip_medal.name} by {self._game_state.skip_medal_player.nickname} and skip')
 
         await self.hide_timer()
         await asyncio.gather(
@@ -240,22 +240,22 @@ class RMTGame(Game):
     @check_player_allowed_to_manage_running_game
     async def command_free_skip(self, player: Player, *args, **kwargs):
         if self._game_state.is_paused:
-            return await self.app.chat_manager("Game currently paused", player)
+            return await self.app.chat("Game currently paused", player)
 
         if self._game_state.current_map_completed:
-            return await self.app.chat_manager("You are not allowed to skip", player)
+            return await self.app.chat("You are not allowed to skip", player)
 
         if not self.config.can_skip_map():
-            return await self.app.chat_manager("Free skip is not available", player)
+            return await self.app.chat("Free skip is not available", player)
 
         await self.config.update_time_left(free_skip=True)
         self._game_state.current_map_completed = True
 
         if not self.app.map_handler.pre_patch_ice and self._game_state.free_skip_available:
-            await self.app.chat_manager(f'{player.nickname} decided to use free skip')
+            await self.app.chat(f'{player.nickname} decided to use free skip')
             self._game_state.free_skip_available = False
         else:
-            await self.app.chat_manager(f'{player.nickname} decided to skip the map')
+            await self.app.chat(f'{player.nickname} decided to skip the map')
 
         await self.hide_timer()
         await asyncio.gather(
