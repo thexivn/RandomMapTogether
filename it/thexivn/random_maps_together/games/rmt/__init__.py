@@ -1,6 +1,6 @@
 import asyncio
+import datetime
 import logging
-import re
 import time as py_time
 
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -157,15 +157,8 @@ class RMTGame(Game):
             if not race_medal:
                 return
 
-            if len(str(race_time)) <= 5:
-                match = re.match(r"(?P<seconds>\d{1,2})(?P<milliseconds>\d{3})", str(race_time))
-                formatted_race_time = f"{match.group('seconds')}.{match.group('milliseconds')}"
-            elif len(str(race_time)) <= 7:
-                match = re.match(r"(?P<minutes>\d{1,2})(?P<seconds>\d{2})(?P<milliseconds>\d{3})", str(race_time))
-                formatted_race_time = f"{match.group('minutes')}:{match.group('seconds')}.{match.group('milliseconds')}"
-            else:
-                match = re.match(r"(?P<hours>\d+)(?P<minutes>\d{2})(?P<seconds>\d{2})(?P<milliseconds>\d{3})", str(race_time))
-                formatted_race_time = f"{match.group('hours')}:{match.group('minutes')}:{match.group('seconds')}.{match.group('milliseconds')}"
+
+            formatted_race_time = datetime.datetime.fromtimestamp(race_time / 1000.0).strftime("%H:%M:%S")
 
             if race_medal >= (self.config.player_configs[player.login].goal_medal or self.config.goal_medal):
                 if not (self.config.player_configs[player.login].enabled if self.config.player_configs[player.login].enabled is not None else self.config.enabled):
