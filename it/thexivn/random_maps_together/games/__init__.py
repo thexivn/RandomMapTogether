@@ -40,5 +40,5 @@ class Game:
     async def player_connect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
         pass
 
-    async def player_disconnect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
+    async def player_disconnect(self, player: Player, reason: str, source, *args, **kwargs):
         pass

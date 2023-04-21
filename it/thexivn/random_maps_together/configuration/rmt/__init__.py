@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict
 from pyplanet.apps import AppConfig
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -20,7 +20,7 @@ class RandomMapsTogetherConfiguration(Configuration):
     skip_medal = Medals.GOLD
     enabled = True
     map_generator = None
-    player_configs: Dict[str, PlayerConfiguration] = None
+    player_configs: Dict[str, PlayerConfiguration] = field(default_factory=dict)
 
     def __post_init__(self):
         self.map_generator = MapGenerator(self.app)
@@ -30,15 +30,9 @@ class RandomMapsTogetherConfiguration(Configuration):
         pass
 
     def update_player_configs(self):
-        if not self.player_configs:
-            self.player_configs = {
-                player.login: PlayerConfiguration(player)
-                for player in self.app.instance.player_manager.online
-            }
-        else:
-            for player in self.app.instance.player_manager.online:
-                if not player.login in self.player_configs:
-                    self.player_configs[player.login] = PlayerConfiguration(player)
+        for player in self.app.instance.player_manager.online:
+            if not player.login in self.player_configs:
+                self.player_configs[player.login] = PlayerConfiguration(player, enabled=True if not self.app.game.game_is_in_progress else self.enabled)
 
 
     @check_player_allowed_to_change_game_settings
@@ -77,8 +71,8 @@ class RandomMapsTogetherConfiguration(Configuration):
 
         await self.app.game.views.settings_view.display()
 
-    @check_player_allowed_to_change_game_settings
     async def display_player_settings(self, player, caller, values, **kwargs):
+        self.update_player_configs()
         await PlayerConfigView(self.app).display(player)
 
     async def display_leaderboard(self, player, caller, values, **kwargs):

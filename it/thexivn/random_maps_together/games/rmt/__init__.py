@@ -15,6 +15,7 @@ from ...models.database.rmt.random_maps_together_player_score import RandomMapsT
 from ...models.game_views.rmt import RandomMapsTogetherViews
 from ...views.rmt.scoreboard import RandomMapsTogetherScoreBoardView
 from ...constants import BIG_MESSAGE, RACE_SCORES_TABLE, S_FORCE_LAPS_NB, S_TIME_LIMIT
+from ...exceptions import GameCancelledException
 
 
 _lock = asyncio.Lock()
@@ -31,11 +32,17 @@ class RMTGame(Game):
 
         self.views.scoreboard_view = RandomMapsTogetherScoreBoardView(self)
         self._game_state = GameState()
+        mania_callback.player.player_connect.register(self.player_connect)
+        mania_callback.player.player_disconnect.register(self.player_disconnect)
 
         self._time_left = 0
         self._time_left_at_pause = 83
         self._time_at_pause = py_time.time()
         logger.info("RMT Game initialized")
+
+    def __del__(self):
+        mania_callback.player.player_connect.unregister(self.player_connect)
+        mania_callback.player.player_disconnect.unregister(self.player_disconnect)
 
     async def __aenter__(self):
         tm_callbacks.finish.register(self.on_map_finish)
@@ -119,7 +126,10 @@ class RMTGame(Game):
         if not self._game_state.current_map_completed or self._time_left == 0:
             logger.info(f"{self.game_mode.value} finished successfully")
             await self.app.chat(
-                f'Challenge completed {self.config.goal_medal.name}: {self._score.total_goal_medals} {self.config.skip_medal.name}: {self._score.total_skip_medals}')
+                "Challenge completed"
+                f" {self.config.goal_medal.name}: {self._score.total_goal_medals}"
+                f" {self.config.skip_medal.name}: {self._score.total_skip_medals}"
+            )
             self.game_is_in_progress = False
         else:
             self.app.mode_settings[S_TIME_LIMIT] = self._time_left
@@ -323,11 +333,12 @@ class RMTGame(Game):
 
     async def player_connect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
         if not is_spectator:
+            self.config.update_player_configs()
             if self.game_is_in_progress:
                 await self.views.ingame_view.display()
             else:
                 await self.app.game_selector.display(player)
-                await self.app.game.views.settings_view.display(player)
+                await self.views.settings_view.display(player)
 
     async def player_disconnect(self, player: Player, reason: str, source, *args, **kwargs):
         self.config.player_configs.pop(player.login, None)

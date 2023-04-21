@@ -3,6 +3,7 @@ import logging
 
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
+from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
@@ -13,16 +14,15 @@ from .views.game_selector_view import GameSelectorView
 from .games import Game, check_player_allowed_to_change_game_settings, check_player_allowed_to_manage_running_game
 from .games.rmt.random_map_challenge_game import RandomMapChallengeGame
 from .constants import S_TIME_LIMIT
+from .exceptions import GameCancelledException
 from .settings import MIN_PLAYER_LEVEL_SETTINGS
 
 logger = logging.getLogger(__name__)
 
 # maniaplanet://#join=i-XjZRVESdql3RnRsnTBGg@Trackmania
-# TODO: Enable players in lobby, players who join during game follow default config
 # TODO: Voting for skip
 # TODO: One database transaction for the game
 # TODO: Global app variable
-# TODO: Player connect and disconnect management
 
 class RandomMapsTogetherApp(AppConfig):
     app_dependencies = ['core.maniaplanet', 'core.trackmania']
@@ -33,6 +33,7 @@ class RandomMapsTogetherApp(AppConfig):
         self.tmx_client: TMExchangeClient = TMExchangeClient()
         self.map_handler = MapHandler(self, self.instance.map_manager, self.instance.storage)
         self.chat: ChatManager = self.instance.chat
+        self.db = self.instance.db
         self.tm_ui_manager: GlobalUIManager = self.instance.ui_manager
         self.mode_manager: ModeManager = self.instance.mode_manager
         self.game_selector = GameSelectorView(self)
@@ -52,8 +53,8 @@ class RandomMapsTogetherApp(AppConfig):
 
         await self.game_selector.display()
 
-        mania_callback.player.player_connect.register(self.game.player_connect)
-        mania_callback.player.player_disconnect.register(self.game.player_disconnect)
+        mania_callback.player.player_connect.register(self.player_connect)
+        mania_callback.player.player_disconnect.register(self.player_disconnect)
         mania_callback.map.map_begin.register(self.map_handler.map_begin_event)
 
         logger.info("application initialized correctly")
@@ -88,8 +89,8 @@ class RandomMapsTogetherApp(AppConfig):
                 while game.game_is_in_progress:
                     await asyncio.sleep(1)
         except Exception as e:
-            await self.chat(f"An error has occurred, exiting the game: {str(e)}")
-            logger.error("An error has occurred, exiting the game", exc_info=e)
+            await self.chat(str(e))
+            logger.error(exc_info=e)
 
         await self.chat(f"{self.game.game_mode.value} ended")
         await self.map_handler.load_hub()
@@ -104,3 +105,10 @@ class RandomMapsTogetherApp(AppConfig):
     async def stop_game(self, player, *args, **kwargs):
         await self.chat(f'{player.nickname} stopped the current game')
         self.game.game_is_in_progress = False
+
+    async def player_connect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
+        if not self.game.game_is_in_progress:
+            await self.game_selector.display(player)
+
+    async def player_disconnect(self, player: Player, reason: str, source, *args, **kwargs):
+        pass
