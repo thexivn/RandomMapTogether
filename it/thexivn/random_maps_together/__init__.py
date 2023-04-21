@@ -7,6 +7,7 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.chat import ChatManager
 from pyplanet.contrib.mode import ModeManager
 from pyplanet.core.ui import GlobalUIManager
+from pyplanet.core.db.database import Database
 
 from .map_handler import MapHandler
 from .client.tm_exchange_client import TMExchangeClient
@@ -33,7 +34,7 @@ class RandomMapsTogetherApp(AppConfig):
         self.tmx_client: TMExchangeClient = TMExchangeClient()
         self.map_handler = MapHandler(self, self.instance.map_manager, self.instance.storage)
         self.chat: ChatManager = self.instance.chat
-        self.db = self.instance.db
+        self.db: Database = self.instance.db
         self.tm_ui_manager: GlobalUIManager = self.instance.ui_manager
         self.mode_manager: ModeManager = self.instance.mode_manager
         self.game_selector = GameSelectorView(self)
