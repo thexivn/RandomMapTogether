@@ -71,9 +71,6 @@ class RandomMapsTogetherApp(AppConfig):
         mania_callback.map.map_begin.unregister(self.map_handler.map_begin_event)
 
         await self.game_selector.destroy()
-        self.instance.ui_manager.properties.set_visibility('Race_ScoresTable', True)
-        self.instance.ui_manager.properties.set_visibility('Race_BigMessage', True)
-        await self.instance.ui_manager.properties.send_properties()
 
     async def on_destroy(self):
         await super().on_destroy()

@@ -109,6 +109,7 @@ class RMTGame(Game):
 
     async def map_begin_event(self, map, *args, **kwargs):
         logger.info("[map_begin_event] STARTED")
+        await self.set_original_scoreboard_visible(True)
         if self.app.map_handler.pre_patch_ice:
             await self.app.chat("$o$FB0 This track was created before the ICE physics change $z")
         self._game_state.current_map_completed = False
@@ -121,6 +122,7 @@ class RMTGame(Game):
 
     async def map_end_event(self, time, count, *args, **kwargs):
         logger.info("MAP end")
+        await self.set_original_scoreboard_visible(True)
         self._game_state.skip_medal_player = None
         self._game_state.skip_medal = None
         if not self._game_state.current_map_completed or self._time_left == 0:
