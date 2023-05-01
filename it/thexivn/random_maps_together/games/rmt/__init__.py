@@ -176,8 +176,8 @@ class RMTGame(Game):
                     game_score=self._score.id,
                     player=player.id,
                     defaults={
-                        "goal_medal": self.config.player_configs[player.login].goal_medal,
-                        "skip_medal": self.config.player_configs[player.login].skip_medal,
+                        "goal_medal": self.config.player_configs[player.login].goal_medal.name,
+                        "skip_medal": self.config.player_configs[player.login].skip_medal.name,
                     }
                 )
                 await player_score.increase_medal_count(race_medal)
@@ -222,8 +222,8 @@ class RMTGame(Game):
             game_score=self._score.id,
             player=self._game_state.skip_medal_player.id,
             defaults={
-                "goal_medal": self.config.player_configs[self._game_state.skip_medal_player.login].goal_medal,
-                "skip_medal": self.config.player_configs[self._game_state.skip_medal_player.login].skip_medal,
+                "goal_medal": self.config.player_configs[self._game_state.skip_medal_player.login].goal_medal.name,
+                "skip_medal": self.config.player_configs[self._game_state.skip_medal_player.login].skip_medal.name,
             }
         )
         player_score.total_skip_medals += 1
