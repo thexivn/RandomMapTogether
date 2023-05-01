@@ -7,7 +7,7 @@
     </frame>
     <label pos="70 -2.5" z-index="1" text="$sPlayer Configs" textsize="2.5" textfont="RajdhaniMono"
             halign="left" valign="center" style="CardButtonSmallS"
-            id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_toggle_player_settings" />
+            id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_display_player_settings" />
     <label pos="70 -10" z-index="1" text="$sLeaderboard" textsize="2.5" textfont="RajdhaniMono"
             halign="left" valign="center" style="CardButtonSmallS"
             id="rmt_start_btn" scriptevents="1" action="{{ id }}__ui_display_leaderboard" />
