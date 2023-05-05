@@ -10,20 +10,19 @@ PKG = 'random_maps_together'
 setup(
     name=PKG,
     version='0.0.4',
-    description='Simple pyplanet application to add RMC mode online',
+    description='Simple pyplanet application to add random map game modes online',
     long_description='',
     keywords='maniaplanet, pyplanet, RMC, trackmania',
     license='GNU General Public License v3 (GPLv3)',
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
-    extras_require={},
     include_package_data=True,
     long_description_content_type='text/markdown',
     package_data={
         'templates': ['*.xml', '*.Script.Txt']
     },
-    author='thexivn',
-    author_email='thexivn@proton.me',
-    url='https://github.com/thexivn/RandomMapTogether',
+    author='marwinfaiter',
+    author_email='noobgubbe@gmail.com',
+    url='https://github.com/marwinfaiter/RandomMapTogether',
 
     classifiers=[  # Please update this. Possibilities: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
@@ -46,5 +45,19 @@ setup(
         'Intended Audience :: Developers',
 
     ],
-    zip_safe=False, install_requires=['pyplanet', 'aiohttp']
+    zip_safe=False,
+    install_requires=[
+        'pyplanet',
+        'aiohttp',
+        "async-timeout<4.0",
+        "Markupsafe<2.1.0"
+    ],
+    extras_require={
+        "test": [
+            "mypy",
+            "pytest",
+            "pylint",
+            "mockito"
+        ]
+    }
 )
