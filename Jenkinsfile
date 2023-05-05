@@ -39,6 +39,9 @@ pipeline {
                     }
                 }
                 stage("Publish wheel") {
+                    when {
+                        branch 'main'
+                    }
                     steps {
                         sh "python -m pip install --user twine"
                         sh "python -m twine upload --repository-url https://nexus.buddaphest.se/repository/pypi-releases/ --u '${TWINE_CREDENTIALS_USR}' --p '${TWINE_CREDENTIALS_PSW}' dist/*"
