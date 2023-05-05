@@ -4,16 +4,16 @@ pipeline {
         TWINE_CREDENTIALS = credentials("nexus")
     }
     stages {
-        stage("Clean workspace") {
-            steps {
-                sh "git clean -xdf"
-            }
-        }
         stage("Run in container") {
             agent {
                 dockerfile true
             }
             stages {
+                stage("Clean workspace") {
+                    steps {
+                        sh "git clean -xdf"
+                    }
+                }
                 stage("Install dependencies") {
                     steps {
                         sh "python -m pip install --user .[test]"
