@@ -1,8 +1,8 @@
 from unittest import IsolatedAsyncioTestCase
 from mockito import when, unstub, KWARGS
-from random_maps_together.client.tm_exchange_client import TMExchangeClient
-from random_maps_together.models.api_response.api_map_info import APIMapInfo
-from random_maps_together.models.api_response.api_map_pack_info import APIMapPackInfo
+from it.thexivn.random_maps_together.client.tm_exchange_client import TMExchangeClient
+from it.thexivn.random_maps_together.models.api_response.api_map_info import APIMapInfo
+from it.thexivn.random_maps_together.models.api_response.api_map_pack_info import APIMapPackInfo
 import aiohttp
 import json
 

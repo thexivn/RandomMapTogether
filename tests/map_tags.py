@@ -1,4 +1,4 @@
-from random_maps_together.models.map_tag import MapTag
+from it.thexivn.random_maps_together.models.map_tag import MapTag
 
 class TestMapTags:
     def expected_map_tags_as_objects(self):
