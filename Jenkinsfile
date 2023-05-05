@@ -49,7 +49,15 @@ pipeline {
     }
     post {
         always {
-            cleanWs()
+            cleanWs(
+                deleteDirs: true,
+                disableDeferredWipeout: true,
+                patterns: [
+                    [pattern: "dist", type: "INCLUDE"],
+                    [pattern: "build", type: "INCLUDE"],
+                    [pattern: "*.egg-info", type: "INCLUDE"],
+                ]
+            )
         }
     }
 }
