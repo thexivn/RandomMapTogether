@@ -4,7 +4,7 @@ pipeline {
         TWINE_CREDENTIALS = credentials("nexus")
     }
     stages {
-        stage("Run tests in container") {
+        stage("Run in container") {
             agent {
                 dockerfile true
             }
@@ -33,17 +33,17 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-        stage("Build wheel") {
-            steps {
-                sh "python setup.py bdist_wheel"
-            }
-        }
-        stage("Publish wheel") {
-            steps {
-                sh "python -m pip install --user twine"
-                sh "python -m twine upload --repository-url https://nexus.buddaphest.se/repository/pypi-releases/ --u ${TWINE_CREDENTIALS_USR} --p ${TWINE_CREDENTIALS_PSW} dist/*"
+                stage("Build wheel") {
+                    steps {
+                        sh "python setup.py bdist_wheel"
+                    }
+                }
+                stage("Publish wheel") {
+                    steps {
+                        sh "python -m pip install --user twine"
+                        sh "python -m twine upload --repository-url https://nexus.buddaphest.se/repository/pypi-releases/ --u ${TWINE_CREDENTIALS_USR} --p ${TWINE_CREDENTIALS_PSW} dist/*"
+                    }
+                }
             }
         }
     }
