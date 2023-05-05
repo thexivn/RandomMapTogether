@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-PKG = 'random_maps_together'
+PKG = 'it.thexivn.random_maps_together'
 ######
 setup(
     name=PKG,
@@ -13,7 +13,9 @@ setup(
     packages=find_packages(include=["it.*"]),
     include_package_data=True,
     long_description_content_type='text/markdown',
-    package_data={},
+    package_data={
+        'templates': ['*.xml', '*.Script.Txt']
+    },
     author='marwinfaiter',
     author_email='noobgubbe@gmail.com',
     url='https://github.com/marwinfaiter/RandomMapTogether',
