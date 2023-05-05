@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage("Clean workspace") {
             steps {
-                sh "git clean -xf"
+                sh "git clean -xdf"
             }
         }
         stage("Run in container") {
@@ -53,6 +53,11 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            sh "docker system prune -a"
         }
     }
 }
