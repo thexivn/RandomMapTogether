@@ -1,10 +1,6 @@
 import os
 from setuptools import setup, find_packages
 
-EXCLUDE_FROM_PACKAGES = [
-    'env*',
-]
-
 PKG = 'random_maps_together'
 ######
 setup(
@@ -14,12 +10,10 @@ setup(
     long_description='',
     keywords='maniaplanet, pyplanet, RMC, trackmania',
     license='GNU General Public License v3 (GPLv3)',
-    packages=find_packages(include="random_maps_together.*", exclude=EXCLUDE_FROM_PACKAGES),
+    packages=find_packages(include=["random_maps_together.*"]),
     include_package_data=True,
     long_description_content_type='text/markdown',
-    package_data={
-        'templates': ['*.xml', '*.Script.Txt']
-    },
+    package_data={},
     author='marwinfaiter',
     author_email='noobgubbe@gmail.com',
     url='https://github.com/marwinfaiter/RandomMapTogether',

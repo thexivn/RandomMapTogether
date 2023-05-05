@@ -11,7 +11,7 @@ pipeline {
             stages {
                 stage("Install dependencies") {
                     steps {
-                        sh "python setup.py clean"
+                        cleanWs()
                         sh "python -m pip install --user .[test]"
                     }
                 }
