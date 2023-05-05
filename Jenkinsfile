@@ -1,9 +1,16 @@
 pipeline {
     agent any
+    options {
+        skipDefaultCheckout(true)
+    }
     environment {
         TWINE_CREDENTIALS = credentials("nexus")
     }
     stages {
+        stage("Clean workspace") {
+            cleanWs()
+            checkout scm
+        }
         stage("Run in container") {
             agent {
                 dockerfile true
@@ -11,7 +18,6 @@ pipeline {
             stages {
                 stage("Install dependencies") {
                     steps {
-                        cleanWs()
                         sh "python -m pip install --user .[test]"
                     }
                 }
