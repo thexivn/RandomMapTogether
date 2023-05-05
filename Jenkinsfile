@@ -4,6 +4,11 @@ pipeline {
         TWINE_CREDENTIALS = credentials("nexus")
     }
     stages {
+        stage("Clean workspace") {
+            steps {
+                sh "git clean -x"
+            }
+        }
         stage("Run in container") {
             agent {
                 dockerfile true
@@ -48,19 +53,6 @@ pipeline {
                     }
                 }
             }
-        }
-    }
-    post {
-        always {
-            cleanWs(
-                deleteDirs: true,
-                disableDeferredWipeout: true,
-                patterns: [
-                    [pattern: "dist", type: "INCLUDE"],
-                    [pattern: "build", type: "INCLUDE"],
-                    [pattern: "*.egg-info", type: "INCLUDE"],
-                ]
-            )
         }
     }
 }
