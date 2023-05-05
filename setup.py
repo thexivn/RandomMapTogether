@@ -9,7 +9,7 @@ PKG = 'random_maps_together'
 ######
 setup(
     name=PKG,
-    version='0.0.4',
+    version=f"0.0.{os.environ.get('BUILD_ID', 4)}",
     description='Simple pyplanet application to add random map game modes online',
     long_description='',
     keywords='maniaplanet, pyplanet, RMC, trackmania',
