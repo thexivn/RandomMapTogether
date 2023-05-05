@@ -8,8 +8,10 @@ pipeline {
     }
     stages {
         stage("Clean workspace") {
-            cleanWs()
-            checkout scm
+            steps {
+                cleanWs()
+                checkout scm
+            }
         }
         stage("Run in container") {
             agent {
