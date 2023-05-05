@@ -1,2 +1,2 @@
-include it/thexivn/random_maps_together/templates/*.xml
-include it/thexivn/random_maps_together/templates/*.Script.Txt
+recursive-include it/thexivn/random_maps_together/templates *.xml
+recursive-include it/thexivn/random_maps_together/templates *.Script.Txt
