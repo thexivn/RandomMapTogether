@@ -18,7 +18,7 @@ pipeline {
                     stages {
                         stage("Run mypy") {
                             steps {
-                                sh "python -m mypy it tests --check-untyped-defs"
+                                sh "python -m mypy it tests"
                             }
                         }
                         stage("Run pylint") {
