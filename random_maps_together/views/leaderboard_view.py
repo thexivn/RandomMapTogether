@@ -4,13 +4,13 @@ from pyplanet.apps.config import AppConfig
 from pyplanet.views.generics.list import ManualListView
 
 from ..models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
-
+# pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
-class LeaderboardView(ManualListView):
+class LeaderboardView(ManualListView): # pylint: disable=duplicate-code
     app: AppConfig = None
 
-    title = 'Leaderboard'
+    title = 'Leaderboard' # pylint: disable=duplicate-code
     template_name = "random_maps_together/list.xml"
     icon_style = 'Icons128x128_1'
     icon_substyle = 'Browse'
@@ -111,6 +111,8 @@ class LeaderboardView(ManualListView):
             ).dicts()
         ))
 
-    async def display_score_board(self, player, values, row, **kwargs):
-        self.app.game.views.scoreboard_view.game_score = await RandomMapsTogetherScore.get(RandomMapsTogetherScore.id == row["id"])
+    async def display_score_board(self, _player, _values, row, **_kwargs):
+        self.app.game.views.scoreboard_view.game_score = await RandomMapsTogetherScore.get(
+            RandomMapsTogetherScore.id == row["id"] # pylint: disable=no-member
+        )
         await self.app.game.views.scoreboard_view.display()

@@ -1,9 +1,8 @@
 import logging
 from pyplanet.views.generics.widget import WidgetView
 
-from ...models.enums.game_modes import GameModes
 from ...models.enums.medal_urls import MedalURLs
-
+# pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
 cb_y_off = 3

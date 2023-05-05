@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import time as py_time
-from typing import Optional
 
 from pyplanet.views import TemplateView
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -30,25 +29,32 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
         data["game"] = self.game
         data["total_goal_medals"] = self.game_score.total_goal_medals
         data["total_skip_medals"] = self.game_score.total_skip_medals
-        data["goal_medal_url"] = MedalURLs[self.game_score.goal_medal].value
-        data["skip_medal_url"] = MedalURLs[self.game_score.skip_medal].value
+        data["goal_medal_url"] = MedalURLs[self.game_score.goal_medal].value # type: ignore[misc]
+        data["skip_medal_url"] = MedalURLs[self.game_score.skip_medal].value # type: ignore[misc]
         data["medal_urls"] = MedalURLs
 
         data["players"] = await RandomMapsTogetherPlayerScore.get_top_20_players(self.game_score.id)
         data["time_left"] = self.game.time_left_str()
-        data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(self.game_score.game_time_seconds + self.game_score.total_time_gained - self.game.time_left + self.game.game_state.map_played_time()))
+        data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(
+            self.game_score.game_time_seconds +
+            self.game_score.total_time_gained -
+            self.game.time_left +
+            self.game.game_state.map_played_time()
+        ))
 
         data["nb_players"] = len(data["players"])
         data["scroll_max"] = max(0, data["nb_players"] * 10 - 100)
 
         return data
 
-    async def display(self, player_logins=None):
+    async def display(self, player_logins=None, **_kwargs):
         if player_logins:
             for player_login in player_logins:
-                    if self._player_loops.get(player_login):
-                        return
-                    self._player_loops[player_login] = asyncio.create_task(self.display_and_update_until_hide(player_login))
+                if self._player_loops.get(player_login):
+                    return
+                self._player_loops[player_login] = asyncio.create_task(
+                    self.display_and_update_until_hide(player_login)
+                )
         else:
             await super().display()
 
@@ -69,9 +75,9 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
                 await asyncio.sleep(1)
                 await super().display([player_login])
 
-    async def display_scoreboard_for_player(self, player: Player, *args, **kw):
+    async def display_scoreboard_for_player(self, player: Player, *_args, **_kwargs):
         await self.display([player.login])
 
-    async def hide_scoreboard_for_player(self, player: Player, *args, **kw):
+    async def hide_scoreboard_for_player(self, player: Player, *_args, **_kwargs):
         if self._is_player_shown.get(player.login) or self._is_global_shown:
             await self.hide([player.login])

@@ -1,10 +1,8 @@
 import logging
-from typing import Union
 
 from pyplanet.views.generics.widget import WidgetView
-from ...configuration.rmt import RandomMapsTogetherConfiguration
 from ...configuration.rmt.rmc_configuration import RandomMapChallengeConfiguration
-
+# pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
 cb_y_off = 3

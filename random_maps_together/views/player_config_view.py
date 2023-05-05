@@ -6,13 +6,13 @@ from pyplanet.apps.config import AppConfig
 from ..models.enums.medals import Medals
 from .player_prompt_view import PlayerPromptView
 from ..games import check_player_allowed_to_change_game_settings
-
+# pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
-class PlayerConfigView(ManualListView):
+class PlayerConfigView(ManualListView): # pylint: disable=duplicate-code
     app: AppConfig = None
 
-    title = 'Player Configs'
+    title = 'Player Configs' # pylint: disable=duplicate-code
     template_name = "random_maps_together/list.xml"
     icon_style = 'Icons128x128_1'
     icon_substyle = 'Browse'
@@ -83,43 +83,55 @@ class PlayerConfigView(ManualListView):
             for player_config in sorted(self.app.game.config.player_configs.values(), key=lambda x: x.player.nickname)
         ]
 
-    def _render_action_attr(self, row, action):
+    def _render_action_attr(self, row, _action):
         return [
             {
                 "key": "styleselected",
-                "value": self.app.game.config.player_configs[row["player_login"]].enabled if self.app.game.config.player_configs[row["player_login"]].enabled is not None else self.app.game.config.enabled
+                "value": self.app.game.config.player_configs[row["player_login"]].enabled \
+                    if self.app.game.config.player_configs[row["player_login"]].enabled is not None \
+                    else self.app.game.config.enabled
             }
         ]
 
     @check_player_allowed_to_change_game_settings
-    async def action_toggle_enabled_player(self, player, values, row, **kwargs):
-        input_value = await PlayerPromptView.prompt_for_input(player, f"Enable or disable player, OK for global player enabled: {self.app.game.config.enabled}", [
-            {"name": "Enable", "value": True},
-            {"name": "Disable", "value": False},
-        ], entry=False)
+    async def action_toggle_enabled_player(self, player, _values, row, **_kwargs):
+        input_value = await PlayerPromptView.prompt_for_input(
+            player, f"Enable or disable player, OK for global player enabled: {self.app.game.config.enabled}",
+            [
+                {"name": "Enable", "value": True},
+                {"name": "Disable", "value": False},
+            ],
+            entry=False
+        )
         self.app.game.config.player_configs[row["player_login"]].enabled = input_value
         await self.refresh(player=player)
 
     @check_player_allowed_to_change_game_settings
-    async def prompt_for_goal_medal(self, player, values, row, **kwargs):
+    async def prompt_for_goal_medal(self, player, _values, row, **_kwargs):
         buttons = [
             {"name": medal.name, "value": medal}
             for medal in [Medals.AUTHOR, Medals.GOLD, Medals.SILVER]
         ]
 
-        medal = await PlayerPromptView.prompt_for_input(player, f"Goal Medal, OK for global Goal Medal: {self.app.game.config.goal_medal.name}", buttons=buttons, entry=False)
+        medal = await PlayerPromptView.prompt_for_input(
+            player, f"Goal Medal, OK for global Goal Medal: {self.app.game.config.goal_medal.name}",
+            buttons=buttons, entry=False
+        )
         self.app.game.config.player_configs[row["player_login"]].goal_medal = medal
 
         await self.refresh(player=player)
 
     @check_player_allowed_to_change_game_settings
-    async def prompt_for_skip_medal(self, player, values, row, **kwargs):
+    async def prompt_for_skip_medal(self, player, _values, row, **_kwargs):
         buttons = [
             {"name": medal.name, "value": medal}
             for medal in [Medals.GOLD, Medals.SILVER, Medals.BRONZE]
         ]
 
-        medal = await PlayerPromptView.prompt_for_input(player, f"Skip Medal, OK for global Skip Medal: {self.app.game.config.skip_medal.name}", buttons=buttons, entry=False)
+        medal = await PlayerPromptView.prompt_for_input(
+            player, f"Skip Medal, OK for global Skip Medal: {self.app.game.config.skip_medal.name}",
+            buttons=buttons, entry=False
+        )
         self.app.game.config.player_configs[row["player_login"]].skip_medal = medal
 
         await self.refresh(player=player)

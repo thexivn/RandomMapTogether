@@ -32,7 +32,7 @@ class PlayerPromptView(AlertView):
         if self.entry and not value:
             raise ValueError("Empty value given!")
 
-    async def handle(self, player, action, values, **kwargs):  # pragma: no cover
+    async def handle(self, player, action, values, **_kwargs):  # pragma: no cover
         # Try to parse the button id instead of the whole action string.
         button = None
         try:
@@ -42,7 +42,7 @@ class PlayerPromptView(AlertView):
             match = re.search(r'button_(ok)$', action)
             if match:
                 button = match.group(1)
-        except:
+        except Exception as _exc: # pylint: disable=broad-exception-caught
             pass
 
         if button == "ok":
@@ -54,7 +54,7 @@ class PlayerPromptView(AlertView):
                     self.validator(value)
                 self.response_future.set_result(value)
                 await self.close(player)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 self.data['errors'] = str(e)
                 await self.display([player.login])
 
@@ -63,12 +63,14 @@ class PlayerPromptView(AlertView):
             await self.close(player)
 
     @classmethod
-    async def prompt_for_input(cls, player: Player, message: str, buttons=None, entry=True, validator=None, default=None):
+    async def prompt_for_input(
+        cls, player: Player, message: str,
+        buttons=None, entry=True, validator=None, default=None
+    ):
         prompt_view = cls(message, buttons, entry=entry, validator=validator, default=default)
         await prompt_view.display([player])
         player_input = await prompt_view.wait_for_input()
         await prompt_view.destroy()
         if isinstance(player_input, dict):
             return player_input.get("value", player_input["name"])
-        else:
-            return player_input
+        return player_input

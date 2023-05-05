@@ -2,10 +2,8 @@ from dataclasses import dataclass
 from typing import Tuple, List
 from datetime import date, datetime
 
-from pyplanet.apps.core.maniaplanet.models import Map
 from ..map_tag import MapTag
 from ...constants import TAG_BOBSLEIGH, TAG_ICE, ICE_CHANGE_DATE
-from ...models.enums.medals import Medals
 
 
 @dataclass(frozen=True)
@@ -27,8 +25,8 @@ class APIMapInfo:
 
     @classmethod
     def from_json(cls, json, map_tags: List[MapTag]) -> "APIMapInfo":
-        date, milliseconds = json["UpdatedAt"].split(".")
-        json["UpdatedAt"] = f"{date}.{int(milliseconds):<03d}"
+        date_string, milliseconds = json["UpdatedAt"].split(".")
+        json["UpdatedAt"] = f"{date_string}.{int(milliseconds):<03d}"
         return cls(
             json["TrackID"],
             json["TrackUID"],
@@ -68,7 +66,7 @@ class APIMapInfo:
     # "ReplayWRUserID": None,
     # "ReplayWRUsername": None,
     # "TrackValue": 0,
-    # "Comments": "Welcome to Toybox Garden! Remember to play gently with your toys, or you might just break them! Happy Hunting!",
+    # "Comments": "Welcome to Toybox Garden!",
     # "MappackID": 0,
     # "Unlisted": False,
     # "Unreleased": False,

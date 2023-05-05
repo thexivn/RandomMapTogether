@@ -5,13 +5,13 @@ from pyplanet.views.generics.list import ManualListView
 from pyplanet.apps.config import AppConfig
 
 from .player_prompt_view import PlayerPromptView
-
+# pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
-class CustomMapsView(ManualListView):
+class CustomMapsView(ManualListView): # pylint: disable=duplicate-code
     app: AppConfig = None
 
-    title = 'Custom Maps'
+    title = 'Custom Maps' # pylint: disable=duplicate-code
     template_name = "random_maps_together/list.xml"
     icon_style = 'Icons128x128_1'
     icon_substyle = 'Browse'
@@ -105,16 +105,20 @@ class CustomMapsView(ManualListView):
         logger.info(data)
         return data
 
-    async def remove_map(self, player, values, map, **kwargs):
-        await self.app.game.config.map_generator.remove_map(map["id"])
+    async def remove_map(self, player, _values, track, **_kwargs):
+        await self.app.game.config.map_generator.remove_map(track["id"])
         await self.display(player)
 
-    async def add_map(self, player, values, **kwargs):
-        map_id = await PlayerPromptView.prompt_for_input(player, "Map ID", validator=self.app.game.config.map_generator.map_id_validator, default="")
+    async def add_map(self, player, _values, **_kwargs):
+        map_id = await PlayerPromptView.prompt_for_input(
+            player, "Map ID", validator=self.app.game.config.map_generator.map_id_validator, default=""
+        )
         await self.app.game.config.map_generator.add_map(map_id)
         await self.display(player)
 
-    async def add_map_pack(self, player, values, **kwargs):
-        map_pack_id = await PlayerPromptView.prompt_for_input(player, "Map Pack ID", validator=self.app.game.config.map_generator.map_pack_id_validator, default="")
+    async def add_map_pack(self, player, _values, **_kwargs):
+        map_pack_id = await PlayerPromptView.prompt_for_input(
+            player, "Map Pack ID", validator=self.app.game.config.map_generator.map_pack_id_validator, default=""
+        )
         await self.app.game.config.map_generator.add_map_pack(map_pack_id)
         await self.display(player)

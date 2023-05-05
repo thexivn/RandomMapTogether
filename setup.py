@@ -44,7 +44,8 @@ setup(
         'pyplanet',
         'aiohttp',
         "async-timeout<4.0",
-        "Markupsafe<2.1.0"
+        "Markupsafe<2.1.0",
+        "types-peewee"
     ],
     extras_require={
         "test": [

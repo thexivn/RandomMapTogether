@@ -5,7 +5,7 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from ..models.enums.game_modes import GameModes
 from ..games.rmt.random_map_challenge_game import RandomMapChallengeGame
 from ..games.rmt.random_map_survival_game import RandomMapSurvivalGame
-from ..games import check_player_allowed_to_change_game_settings, check_player_allowed_to_manage_running_game
+from ..games import check_player_allowed_to_change_game_settings
 from ..views.player_prompt_view import PlayerPromptView
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class GameSelectorView(WidgetView):
 
 
     @check_player_allowed_to_change_game_settings
-    async def set_game_mode(self, player: Player, *args, **kwargs):
+    async def set_game_mode(self, player: Player, *_args, **_kwargs):
         buttons = [
             {"name": game_mode.value, "value": game_mode}
             for game_mode in GameModes
