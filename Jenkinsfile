@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage("Clean workspace") {
             steps {
-                sh "git clean -x"
+                sh "git clean -xf"
             }
         }
         stage("Run in container") {
