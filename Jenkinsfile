@@ -1,18 +1,9 @@
 pipeline {
     agent any
-    options {
-        skipDefaultCheckout(true)
-    }
     environment {
         TWINE_CREDENTIALS = credentials("nexus")
     }
     stages {
-        stage("Clean workspace") {
-            steps {
-                cleanWs()
-                checkout scm
-            }
-        }
         stage("Run in container") {
             agent {
                 dockerfile true
@@ -52,6 +43,15 @@ pipeline {
                         sh "python -m pip install --user twine"
                         sh "python -m twine upload --repository-url https://nexus.buddaphest.se/repository/pypi-releases/ --u '${TWINE_CREDENTIALS_USR}' --p '${TWINE_CREDENTIALS_PSW}' dist/*"
                     }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            stage("Clean workspace") {
+                steps {
+                    cleanWs()
                 }
             }
         }
