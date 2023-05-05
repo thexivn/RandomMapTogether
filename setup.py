@@ -10,7 +10,7 @@ setup(
     long_description='',
     keywords='maniaplanet, pyplanet, RMC, trackmania',
     license='GNU General Public License v3 (GPLv3)',
-    packages=find_packages(include=["random_maps_together.*"]),
+    packages=find_packages(include=["it.*"]),
     include_package_data=True,
     long_description_content_type='text/markdown',
     package_data={},

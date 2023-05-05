@@ -18,12 +18,12 @@ pipeline {
                     stages {
                         stage("Run mypy") {
                             steps {
-                                sh "python -m mypy random_maps_together tests --check-untyped-defs"
+                                sh "python -m mypy it tests --check-untyped-defs"
                             }
                         }
                         stage("Run pylint") {
                             steps {
-                                sh "python -m pylint random_maps_together tests"
+                                sh "python -m pylint it tests"
                             }
                         }
                         stage("Run pytest") {
