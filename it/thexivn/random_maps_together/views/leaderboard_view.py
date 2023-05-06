@@ -111,8 +111,8 @@ class LeaderboardView(ManualListView): # pylint: disable=duplicate-code
             ).dicts()
         ))
 
-    async def display_score_board(self, _player, _values, row, **_kwargs):
+    async def display_score_board(self, player, values, row, **_kwargs): # pylint: disable=unused-argument
         self.app.game.views.scoreboard_view.game_score = await RandomMapsTogetherScore.get(
             RandomMapsTogetherScore.id == row["id"] # pylint: disable=no-member
         )
-        await self.app.game.views.scoreboard_view.display()
+        await self.app.game.views.scoreboard_view.display(player)
