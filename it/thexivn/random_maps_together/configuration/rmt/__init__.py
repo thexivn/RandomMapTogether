@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, cast
+from typing import Dict
 from pyplanet.apps.core.maniaplanet.models import Player
 
 from .. import Configuration
@@ -16,7 +16,7 @@ from ...views.player_prompt_view import PlayerPromptView
 @dataclass
 class RandomMapsTogetherConfiguration(Configuration):
     map_generator: MapGenerator
-    game_time_seconds: int = 0
+    game_time_seconds: int = field(init=False)
     goal_medal = Medals.AUTHOR
     skip_medal = Medals.GOLD
     enabled = True
