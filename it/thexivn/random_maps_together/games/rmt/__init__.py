@@ -111,7 +111,7 @@ class RMTGame(Game):
             await asyncio.sleep(1)
         await self.hide_custom_scoreboard()
 
-    async def map_begin_event(self, _map, *_args, **_kwargs):
+    async def map_begin_event(self, *_args, **_kwargs):
         logger.info("[map_begin_event] STARTED")
         await self.set_original_scoreboard_visible(True)
         if self.app.map_handler.pre_patch_ice:
@@ -124,7 +124,7 @@ class RMTGame(Game):
         )
         logger.info("[map_begin_event] ENDED")
 
-    async def map_end_event(self, _time, _count, *_args, **_kwargs):
+    async def map_end_event(self, *_args, **_kwargs):
         logger.info("MAP end")
         await self.set_original_scoreboard_visible(True)
         self.game_state.skip_medal_player = None
@@ -143,8 +143,8 @@ class RMTGame(Game):
             await self.app.mode_manager.update_settings(self.app.mode_settings)
 
 
-    async def on_map_finish(self, player: Player, race_time: int, _lap_time: int, _cps, _lap_cps, _race_cps, _flow,
-                           is_end_race: bool, _is_end_lap, _raw, *_args, **_kwargs):
+    async def on_map_finish(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow, # pylint: disable=too-many-locals,unused-argument
+                           is_end_race: bool, is_end_lap, raw, *_args, **_kwargs): # pylint: disable=too-many-locals,unused-argument
         logger.info("[on_map_finish] %s has finished the map with time: %sms", player.nickname, race_time)
         async with _lock: # lock to avoid multiple AT before next map is loaded
             if self.game_state.current_map_completed:

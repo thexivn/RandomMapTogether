@@ -134,5 +134,5 @@ class MapHandler:
             if track["UId"] != self.hub_map:
                 await self.remove_map(track)
 
-    async def map_begin_event(self, track: Map, *_args, **_kwargs):
-        self.active_map = track
+    async def map_begin_event(self, map: Map, *_args, **_kwargs): # pylint: disable=redefined-builtin
+        self.active_map = map
