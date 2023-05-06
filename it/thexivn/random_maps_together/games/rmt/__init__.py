@@ -169,7 +169,7 @@ class RMTGame(Game):
 
 
             formatted_race_time = datetime.datetime.fromtimestamp(race_time / 1000.0).strftime("%H:%M:%S")
-            formatted_race_time = f"{formatted_race_time}.{int(((race_time / 1000) % 1) * 1000)}"
+            formatted_race_time = f"{formatted_race_time}.{int(round(((race_time / 1000) % 1) * 1000))}"
 
             if race_medal >= (self.config.player_configs[player.login].goal_medal or self.config.goal_medal):
                 if not (
