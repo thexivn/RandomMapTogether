@@ -115,4 +115,4 @@ class LeaderboardView(ManualListView): # pylint: disable=duplicate-code
         self.app.game.views.scoreboard_view.game_score = await RandomMapsTogetherScore.get(
             RandomMapsTogetherScore.id == row["id"] # pylint: disable=no-member
         )
-        await self.app.game.views.scoreboard_view.display(player.login)
+        await self.app.game.views.scoreboard_view.display([player.login])
