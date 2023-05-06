@@ -30,7 +30,7 @@ class RandomMapChallengeConfiguration(RandomMapsTogetherConfiguration):
             {"name": "1h", "value": 3600},
             {"name": "2h", "value": 7200}
         ]
-        super().set_game_time_seconds(player, buttons)
+        await super().set_game_time_seconds(player, buttons)
 
     @check_player_allowed_to_change_game_settings
     async def toggle_infinite_skips(self, _player: Player, *_args, **_kwargs):

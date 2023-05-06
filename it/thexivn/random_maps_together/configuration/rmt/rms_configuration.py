@@ -36,7 +36,7 @@ class RandomMapSurvivalConfiguration(RandomMapsTogetherConfiguration):
             {"name": "30m", "value": 1800},
             {"name": "1h", "value": 3600}
         ]
-        super().set_game_time_seconds(player, buttons)
+        await super().set_game_time_seconds(player, buttons)
 
     @check_player_allowed_to_change_game_settings
     async def set_goal_bonus_seconds(self, player: Player, *_args, **_kwargs):
