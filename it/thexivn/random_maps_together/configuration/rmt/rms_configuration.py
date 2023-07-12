@@ -4,7 +4,6 @@ from . import RandomMapsTogetherConfiguration
 from ...games import check_player_allowed_to_change_game_settings
 from ...views.player_prompt_view import PlayerPromptView
 
-
 @dataclass
 class RandomMapSurvivalConfiguration(RandomMapsTogetherConfiguration):
     game_time_seconds = 900
@@ -16,14 +15,16 @@ class RandomMapSurvivalConfiguration(RandomMapsTogetherConfiguration):
             if self.app.map_handler.pre_patch_ice or self.app.game.game_state.free_skip_available:
                 pass
             else:
-                self.app.game.time_left -= self.skip_penalty_seconds
+                self.game_time_seconds = max(self.game_time_seconds - self.skip_penalty_seconds, 0)
+            self.app.game.time_left -= self.app.game.game_state.map_played_time()
+            self.app.game.time_left = min(self.game_time_seconds, self.app.game.time_left)
 
         elif goal_medal:
-            self.app.game.time_left += self.goal_bonus_seconds
+            self.app.game.time_left -= self.app.game.game_state.map_played_time()
+            self.app.game.time_left = min(self.app.game.time_left + self.goal_bonus_seconds, self.game_time_seconds)
             self.app.game.score.total_time_gained += self.goal_bonus_seconds
         elif skip_medal:
             pass
-        self.app.game.time_left -= self.app.game.game_state.map_played_time()
         self.app.game.time_left = max(0, self.app.game.time_left)
 
     def can_skip_map(self):
