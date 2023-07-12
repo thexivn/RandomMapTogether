@@ -23,9 +23,6 @@ class RandomMapsTogetherConfiguration(Configuration):
     player_configs: Dict[str, PlayerConfiguration] = field(default_factory=dict)
     allow_pausing = False
 
-    def __post_init__(self):
-        self.update_player_configs()
-
     async def update_time_left(self, free_skip=False, goal_medal=False, skip_medal=False):
         pass
 

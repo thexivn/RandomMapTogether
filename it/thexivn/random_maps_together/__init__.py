@@ -47,6 +47,7 @@ class RandomMapsTogetherApp(AppConfig):
         self.mode_settings = await self.instance.mode_manager.get_settings()
 
         self.game = RandomMapChallengeGame(self)
+        self.game.config.update_player_configs()
         await self.map_handler.load_hub()
         logger.info("HUB loaded")
 
