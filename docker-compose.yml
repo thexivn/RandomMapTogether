@@ -1,7 +1,49 @@
 version: "3.9"
 
+name: pyplanet
 services:
-  rmt:
-    build: .
+  database:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pyplanet
+      MYSQL_USER: pyplanet
+      MYSQL_PASSWORD: pyplanet
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
+      - mariadb:/var/lib/mysql
+  trackmania:
+    image: evotm/trackmania
+    environment:
+      MASTER_LOGIN: ${TRACKMANIA_ACCOUNT_LOGIN} # setup here https://www.trackmania.com/player/dedicated-servers
+      MASTER_PASSWORD: ${TRACKMANIA_ACCOUNT_PASSWORD}
+      XMLRPC_ALLOWREMOTE: "True"
+    ports:
+      - 2353:2353/tcp
+      - 2353:2353/udp
+    volumes:
+      - userdata:/server/UserData
+      - ./dedicated_cfg.txt:/server/UserData/Config/dedicated_cfg.txt:ro
+    depends_on:
+      - database
+  pyplanet:
+    image: docker.buddaphest.se/marwinfaiter/pyplanet
+    build:
+      context: .
+    environment:
+      PYPLANET_OWNER: ${TRACKMANIA_PLAYER_ACCOUNT_ID} # Player account ID
+      PYPLANET_DEBUG: 1
+      DB_HOST: database
+      TM_HOST: trackmania
+      DB_USER: pyplanet
+      DB_USER_PASSWORD: pyplanet
+    volumes:
+      - userdata:/pyplanet/server/UserData
+      - ./apps.py:/pyplanet/server/settings/apps.py
       - .:/src
+    depends_on:
+      - trackmania
+
+volumes:
+  mariadb:
+  userdata:
