@@ -28,8 +28,6 @@ services:
       - database
   pyplanet:
     image: docker.buddaphest.se/marwinfaiter/pyplanet
-    build:
-      context: .
     environment:
       PYPLANET_OWNER: ${TRACKMANIA_PLAYER_ACCOUNT_ID} # Player account ID
       PYPLANET_DEBUG: 1
