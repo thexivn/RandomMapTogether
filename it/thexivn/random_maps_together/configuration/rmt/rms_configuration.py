@@ -11,16 +11,15 @@ class RandomMapSurvivalConfiguration(RandomMapsTogetherConfiguration):
     skip_penalty_seconds = 60
 
     async def update_time_left(self, free_skip=False, goal_medal=False, skip_medal=False):
+        self.app.game.time_left -= self.app.game.game_state.map_played_time()
         if free_skip:
             if self.app.map_handler.pre_patch_ice or self.app.game.game_state.free_skip_available:
                 pass
             else:
                 self.game_time_seconds = max(self.game_time_seconds - self.skip_penalty_seconds, 0)
-            self.app.game.time_left -= self.app.game.game_state.map_played_time()
             self.app.game.time_left = min(self.game_time_seconds, self.app.game.time_left)
 
         elif goal_medal:
-            self.app.game.time_left -= self.app.game.game_state.map_played_time()
             self.app.game.time_left = min(self.app.game.time_left + self.goal_bonus_seconds, self.game_time_seconds)
             self.app.game.score.total_time_gained += self.goal_bonus_seconds
         elif skip_medal:
