@@ -301,7 +301,7 @@ class RMTGame(Game):
         await self.views.ingame_view.hide()
 
     @check_player_allowed_to_manage_running_game
-    async def command_toggle_pause(self, player: Player, *_args, **_kwargs):
+    async def command_toggle_pause(self, *_args, **_kwargs):
         self.game_state.is_paused ^= True
         if self.game_state.is_paused:
             self.game_state.round_timer.stop_timer()
