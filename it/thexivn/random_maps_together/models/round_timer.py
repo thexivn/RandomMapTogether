@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class RoundTimer:
-    total_time: Union[int, float] = 0
+    total_time: int = 0
     start_round: Union[int, float] = 0
-    last_round: Union[int, float] = 0
+    last_round: int = 0
 
     def start_timer(self):
         if self.start_round:

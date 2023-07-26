@@ -1,4 +1,5 @@
 from peewee import BooleanField, CharField, IntegerField
+from typing import Union
 from pyplanet.core.db import TimedModel
 
 class RandomMapsTogetherScore(TimedModel):
@@ -10,4 +11,4 @@ class RandomMapsTogetherScore(TimedModel):
     medal_sum = IntegerField(default=0)
     modified_player_settings = BooleanField(default=False)
     game_time_seconds = IntegerField(default=0)
-    total_time = IntegerField(default=0)
+    total_time: Union[int, IntegerField] = IntegerField(default=0)
