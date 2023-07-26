@@ -21,7 +21,6 @@ class RandomMapsTogetherConfiguration(Configuration):
     skip_medal = Medals.GOLD
     enabled = True
     player_configs: Dict[str, PlayerConfiguration] = field(default_factory=dict)
-    allow_pausing = False
 
     async def update_time_left(self, free_skip=False, goal_medal=False, skip_medal=False):
         pass
@@ -51,11 +50,6 @@ class RandomMapsTogetherConfiguration(Configuration):
     @check_player_allowed_to_change_game_settings
     async def set_skip_medal(self, _, caller, *_args, **_kwargs):
         self.skip_medal = Medals[caller.split("it_thexivn_RandomMapsTogether_settings__ui_set_skip_medal_")[1].upper()]
-        await self.app.game.views.settings_view.display()
-
-    @check_player_allowed_to_change_game_settings
-    async def toggle_allow_pausing(self, *_args, **_kwargs):
-        self.allow_pausing ^= True
         await self.app.game.views.settings_view.display()
 
     @check_player_allowed_to_change_game_settings

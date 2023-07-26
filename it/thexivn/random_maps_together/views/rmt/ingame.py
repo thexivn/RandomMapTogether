@@ -62,7 +62,6 @@ class RandomMapsTogetherIngameView(WidgetView):
         data["skip_medal_url"] = MedalURLs[self.game.config.skip_medal.name].value
         data["game_started"] = self.game.game_is_in_progress
         data["skip_medal"] = self.game.game_state.skip_medal
-        data["allow_pausing"] = self.game.config.allow_pausing
         data["skip_pre_patch_ice_visible"] = self.game.app.map_handler.pre_patch_ice
         data["map_loading"] = self.game.app.map_handler.map_is_loading
 

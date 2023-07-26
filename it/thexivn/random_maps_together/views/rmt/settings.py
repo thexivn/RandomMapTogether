@@ -32,8 +32,6 @@ class RandomMapsTogetherSettingsView(WidgetView):
     size_x = 66
     size_y = 9
 
-    template_name = "random_maps_together/widget.xml"
-
     def __init__(self, app, config):
         super().__init__()
         logger.info("Loading VIEW")
@@ -59,7 +57,6 @@ class RandomMapsTogetherSettingsView(WidgetView):
 
         if isinstance(self.config, RandomMapChallengeConfiguration):
             self.subscribe("ui_toggle_infinite_skips", self.config.toggle_infinite_skips)
-        self.subscribe("ui_toggle_allow_pausing", self.config.toggle_allow_pausing)
 
         self.subscribe("ui_toggle_enabled_players", self.config.toggle_enabled_players)
 
