@@ -23,11 +23,11 @@
             {% elif skip_pre_patch_ice_visible %}
                 <label {{btn_pos_size(1) | safe}} z-index="1" text="$sSkip Pre Patch Ice" textsize="2.5" textfont="RajdhaniMono"
                         halign="left" valign="center" style="CardButtonSmallS"
-                        id="rmt_skip_btn" scriptevents="1" action="{{ id }}__ui_free_skip" />
-            {% elif free_skip_visible %}
+                        id="rmt_skip_btn" scriptevents="1" action="{{ id }}__ui_skip" />
+            {% elif skip_visible %}
                 <label {{btn_pos_size(1) | safe}} z-index="1" text="$sSkip" textsize="2.5" textfont="RajdhaniMono"
                         halign="left" valign="center" style="CardButtonSmallS"
-                        id="rmt_skip_btn" scriptevents="1" action="{{ id }}__ui_free_skip" />
+                        id="rmt_skip_btn" scriptevents="1" action="{{ id }}__ui_skip" />
             {% endif %}
         {% endif %}
     </frame>

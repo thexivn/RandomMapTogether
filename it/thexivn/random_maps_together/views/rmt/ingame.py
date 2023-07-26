@@ -43,7 +43,7 @@ class RandomMapsTogetherIngameView(WidgetView):
 
         self.subscribe("ui_stop", self.game.app.stop_game)
         self.subscribe("ui_skip_medal", self.game.command_skip_medal)
-        self.subscribe("ui_free_skip", self.game.command_free_skip)
+        self.subscribe("ui_skip", self.game.command_skip)
         self.subscribe("ui_toggle_pause", self.game.command_toggle_pause)
         self.subscribe("ui_display_player_settings", self.game.config.display_player_settings)
         self.subscribe("ui_display_scoreboard", self.game.views.scoreboard_view.display_scoreboard_for_player)

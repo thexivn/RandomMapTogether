@@ -10,7 +10,6 @@ class GameState:
     round_timer: RoundTimer = field(default_factory=RoundTimer)
     time_left: Union[int, float] = 0
     current_map_completed: bool = True
-    free_skip_available: bool = True
     skip_medal_player: Optional[Player] = None
     skip_medal: Optional[Medals] = None
     is_paused: bool = False

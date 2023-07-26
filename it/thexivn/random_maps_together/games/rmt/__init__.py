@@ -127,13 +127,11 @@ class RMTGame(Game):
 
     async def map_end_event(self, *_args, **_kwargs):
         logger.info("MAP end")
-        if self.app.map_handler.active_map and self.app.map_handler.active_map.uid != self.app.map_handler.hub_map:
-            self.game_state.round_timer.stop_timer()
-
         await self.set_original_scoreboard_visible(True)
         self.game_state.skip_medal_player = None
         self.game_state.skip_medal = None
         if not self.game_state.current_map_completed or self.game_state.time_left == 0:
+            self.game_state.round_timer.stop_timer()
             logger.info("%s finished successfully", self.game_mode.value)
             await self.app.chat(
                 "Challenge completed"
@@ -278,7 +276,7 @@ class RMTGame(Game):
 
 
     @check_player_allowed_to_manage_running_game
-    async def command_free_skip(self, player: Player, *_args, **_kwargs):
+    async def command_skip(self, player: Player, *_args, **_kwargs):
         if self.game_state.is_paused:
             return await self.app.chat("Game currently paused", player)
 
@@ -286,17 +284,13 @@ class RMTGame(Game):
             return await self.app.chat("You are not allowed to skip", player)
 
         if not self.config.can_skip_map():
-            return await self.app.chat("Free skip is not available", player)
+            return await self.app.chat("No skip available", player)
 
         self.game_state.round_timer.stop_timer()
         await self.config.update_time_left(free_skip=True)
         self.game_state.current_map_completed = True
 
-        if not self.app.map_handler.pre_patch_ice and self.game_state.free_skip_available:
-            await self.app.chat(f'{player.nickname} decided to use free skip')
-            self.game_state.free_skip_available = False
-        else:
-            await self.app.chat(f'{player.nickname} decided to skip the map')
+        await self.app.chat(f'{player.nickname} decided to skip the map')
 
         await self.hide_timer()
         await asyncio.gather(

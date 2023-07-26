@@ -13,7 +13,7 @@ class RandomMapSurvivalConfiguration(RandomMapsTogetherConfiguration):
     async def update_time_left(self, free_skip=False, goal_medal=False, skip_medal=False):
         self.app.game.game_state.time_left -= self.app.game.game_state.round_timer.last_round
         if free_skip:
-            if self.app.map_handler.pre_patch_ice or self.app.game.game_state.free_skip_available:
+            if self.app.map_handler.pre_patch_ice:
                 pass
             else:
                 self.game_time_seconds = max(self.game_time_seconds - self.skip_penalty_seconds, 0)

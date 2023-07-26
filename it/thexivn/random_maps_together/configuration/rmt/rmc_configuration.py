@@ -18,7 +18,6 @@ class RandomMapChallengeConfiguration(RandomMapsTogetherConfiguration):
 
     def can_skip_map(self):
         return any([
-            self.app.game.game_state.free_skip_available,
             self.app.map_handler.pre_patch_ice,
             self.infinite_free_skips,
         ])

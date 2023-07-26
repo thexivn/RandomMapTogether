@@ -13,5 +13,5 @@ class RandomMapSurvivalIngameView(RandomMapsTogetherIngameView):
     async def get_context_data(self):
         logger.info("Context Data")
         data = await super().get_context_data()
-        data["free_skip_visible"] = True
+        data["skip_visible"] = True
         return data
