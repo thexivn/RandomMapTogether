@@ -10,4 +10,4 @@ class RandomMapsTogetherScore(TimedModel):
     medal_sum = IntegerField(default=0)
     modified_player_settings = BooleanField(default=False)
     game_time_seconds = IntegerField(default=0)
-    total_time_gained = IntegerField(default=0)
+    total_time = IntegerField(default=0)

@@ -1,9 +1,9 @@
 import asyncio
 import logging
-import time as py_time
 
 from pyplanet.views import TemplateView
 from pyplanet.apps.core.maniaplanet.models import Player
+from pyplanet.utils.times import format_time
 
 from ...models.enums.medal_urls import MedalURLs
 from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
@@ -34,13 +34,8 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
         data["medal_urls"] = MedalURLs
 
         data["players"] = await RandomMapsTogetherPlayerScore.get_top_20_players(self.game_score.id)
-        data["time_left"] = self.game.time_left_str()
-        data["total_played_time"] = py_time.strftime('%H:%M:%S', py_time.gmtime(
-            self.game_score.game_time_seconds +
-            self.game_score.total_time_gained -
-            self.game.time_left +
-            self.game.game_state.map_played_time()
-        ))
+        data["time_left"] = format_time(int((self.game.game_state.time_left - self.game.game_state.round_timer.current_round) * 1000), hide_milliseconds=True)
+        data["total_played_time"] = str(self.game.game_state.round_timer)
 
         data["nb_players"] = len(data["players"])
         data["scroll_max"] = max(0, data["nb_players"] * 10 - 100)

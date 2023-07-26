@@ -13,8 +13,8 @@ class RandomMapChallengeConfiguration(RandomMapsTogetherConfiguration):
     infinite_free_skips = False
 
     async def update_time_left(self, free_skip=False, goal_medal=False, skip_medal=False):
-        self.app.game.time_left -= self.app.game.game_state.map_played_time()
-        self.app.game.time_left = max(0, self.app.game.time_left)
+        self.app.game.game_state.time_left -= self.app.game.game_state.round_timer.last_round
+        self.app.game.game_state.time_left = max(0, self.app.game.game_state.time_left)
 
     def can_skip_map(self):
         return any([

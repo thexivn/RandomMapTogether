@@ -90,8 +90,8 @@ class LeaderboardView(ManualListView): # pylint: disable=duplicate-code
                 'action': self.display_score_board,
             },
             {
-                'name': 'Gained time',
-                'index': 'total_time_gained',
+                'name': 'Total time',
+                'index': 'total_time',
                 'sorting': True,
                 'searching': False,
                 'width': 20,

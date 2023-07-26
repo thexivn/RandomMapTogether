@@ -35,13 +35,9 @@ class RMTGame(Game):
         self.app.mode_settings[S_FORCE_LAPS_NB] = -1
 
         self.views.scoreboard_view = RandomMapsTogetherScoreBoardView(self)
-        self.game_state = GameState()
         mania_callback.player.player_connect.register(self.player_connect)
         mania_callback.player.player_disconnect.register(self.player_disconnect)
 
-        self.time_left = 0
-        self._time_left_at_pause = 83
-        self._time_at_pause = py_time.time()
         logger.info("RMT Game initialized")
 
     def __del__(self):
@@ -52,7 +48,7 @@ class RMTGame(Game):
         tm_callbacks.finish.register(self.on_map_finish)
         mania_callback.map.map_begin.register(self.map_begin_event)
         mania_callback.flow.round_end.register(self.map_end_event)
-        mania_callback.flow.round_start__end.register(self.set_time_left)
+        mania_callback.flow.round_start__end.register(self.round_start)
 
         await self.app.instance.gbx.multicall(
             self.app.instance.gbx.prepare('SetCallVoteRatios', [-1])
@@ -74,8 +70,8 @@ class RMTGame(Game):
         self.game_state = GameState()
 
         self.config.update_player_configs()
-        self.time_left = self.config.game_time_seconds
-        self.app.mode_settings[S_TIME_LIMIT] = self.time_left
+        self.game_state.time_left = self.config.game_time_seconds
+        self.app.mode_settings[S_TIME_LIMIT] = self.game_state.time_left
         try:
             await asyncio.gather(
                 self.app.map_handler.load_with_retry(),
@@ -87,8 +83,10 @@ class RMTGame(Game):
         return self
 
     async def __aexit__(self, *err):
+        self.game_state.round_timer.stop_timer()
         await self.config.update_time_left()
-        if self.time_left == 0:
+        if self.game_state.time_left == 0:
+            self.score.total_time = self.game_state.round_timer.total_time
             await self.score.save()
         else:
             await self.score.destroy(recursive=True)
@@ -102,7 +100,7 @@ class RMTGame(Game):
         tm_callbacks.finish.unregister(self.on_map_finish)
         mania_callback.map.map_begin.unregister(self.map_begin_event)
         mania_callback.flow.round_end.unregister(self.map_end_event)
-        mania_callback.flow.round_start__end.unregister(self.set_time_left)
+        mania_callback.flow.round_start__end.unregister(self.round_start)
 
         logger.info("Back to HUB completed")
 
@@ -124,12 +122,18 @@ class RMTGame(Game):
         )
         logger.info("[map_begin_event] ENDED")
 
+    async def round_start(self, *_args, **_kwargs):
+        self.game_state.round_timer.start_timer()
+
     async def map_end_event(self, *_args, **_kwargs):
         logger.info("MAP end")
+        if self.app.map_handler.active_map and self.app.map_handler.active_map.uid != self.app.map_handler.hub_map:
+            self.game_state.round_timer.stop_timer()
+
         await self.set_original_scoreboard_visible(True)
         self.game_state.skip_medal_player = None
         self.game_state.skip_medal = None
-        if not self.game_state.current_map_completed or self.time_left == 0:
+        if not self.game_state.current_map_completed or self.game_state.time_left == 0:
             logger.info("%s finished successfully", self.game_mode.value)
             await self.app.chat(
                 "Challenge completed"
@@ -138,10 +142,9 @@ class RMTGame(Game):
             )
             self.game_is_in_progress = False
         else:
-            self.app.mode_settings[S_TIME_LIMIT] = self.time_left
-            logger.info("Continue with %d time left", self.time_left)
+            self.app.mode_settings[S_TIME_LIMIT] = round(self.game_state.time_left)
+            logger.info("Continue with %d time left", self.game_state.time_left)
             await self.app.mode_manager.update_settings(self.app.mode_settings)
-
 
     async def on_map_finish(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow, # pylint: disable=too-many-locals,unused-argument
                            is_end_race: bool, is_end_lap, raw, *_args, **_kwargs): # pylint: disable=too-many-locals,unused-argument
@@ -155,18 +158,11 @@ class RMTGame(Game):
 
             if self.game_state.is_paused:
                 return await self.app.chat("Time doesn't count because game is paused", player)
-            if (py_time.time() - (race_time * 0.001)) < self._time_at_pause:
-                return await self.app.chat(
-                    "Time doesn't count because game was paused "
-                    f"({race_time}ms / cur time: {py_time.time()} / paused at time: {self._time_at_pause})",
-                    player
-                )
 
             logger.info("[on_map_finish] Final time check for %s", self.config.goal_medal.name)
             race_medal = self.app.map_handler.get_medal_by_time(race_time)
             if not race_medal:
                 return
-
 
             formatted_race_time = datetime.datetime.fromtimestamp(race_time / 1000.0).strftime("%H:%M:%S")
             formatted_race_time = f"{formatted_race_time}.{int(round(((race_time / 1000) % 1) * 1000))}"
@@ -181,6 +177,7 @@ class RMTGame(Game):
                     )
 
                 logger.info("[on_map_finish %s acquired", self.config.goal_medal.name)
+                self.game_state.round_timer.stop_timer()
                 await self.config.update_time_left(goal_medal=True)
 
                 self.score.total_goal_medals += 1
@@ -243,6 +240,7 @@ class RMTGame(Game):
         if not self.game_state.skip_medal:
             return await self.app.chat(f"{self.config.skip_medal.name} skip is not available", player)
 
+        self.game_state.round_timer.stop_timer()
         await self.config.update_time_left(skip_medal=True)
 
         self.score.total_skip_medals += 1
@@ -290,6 +288,7 @@ class RMTGame(Game):
         if not self.config.can_skip_map():
             return await self.app.chat("Free skip is not available", player)
 
+        self.game_state.round_timer.stop_timer()
         await self.config.update_time_left(free_skip=True)
         self.game_state.current_map_completed = True
 
@@ -310,22 +309,16 @@ class RMTGame(Game):
     @check_player_allowed_to_manage_running_game
     async def command_toggle_pause(self, player: Player, *_args, **_kwargs):
         self.game_state.is_paused ^= True
-        pause_duration = 0
         if self.game_state.is_paused:
-            self._time_at_pause = py_time.time()
-            self._time_left_at_pause = self.time_left
-            self.app.mode_settings[S_TIME_LIMIT] = -1
+            self.game_state.round_timer.stop_timer()
+            self.game_state.time_left -= self.game_state.round_timer.last_round
+            self.app.mode_settings[S_TIME_LIMIT] = 0
+            await self.app.mode_manager.update_settings(self.app.mode_settings)
         else:
-            pause_duration = int(py_time.time() - self._time_at_pause)
-            self.app.mode_settings[S_TIME_LIMIT] = self._time_left_at_pause + pause_duration
-            self.time_left += pause_duration
-            # respawn the player, this means the unpausing player's next run always starts after unpausing.
-            await self.respawn_player(player)
-        await self.app.mode_manager.update_settings(self.app.mode_settings)
+            self.app.mode_settings[S_TIME_LIMIT] = round(self.game_state.time_left)
+            await self.app.mode_manager.update_settings(self.app.mode_settings)
+            await self.app.map_handler.restart_map()
         await self.views.ingame_view.display()
-        # no need to extend b/c this is done by setting the time limit to whatever it was + pause duration
-        # if pause_duration > 0:
-        #     await self.app.map_handler._map_manager.extend_ta(pause_duration)
         logging.info("Set paused: %s", str(self.game_state.is_paused))
 
     async def respawn_player(self, player: Player):
@@ -346,22 +339,6 @@ class RMTGame(Game):
         self.app.tm_ui_manager.properties.set_visibility(RACE_SCORES_TABLE, visible)
         self.app.tm_ui_manager.properties.set_visibility(BIG_MESSAGE, visible)
         await self.app.tm_ui_manager.properties.send_properties()
-
-    async def set_time_left(self, count, time, *_args, **_kwargs):
-        logger.info("ROUND_START %s -- %s", time, count)
-        if not self.game_state.start_time:
-            self.game_state.start_time = py_time.time()
-        self.game_state.map_start_time = py_time.time()
-
-    def time_left_str(self):
-        tl = self.time_left
-        if tl == 0:
-            return "00:00:00"
-        if self.game_state.is_paused:
-            pause_duration = int(py_time.time() - self._time_at_pause)
-            tl = self._time_left_at_pause + pause_duration
-        tl -= self.game_state.map_played_time()
-        return py_time.strftime('%H:%M:%S', py_time.gmtime(tl))
 
     async def player_connect(self, player: Player, is_spectator: bool, *_args, **_kwargs):
         if not is_spectator:

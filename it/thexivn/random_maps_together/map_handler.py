@@ -136,3 +136,6 @@ class MapHandler:
 
     async def map_begin_event(self, map: Map, *_args, **_kwargs): # pylint: disable=redefined-builtin
         self.active_map = map
+
+    async def restart_map(self):
+        await self.app.instance.gbx.multicall(self.app.instance.gbx('RestartMap'))
