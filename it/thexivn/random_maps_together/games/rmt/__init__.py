@@ -83,7 +83,7 @@ class RMTGame(Game):
     async def __aexit__(self, *err):
         self.game_state.round_timer.stop_timer()
         await self.config.update_time_left()
-        if self.game_state.time_left == 0:
+        if self.game_state.time_left == 0 and self.score.medal_sum:
             self.score.total_time = self.game_state.round_timer.total_time
             await self.score.save()
         else:
@@ -174,6 +174,7 @@ class RMTGame(Game):
 
                 self.score.total_goal_medals += 1
                 self.score.medal_sum += race_medal.value
+                self.score.save()
 
                 player_score, _ = await RandomMapsTogetherPlayerScore.get_or_create(
                     game_score=self.score.id,
@@ -237,6 +238,7 @@ class RMTGame(Game):
 
         self.score.total_skip_medals += 1
         self.score.medal_sum += self.game_state.skip_medal.value
+        self.score.save()
 
         player_score, _ = await RandomMapsTogetherPlayerScore.get_or_create(
             game_score=self.score.id,
