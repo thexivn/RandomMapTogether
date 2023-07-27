@@ -104,9 +104,9 @@ class RandomMapsTogetherApp(AppConfig):
         await self.chat(f'{player.nickname} stopped the current game')
         self.game.game_is_in_progress = False
 
-    async def player_connect(self, player: Player, _is_spectator: bool, _source, *_args, **_kwargs):
+    async def player_connect(self, player: Player, *_args, **_kwargs):
         if not self.game.game_is_in_progress:
             await self.game_selector.display(player)
 
-    async def player_disconnect(self, _player: Player, _reason: str, _source, *_args, **_kwargs):
+    async def player_disconnect(self, *_args, **_kwargs):
         pass

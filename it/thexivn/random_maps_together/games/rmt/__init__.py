@@ -337,5 +337,5 @@ class RMTGame(Game):
                 await self.app.game_selector.display(player)
                 await self.views.settings_view.display(player)
 
-    async def player_disconnect(self, player: Player, reason: str, source, *args, **kwargs):
+    async def player_disconnect(self, player: Player, *args, **kwargs):
         self.config.player_configs.pop(player.login, None)
