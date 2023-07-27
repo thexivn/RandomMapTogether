@@ -6,24 +6,19 @@ from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 from pyplanet.utils.times import format_time
 
+
 from .. import Game, check_player_allowed_to_manage_running_game
 from ...models.rmt.game_state import GameState
 from ...models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
 from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
 from ...models.game_views.rmt import RandomMapsTogetherViews
-from ...models.enums.game_modes import GameModes
 from ...views.rmt.scoreboard import RandomMapsTogetherScoreBoardView
 from ...constants import BIG_MESSAGE, RACE_SCORES_TABLE, S_FORCE_LAPS_NB, S_TIME_LIMIT
 from ...configuration.rmt import RandomMapsTogetherConfiguration
 
-
-_lock = asyncio.Lock()
-
-# pyplanet.conf.settings.DEBUG = True
-
 logger = logging.getLogger(__name__)
 
-class RMTGame(Game):
+class ChessGame(Game):
     def __init__(self, app):
         super().__init__(app)
         self.config: RandomMapsTogetherConfiguration
@@ -70,15 +65,18 @@ class RMTGame(Game):
         self.config.update_player_configs()
         self.game_state.time_left = self.config.game_time_seconds
         self.app.mode_settings[S_TIME_LIMIT] = self.game_state.time_left
-        await self.load_map_and_display_ingame_view()
+        try:
+            await asyncio.gather(
+                self.app.map_handler.load_with_retry(),
+                self.views.ingame_view.display()
+            )
+        except Exception as exc:
+            raise RuntimeError(f"Failed to start {self.game_mode.value}: {str(exc)}") from exc
 
         return self
 
     async def __aexit__(self, *err):
         self.game_state.round_timer.stop_timer()
-        if self.game_mode == GameModes.RANDOM_MAP_SURVIVAL:
-            self.config.game_time_seconds += \
-                self.config.skip_penalty_seconds * self.game_state.penalty_skips # type: ignore[attr-defined]
         await self.config.update_time_left()
         if self.game_state.time_left == 0 and self.score.medal_sum:
             self.score.total_time = self.game_state.round_timer.total_time
@@ -141,7 +139,7 @@ class RMTGame(Game):
     async def on_map_finish(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow, # pylint: disable=too-many-locals,unused-argument
                            is_end_race: bool, is_end_lap, raw, *_args, **_kwargs): # pylint: disable=too-many-locals,unused-argument
         logger.info("[on_map_finish] %s has finished the map with time: %sms", player.nickname, race_time)
-        async with _lock: # lock to avoid multiple AT before next map is loaded
+        async with asyncio.Lock(): # lock to avoid multiple AT before next map is loaded
             if self.game_state.current_map_completed:
                 return logger.info('[on_map_finish] Map was already completed')
 
@@ -190,7 +188,10 @@ class RMTGame(Game):
                 await self.app.chat(
                     f'{player.nickname} claimed {race_medal.name} with {format_time(race_time)}, congratulations!'
                 )
-                await self.load_map_and_display_ingame_view()
+                await asyncio.gather(
+                    self.app.map_handler.load_with_retry(),
+                    self.views.ingame_view.display()
+                )
                 await self.views.scoreboard_view.display()
                 await self.views.ingame_view.hide()
             elif race_medal >= \
@@ -257,7 +258,10 @@ class RMTGame(Game):
         )
 
         await self.hide_timer()
-        await self.load_map_and_display_ingame_view()
+        await asyncio.gather(
+            self.app.map_handler.load_with_retry(),
+            self.views.ingame_view.display()
+        )
         await self.views.scoreboard_view.display()
         await self.views.ingame_view.hide()
 
@@ -280,7 +284,10 @@ class RMTGame(Game):
         await self.app.chat(f'{player.nickname} decided to skip the map')
 
         await self.hide_timer()
-        await self.load_map_and_display_ingame_view()
+        await asyncio.gather(
+            self.app.map_handler.load_with_retry(),
+            self.views.ingame_view.display()
+        )
         await self.views.scoreboard_view.display()
         await self.views.ingame_view.hide()
 
@@ -329,16 +336,3 @@ class RMTGame(Game):
 
     async def player_disconnect(self, player: Player, *args, **kwargs):
         self.config.player_configs.pop(player.login, None)
-
-    async def load_map_and_display_ingame_view(self):
-        try:
-            await asyncio.gather(
-                self.app.map_handler.load_with_retry(),
-                self.views.ingame_view.display()
-            )
-        except Exception as exc:
-            await asyncio.gather(
-                self.views.ingame_view.hide(),
-                self.app.game.views.settings_view.display()
-            )
-            raise RuntimeError(f"Error occurred when loading next map: {str(exc)}") from exc

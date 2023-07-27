@@ -7,7 +7,7 @@ from ...models.enums.medals import Medals
 from ...map_generator import MapGenerator, MapGeneratorType
 from ...map_generator.custom import Custom
 from ...map_generator.totd import TOTD
-from ...models.player_configuration import PlayerConfiguration
+from ...models.rmt.player_configuration import PlayerConfiguration
 from ...games import check_player_allowed_to_change_game_settings
 from ...views.player_config_view import PlayerConfigView
 from ...views.leaderboard_view import LeaderboardView

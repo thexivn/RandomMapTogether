@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from typing import Optional, Union
 
 from pyplanet.apps.core.maniaplanet.models import Player
-from .enums.medals import Medals
-from .round_timer import RoundTimer
+from ..enums.medals import Medals
+from ..round_timer import RoundTimer
 
 @dataclass
 class GameState:
