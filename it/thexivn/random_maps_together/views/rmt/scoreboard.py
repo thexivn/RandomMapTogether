@@ -60,7 +60,7 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
                         self.display_and_update_until_hide(player_login)
                     )
                 else:
-                    super().display([player_login])
+                    await super().display([player_login])
         else:
             await super().display()
 
