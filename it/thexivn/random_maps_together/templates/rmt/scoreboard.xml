@@ -47,11 +47,11 @@
                 {% set padding.count = padding.count + 1 %}
             {% endif %}
         </frame>
-        {% if game.config.player_configs[player_score.player.login].goal_medal %}
-        <quad pos="121 {{ -0.5 + (-10 * loop.index0) }}" size="9 9" image="{{ medal_urls[game.config.player_configs[player_score.player.login].goal_medal.name].value }}" autoscale="1" keepratio="Fit"/>
+        {% if player_score.goal_medal %}
+        <quad pos="120.5 {{ -0.5 + (-10 * loop.index0) }} }}" size="9 9" image="{{ medal_urls[player_score.goal_medal].value }}" autoscale="1" keepratio="Fit"/>
         {% endif %}
-        {% if game.config.player_configs[player_score.player.login].skip_medal %}
-        <quad pos="130 {{ -0.5 + (-10 * loop.index0) }}" size="9 9" image="{{ medal_urls[game.config.player_configs[player_score.player.login].skip_medal.name].value }}" autoscale="1" keepratio="Fit"/>
+        {% if player_score.skip_medal %}
+        <quad pos="130 {{ -0.5 + (-10 * loop.index0) }}" size="9 9" image="{{ medal_urls[player_score.skip_medal].value }}" autoscale="1" keepratio="Fit"/>
         {% endif %}
     {% endfor %}
     </frame>

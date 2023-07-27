@@ -54,7 +54,7 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
         if player_logins:
             for player_login in player_logins:
                 if self._player_loops.get(player_login):
-                    return
+                    continue
                 self._player_loops[player_login] = asyncio.create_task(
                     self.display_and_update_until_hide(player_login)
                 )

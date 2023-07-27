@@ -12,6 +12,7 @@ class RandomMapSurvivalGame(RMTGame):
         super().__init__(app, *args, **kwargs)
         self.game_mode = GameModes.RANDOM_MAP_SURVIVAL
         self.config = RandomMapSurvivalConfiguration(app, MapGenerator(app))
+        self.config.update_player_configs()
         self.views.settings_view = RandomMapSurvivalSettingsView(app, self.config)
         self.views.ingame_view = RandomMapSurvivalIngameView(self)
         asyncio.gather(
