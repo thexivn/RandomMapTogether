@@ -55,9 +55,12 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
             for player_login in player_logins:
                 if self._player_loops.get(player_login):
                     continue
-                self._player_loops[player_login] = asyncio.create_task(
-                    self.display_and_update_until_hide(player_login)
-                )
+                if self.game.game_is_in_progress:
+                    self._player_loops[player_login] = asyncio.create_task(
+                        self.display_and_update_until_hide(player_login)
+                    )
+                else:
+                    super().display([player_login])
         else:
             await super().display()
 
@@ -71,12 +74,11 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
         else:
             await super().hide()
 
-    async def display_and_update_until_hide(self, player_login=None):
-        if player_login:
+    async def display_and_update_until_hide(self, player_login):
+        await super().display([player_login])
+        while player_login in self._is_player_shown:
+            await asyncio.sleep(1)
             await super().display([player_login])
-            while player_login in self._is_player_shown:
-                await asyncio.sleep(1)
-                await super().display([player_login])
 
     async def display_scoreboard_for_player(self, player: Player, *_args, **_kwargs):
         await self.display([player.login])
