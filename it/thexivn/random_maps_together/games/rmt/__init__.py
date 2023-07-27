@@ -1,11 +1,10 @@
 import asyncio
-import datetime
 import logging
-import time as py_time
 
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
+from pyplanet.utils.times import format_time
 
 
 from .. import Game, check_player_allowed_to_manage_running_game
@@ -15,7 +14,6 @@ from ...models.database.rmt.random_maps_together_player_score import RandomMapsT
 from ...models.game_views.rmt import RandomMapsTogetherViews
 from ...views.rmt.scoreboard import RandomMapsTogetherScoreBoardView
 from ...constants import BIG_MESSAGE, RACE_SCORES_TABLE, S_FORCE_LAPS_NB, S_TIME_LIMIT
-from ...exceptions import GameCancelledException
 from ...configuration.rmt import RandomMapsTogetherConfiguration
 
 
@@ -131,7 +129,6 @@ class RMTGame(Game):
         self.game_state.skip_medal_player = None
         self.game_state.skip_medal = None
         if not self.game_state.current_map_completed or self.game_state.time_left == 0:
-            self.game_state.round_timer.stop_timer()
             logger.info("%s finished successfully", self.game_mode.value)
             await self.app.chat(
                 "Challenge completed"
@@ -161,9 +158,6 @@ class RMTGame(Game):
             race_medal = self.app.map_handler.get_medal_by_time(race_time)
             if not race_medal:
                 return
-
-            formatted_race_time = datetime.datetime.fromtimestamp(race_time / 1000.0).strftime("%H:%M:%S")
-            formatted_race_time = f"{formatted_race_time}.{int(round(((race_time / 1000) % 1) * 1000))}"
 
             if race_medal >= (self.config.player_configs[player.login].goal_medal or self.config.goal_medal):
                 if not (
@@ -196,7 +190,7 @@ class RMTGame(Game):
                 self.game_state.current_map_completed = True
                 await self.hide_timer()
                 await self.app.chat(
-                    f'{player.nickname} claimed {race_medal.name} with {formatted_race_time}, congratulations!'
+                    f'{player.nickname} claimed {race_medal.name} with {format_time(race_time)}, congratulations!'
                 )
                 await asyncio.gather(
                     self.app.map_handler.load_with_retry(),
@@ -223,7 +217,7 @@ class RMTGame(Game):
                 await self.views.ingame_view.display()
                 await self.app.chat(
                     f'First {race_medal.name} acquired, '
-                    f'congrats to {player.nickname} with {formatted_race_time}'
+                    f'congrats to {player.nickname} with {format_time(race_time)}'
                 )
                 await self.app.chat(f'You are now allowed to take the {race_medal.name} and skip the map')
 
