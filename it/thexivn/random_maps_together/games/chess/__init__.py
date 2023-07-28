@@ -7,31 +7,46 @@ from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 from pyplanet.utils.times import format_time
 
 
-from .. import Game, check_player_allowed_to_manage_running_game
-from ...models.rmt.game_state import GameState
-from ...models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
-from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
-from ...models.game_views.rmt import RandomMapsTogetherViews
-from ...views.rmt.scoreboard import RandomMapsTogetherScoreBoardView
+from .. import Game
+from ...configuration import check_player_allowed_to_manage_running_game
+from ...map_generator import MapGenerator
+from ...models.chess.game_state import GameState
+from ...models.database.chess.chess_score import ChessScore
+from ...models.game_views.chess import ChessViews
+from ...views.chess.board import ChessBoardView
+from ...views.chess.settings import ChessSettingsView
+from ...views.chess.ingame import ChessIngameView
 from ...constants import BIG_MESSAGE, RACE_SCORES_TABLE, S_FORCE_LAPS_NB, S_TIME_LIMIT
-from ...configuration.rmt import RandomMapsTogetherConfiguration
+from ...configuration.chess import ChessConfiguration
+from ...models.enums.game_modes import GameModes
+from ...models.enums.game_script import GameScript
 
 logger = logging.getLogger(__name__)
 
 class ChessGame(Game):
+    game_mode = GameModes.CHESS
+    game_script = GameScript.TEAM
+
     def __init__(self, app):
         super().__init__(app)
-        self.config: RandomMapsTogetherConfiguration
+        self.config = ChessConfiguration(app, MapGenerator(app))
+        self.config.update_player_configs()
         self.game_state: GameState
-        self.score: RandomMapsTogetherScore
-        self.views: RandomMapsTogetherViews = RandomMapsTogetherViews()
+        self.score: ChessScore
         self.app.mode_settings[S_FORCE_LAPS_NB] = -1
+        self.views: ChessViews = ChessViews()
+        self.views.board_view = ChessBoardView(self)
+        self.views.settings_view = ChessSettingsView(app, self.config)
+        self.views.ingame_view = ChessIngameView(self)
 
-        self.views.scoreboard_view = RandomMapsTogetherScoreBoardView(self)
         mania_callback.player.player_connect.register(self.player_connect)
         mania_callback.player.player_disconnect.register(self.player_disconnect)
 
-        logger.info("RMT Game initialized")
+        asyncio.gather(
+            self.views.settings_view.display(),
+        )
+
+        logger.info("Chess Game initialized")
 
     def __del__(self):
         mania_callback.player.player_connect.unregister(self.player_connect)
@@ -54,24 +69,18 @@ class ChessGame(Game):
         self.config.map_generator.played_maps.clear()
         self.app.map_handler.next_map = None
 
-        self.score = self.views.scoreboard_view.game_score = await RandomMapsTogetherScore.create(
-            game_mode=self.game_mode.value,
-            game_time_seconds=self.config.game_time_seconds,
+        self.score = self.views.scoreboard_view.game_score = await ChessScore.create(
             goal_medal=self.config.goal_medal.name,
-            skip_medal=self.config.skip_medal.name,
         )
         self.game_state = GameState()
 
         self.config.update_player_configs()
-        self.game_state.time_left = self.config.game_time_seconds
-        self.app.mode_settings[S_TIME_LIMIT] = self.game_state.time_left
         try:
             await asyncio.gather(
-                self.app.map_handler.load_with_retry(),
                 self.views.ingame_view.display()
             )
         except Exception as exc:
-            raise RuntimeError(f"Failed to start {self.game_mode.value}: {str(exc)}") from exc
+            raise RuntimeError(f"Failed to start Chess game: {str(exc)}") from exc
 
         return self
 
@@ -311,10 +320,6 @@ class ChessGame(Game):
         await self.app.instance.gbx('ForceSpectator', player.login, 1)
         await self.app.instance.gbx('ForceSpectator', player.login, 2)
         await self.app.instance.gbx('ForceSpectator', player.login, 0)
-
-    async def hide_timer(self):
-        self.app.mode_settings[S_TIME_LIMIT] = 0
-        await self.app.mode_manager.update_settings(self.app.mode_settings)
 
     async def hide_custom_scoreboard(self, *_args, **_kwargs):
         await self.views.scoreboard_view.hide()

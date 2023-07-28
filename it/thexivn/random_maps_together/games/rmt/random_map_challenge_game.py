@@ -10,9 +10,10 @@ from ...views.rmt.random_map_challenge.ingame import RandomMapChallengeIngameVie
 from ...map_generator import MapGenerator
 
 class RandomMapChallengeGame(RMTGame):
+    game_mode = GameModes.RANDOM_MAP_CHALLENGE
+
     def __init__(self, app, *args, **kwargs):
         super().__init__(app, *args, **kwargs)
-        self.game_mode = GameModes.RANDOM_MAP_CHALLENGE
         self.config = RandomMapChallengeConfiguration(app, MapGenerator(app))
         self.views.settings_view = RandomMapChallengeSettingsView(app, self.config)
         self.views.ingame_view = RandomMapChallengeIngameView(self)

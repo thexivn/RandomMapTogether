@@ -3,7 +3,7 @@ from typing import List, Dict
 from pyplanet.apps.config import AppConfig
 from pyplanet.views.generics.list import ManualListView
 
-from ..models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
+from ...models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
 # pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 

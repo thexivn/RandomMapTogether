@@ -1,0 +1,22 @@
+{% extends 'core.views/generics/widget.xml' %}
+
+{% block content %}
+    <frame pos="0 0" size="{{size_x}} {{size_y}}">
+        <quad pos="0 0" size="{{size_x}} {{size_y}}" z-index="0" bgcolor="10101070"/>
+            <label pos="33 -2" z-index="1" text="Chess" textsize="3.5" textfont="RajdhaniMono" halign="center" />
+    </frame>
+    <label pos="70 -2.5" z-index="1" text="$sPlayer Configs" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_display_player_settings" />
+    <label pos="70 -10" z-index="1" text="$sLeaderboard" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_display_leaderboard" />
+
+    <frame pos="0 -{{size_y}}" size="{{size_x}} 47">
+        <quad pos="0 0" size="{{size_x}} 47" z-index="0" bgcolor="44664770"/>
+
+        <label pos="0.6 -3.0" size="14 5" z-index="1" text="$sMap Generator:" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center"/>
+        <label pos="15 -3.0" z-index="1" text="{% if config.map_generator.map_generator_type.value == 'RANDOM' %}$000{% endif %}Random" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_random"/>
+        <label pos="27 -3.0" z-index="1" text="{% if config.map_generator.map_generator_type.value == 'TOTD' %}$000{% endif %}TOTD" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_totd"/>
+        <label pos="39 -3.0" z-index="1" text="{% if config.map_generator.map_generator_type.value == 'CUSTOM' %}$000{% endif %}Custom" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallXS" scriptevents="1" action="{{ id }}__ui_set_map_generator_map_pack"/>
+
+        <label pos="1 -44" size="30 5" z-index="1" text="$sStart" textsize="2.5" textfont="RajdhaniMono"
+            halign="left" valign="center" style="CardButtonSmall" scriptevents="1" action="{{ id }}__ui_start" />
+    </frame>
+{% endblock %}

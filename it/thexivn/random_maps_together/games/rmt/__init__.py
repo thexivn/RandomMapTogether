@@ -6,8 +6,11 @@ from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 from pyplanet.utils.times import format_time
 
-from .. import Game, check_player_allowed_to_manage_running_game
+
+from .. import Game
+from ...configuration import check_player_allowed_to_manage_running_game
 from ...models.rmt.game_state import GameState
+from ...models.enums.game_script import GameScript
 from ...models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
 from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
 from ...models.game_views.rmt import RandomMapsTogetherViews
@@ -24,6 +27,8 @@ _lock = asyncio.Lock()
 logger = logging.getLogger(__name__)
 
 class RMTGame(Game):
+    game_script = GameScript.TIME_ATTACK
+
     def __init__(self, app):
         super().__init__(app)
         self.config: RandomMapsTogetherConfiguration

@@ -13,7 +13,7 @@ from pyplanet.core.db.database import Database
 from .map_handler import MapHandler
 from .client.tm_exchange_client import TMExchangeClient
 from .views.game_selector_view import GameSelectorView
-from .games import check_player_allowed_to_change_game_settings, check_player_allowed_to_manage_running_game
+from .configuration import check_player_allowed_to_change_game_settings, check_player_allowed_to_manage_running_game
 from .games.rmt.random_map_challenge_game import RandomMapChallengeGame
 from .constants import S_TIME_LIMIT
 from .settings import MIN_PLAYER_LEVEL_SETTINGS

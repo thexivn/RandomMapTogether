@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pyplanet.apps.core.maniaplanet.models import Player
 from . import RandomMapsTogetherConfiguration
-from ...games import check_player_allowed_to_change_game_settings
+from ...configuration import check_player_allowed_to_change_game_settings
 from ...views.player_prompt_view import PlayerPromptView
 
 @dataclass

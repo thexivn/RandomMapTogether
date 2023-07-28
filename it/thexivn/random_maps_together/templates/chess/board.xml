@@ -1,0 +1,12 @@
+<frame pos="-80 80" size="160 160" z-index="999">
+    <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
+    <quad pos="149 0" size="10 10" style="Icons128x32_1" substyle="Close" scriptevents="1" action="{{ id }}__ui_hide_scoreboard"/>
+
+    <frame pos="20 -5" size="120 50" z-index="4">
+        <label pos="60 -5" size="90 10" text="{{game.game_mode.value}}" textsize="10" halign="center" valign="center" style="ManiaPlanetLogos" />
+    </frame>
+
+    <frame pos="20 -57" size="140 100" z-index="4" scroll="1" scrollmax="0 {{scroll_max}}">
+        <quad pos="0 0" size="120 {{nb_players * 10}}" z-index="10" scriptevents="1" bgcolor="ee000000" />
+    </frame>
+</frame>

@@ -3,9 +3,9 @@ from typing import List, Dict
 from pyplanet.views.generics.list import ManualListView
 from pyplanet.apps.config import AppConfig
 
-from ..models.enums.medals import Medals
-from .player_prompt_view import PlayerPromptView
-from ..games import check_player_allowed_to_change_game_settings
+from ...models.enums.medals import Medals
+from ..player_prompt_view import PlayerPromptView
+from ...configuration import check_player_allowed_to_change_game_settings
 # pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
