@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import cast
 
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
@@ -16,7 +15,6 @@ from ...models.enums.game_modes import GameModes
 from ...views.rmt.scoreboard import RandomMapsTogetherScoreBoardView
 from ...constants import BIG_MESSAGE, RACE_SCORES_TABLE, S_FORCE_LAPS_NB, S_TIME_LIMIT
 from ...configuration.rmt import RandomMapsTogetherConfiguration
-from ...configuration.rmt.rms_configuration import RandomMapSurvivalConfiguration
 
 
 _lock = asyncio.Lock()
@@ -85,8 +83,7 @@ class RMTGame(Game):
     async def __aexit__(self, *err):
         self.game_state.round_timer.stop_timer()
         if self.config == GameModes.RANDOM_MAP_SURVIVAL:
-            cast(RandomMapSurvivalConfiguration, self.config)
-            self.config.game_time_seconds += self.config.skip_penalty_seconds * self.game_state.penalty_skips
+            self.config.game_time_seconds += self.config.skip_penalty_seconds * self.game_state.penalty_skips # type: ignore[attr-defined]
         await self.config.update_time_left()
         if self.game_state.time_left == 0 and self.score.medal_sum:
             self.score.total_time = self.game_state.round_timer.total_time
