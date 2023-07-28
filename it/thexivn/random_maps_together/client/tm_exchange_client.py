@@ -8,7 +8,7 @@ from ..models.map_tag import MapTag
 class TMExchangeClient:
     def __init__(self):
         self.base_url = "https://trackmania.exchange/"
-        self.session = aiohttp.ClientSession()
+        self.session = aiohttp.ClientSession(conn_timeout=10)
         self.map_tags = None
 
     async def get_json(self, url, params=None):

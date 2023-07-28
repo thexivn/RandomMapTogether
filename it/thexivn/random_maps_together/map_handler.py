@@ -35,7 +35,7 @@ class MapHandler:
             except Exception as e: # pylint: disable=broad-exception-caught
                 logger.error("failed to load map...", exc_info=e)
         else:
-            raise RuntimeError("Failed to load map")
+            raise RuntimeError("Failed to load map: Probably problem with trackmania.exchange")
 
         self.map_is_loading = False
 
