@@ -9,6 +9,7 @@ from .round_timer import RoundTimer
 class GameState:
     round_timer: RoundTimer = field(default_factory=RoundTimer)
     time_left: Union[int, float] = 0
+    penalty_skips: int = 0
     current_map_completed: bool = True
     skip_medal_player: Optional[Player] = None
     skip_medal: Optional[Medals] = None

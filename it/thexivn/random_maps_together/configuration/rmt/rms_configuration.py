@@ -17,6 +17,7 @@ class RandomMapSurvivalConfiguration(RandomMapsTogetherConfiguration):
                 pass
             else:
                 self.game_time_seconds = max(self.game_time_seconds - self.skip_penalty_seconds, 0)
+                self.app.game.game_state.penalty_skips += 1
             self.app.game.game_state.time_left = min(self.game_time_seconds, self.app.game.game_state.time_left)
 
         elif goal_medal:

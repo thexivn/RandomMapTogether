@@ -12,6 +12,7 @@ from ...models.game_state import GameState
 from ...models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
 from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
 from ...models.game_views.rmt import RandomMapsTogetherViews
+from ...models.enums.game_modes import GameModes
 from ...views.rmt.scoreboard import RandomMapsTogetherScoreBoardView
 from ...constants import BIG_MESSAGE, RACE_SCORES_TABLE, S_FORCE_LAPS_NB, S_TIME_LIMIT
 from ...configuration.rmt import RandomMapsTogetherConfiguration
@@ -82,6 +83,8 @@ class RMTGame(Game):
 
     async def __aexit__(self, *err):
         self.game_state.round_timer.stop_timer()
+        if self.game_mode == GameModes.RANDOM_MAP_SURVIVAL:
+            self.config.game_time_seconds += self.config.skip_penalty_seconds * self.game_state.penalty_skips
         await self.config.update_time_left()
         if self.game_state.time_left == 0 and self.score.medal_sum:
             self.score.total_time = self.game_state.round_timer.total_time
