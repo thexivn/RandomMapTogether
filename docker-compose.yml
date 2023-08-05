@@ -27,7 +27,7 @@ services:
     depends_on:
       - database
   pyplanet:
-    image: docker.buddaphest.se/marwinfaiter/pyplanet
+    image: docker.buddaphest.se/marwinfaiter/pyplanet:rmt
     environment:
       PYPLANET_OWNER: ${TRACKMANIA_PLAYER_ACCOUNT_ID} # Player account ID
       PYPLANET_DEBUG: 1
@@ -37,7 +37,6 @@ services:
       DB_USER_PASSWORD: pyplanet
     volumes:
       - userdata:/pyplanet/server/UserData
-      - ./apps.py:/pyplanet/server/settings/apps.py
       - .:/src
     depends_on:
       - trackmania
