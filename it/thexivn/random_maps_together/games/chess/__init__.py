@@ -62,16 +62,12 @@ class ChessGame(Game):
             self.app.instance.gbx.prepare('SetCallVoteRatios', [-1])
         )
 
-        await self.set_original_scoreboard_visible(False)
-
         await self.views.settings_view.hide()
 
         self.config.map_generator.played_maps.clear()
         self.app.map_handler.next_map = None
 
-        self.score = self.views.scoreboard_view.game_score = await ChessScore.create(
-            goal_medal=self.config.goal_medal.name,
-        )
+        self.score = self.views.board_view.game_score = await ChessScore.create()
         self.game_state = GameState()
 
         self.config.update_player_configs()
@@ -85,16 +81,8 @@ class ChessGame(Game):
         return self
 
     async def __aexit__(self, *err):
-        self.game_state.round_timer.stop_timer()
-        await self.config.update_time_left()
-        if self.game_state.time_left == 0 and self.score.medal_sum:
-            self.score.total_time = self.game_state.round_timer.total_time
-            await self.score.save()
-        else:
-            await self.score.destroy(recursive=True)
-        self.game_state.current_map_completed = True
-        await self.hide_timer()
-        await self.views.scoreboard_view.display()
+        await self.score.destroy(recursive=True)
+        await self.views.board_view.display()
         await self.views.ingame_view.hide()
         asyncio.create_task(self._show_scoreboard_until_hub_map())
         await self.views.settings_view.display()
@@ -120,7 +108,7 @@ class ChessGame(Game):
         asyncio.gather(
             self.app.map_handler.pre_load_next_map(),
             self.views.ingame_view.display(),
-            self.views.scoreboard_view.hide(),
+            self.views.board_view.hide(),
         )
         logger.info("[map_begin_event] ENDED")
 
@@ -201,7 +189,7 @@ class ChessGame(Game):
                     self.app.map_handler.load_with_retry(),
                     self.views.ingame_view.display()
                 )
-                await self.views.scoreboard_view.display()
+                await self.views.board_view.display()
                 await self.views.ingame_view.hide()
             elif race_medal >= \
                 (self.config.player_configs[player.login].skip_medal or self.config.skip_medal) \
@@ -271,7 +259,7 @@ class ChessGame(Game):
             self.app.map_handler.load_with_retry(),
             self.views.ingame_view.display()
         )
-        await self.views.scoreboard_view.display()
+        await self.views.board_view.display()
         await self.views.ingame_view.hide()
 
 
@@ -297,7 +285,7 @@ class ChessGame(Game):
             self.app.map_handler.load_with_retry(),
             self.views.ingame_view.display()
         )
-        await self.views.scoreboard_view.display()
+        await self.views.board_view.display()
         await self.views.ingame_view.hide()
 
     @check_player_allowed_to_manage_running_game
@@ -322,7 +310,7 @@ class ChessGame(Game):
         await self.app.instance.gbx('ForceSpectator', player.login, 0)
 
     async def hide_custom_scoreboard(self, *_args, **_kwargs):
-        await self.views.scoreboard_view.hide()
+        await self.views.board_view.hide()
         await self.set_original_scoreboard_visible(True)
 
     async def set_original_scoreboard_visible(self, visible: bool):

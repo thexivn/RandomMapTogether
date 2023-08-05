@@ -1,12 +1,17 @@
 <frame pos="-80 80" size="160 160" z-index="999">
     <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
-    <quad pos="149 0" size="10 10" style="Icons128x32_1" substyle="Close" scriptevents="1" action="{{ id }}__ui_hide_scoreboard"/>
+    <quad pos="149 0" z-index="999" size="10 10" style="Icons128x32_1" substyle="Close" scriptevents="1" action="{{ id }}__ui_hide_board"/>
+    {% for n in range(64) %}
+        <quad pos="{{ loop.index0 % 8 * 20 }} {{ ((loop.index0 / 8) | int) * -20 }}" size="20 20" bgcolor="{{ 'FFFFFFAA' if loop.index0 % 2 == 0 and ((loop.index0 / 8) | int) % 2 == 0 or loop.index0 % 2 == 1 and ((loop.index0 / 8) | int) % 2 == 1 else '00AA00AA' }}"/>
+    {% endfor %}
 
-    <frame pos="20 -5" size="120 50" z-index="4">
-        <label pos="60 -5" size="90 10" text="{{game.game_mode.value}}" textsize="10" halign="center" valign="center" style="ManiaPlanetLogos" />
-    </frame>
-
-    <frame pos="20 -57" size="140 100" z-index="4" scroll="1" scrollmax="0 {{scroll_max}}">
-        <quad pos="0 0" size="120 {{nb_players * 10}}" z-index="10" scriptevents="1" bgcolor="ee000000" />
-    </frame>
+    {% for piece in pieces %}
+        <quad z-index="100" pos="{{ piece.x * 20 }} {{ -140 + piece.y * 20 }}"  size="20 20" image="http://buddaphest.se/resources/chess/{{ piece.team.value | lower }}_{{ piece.__class__.__name__ | lower }}.png" autoscale="1" keepratio="Fit" action="{{ id }}__ui_display_piece_moves_{{ piece.x }}_{{ piece.y }}"/>
+    {% endfor %}
+    {% for white_move in white_moves %}
+        <quad z-index="150" pos="{{ white_move.0 * 20 }} {{ -140 + white_move.1 * 20 }}"  size="20 20" image="http://buddaphest.se/resources/chess/dot.png" autoscale="1" keepratio="Fit" action="{{ id }}__ui_move_piece_{{ white_move.0 }}_{{ white_move.1 }}"/>
+    {% endfor %}
+    {% for black_move in black_moves %}
+        <quad z-index="150" pos="{{ black_move.0 * 20 }} {{ -140 + black_move.1 * 20 }}"  size="20 20" image="http://buddaphest.se/resources/chess/dot.png" autoscale="1" keepratio="Fit" action="{{ id }}__ui_move_piece_{{ black_move.0 }}_{{ black_move.1 }}"/>
+    {% endfor %}
 </frame>

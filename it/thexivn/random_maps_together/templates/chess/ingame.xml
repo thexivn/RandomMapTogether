@@ -4,16 +4,14 @@
     <frame pos="0 -{{size_y}}" size="{{size_x}} 6">
         <quad pos="0 0" size="{{size_x}} 6" z-index="0" bgcolor="44664770"/>
         {% if map_loading %}
-            <label pos="0 -3" size="{{size_x}} 5" z-index="1" text="$s LOADING NEXT MAP..."
-                    textsize="3" textfont="RajdhaniMono" halign="left" valign="center" />
+            <label pos="0 -3" size="{{size_x}} 5" z-index="1" text="$s LOADING NEXT MAP..." textsize="3" textfont="RajdhaniMono" halign="left" valign="center" />
         {% else %}
             <label pos="0 -3" z-index="1" text="$sStop" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_stop" />
-            {% endif %}
         {% endif %}
     </frame>
     {% if not map_loading %}
         <label pos="70 -2.5" z-index="1" text="$sPlayer Configs" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_display_player_settings" />
-        <label pos="70 -10" text="$sScoreboard" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_display_scoreboard" z-index="1"/>
+        <label pos="70 -10" text="$sBoard" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_display_board" z-index="1"/>
         <label pos="3 -{{size_y+9}}" z-index="2" text="$s{% if is_paused %}Unpause{% else %}Pause{% endif %}" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_toggle_pause" />
     {% endif %}
 {% endblock %}

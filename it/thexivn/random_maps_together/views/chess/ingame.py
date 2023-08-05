@@ -22,27 +22,15 @@ class ChessIngameView(WidgetView):
         self.manager = game.app.context.ui
 
         self.subscribe("ui_stop", self.game.app.stop_game)
-        self.subscribe("ui_skip_medal", self.game.command_skip_medal)
-        self.subscribe("ui_skip", self.game.command_skip)
         self.subscribe("ui_toggle_pause", self.game.command_toggle_pause)
         self.subscribe("ui_display_player_settings", self.game.config.display_player_settings)
-        self.subscribe("ui_display_scoreboard", self.game.views.board_view.display_scoreboard_for_player)
+        self.subscribe("ui_display_board", self.game.views.board_view.display)
 
     async def get_context_data(self):
         logger.info("Context Data")
         data = await super().get_context_data()
 
-        data["game"] = self.game
-
-        data["total_goal_medals"] = self.game.score.total_goal_medals
-        data["total_skip_medals"] = self.game.score.total_skip_medals
-
-        data["is_paused"] = self.game.game_state.is_paused
-        data["goal_medal_url"] = MedalURLs[self.game.config.goal_medal.name].value
-        data["skip_medal_url"] = MedalURLs[self.game.config.skip_medal.name].value
         data["game_started"] = self.game.game_is_in_progress
-        data["skip_medal"] = self.game.game_state.skip_medal
-        data["skip_pre_patch_ice_visible"] = self.game.app.map_handler.pre_patch_ice
         data["map_loading"] = self.game.app.map_handler.map_is_loading
 
         return data

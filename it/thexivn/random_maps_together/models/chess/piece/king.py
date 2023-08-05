@@ -4,7 +4,7 @@ from . import Piece
 
 @dataclass
 class King(Piece):
-    max_steps: 1
+    max_steps: int = 1
 
     def moves(self):
         return [

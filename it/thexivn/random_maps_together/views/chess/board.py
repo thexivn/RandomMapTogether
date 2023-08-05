@@ -1,13 +1,9 @@
-import asyncio
 import logging
 
 from pyplanet.views import TemplateView
-from pyplanet.apps.core.maniaplanet.models import Player
-from pyplanet.utils.times import format_time
 
-from ...models.enums.medal_urls import MedalURLs
-from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
-from ...models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
+from ...models.database.chess.chess_score import ChessScore
+from ...models.enums.team import Team
 
 logger = logging.getLogger(__name__)
 
@@ -19,70 +15,72 @@ class ChessBoardView(TemplateView):
         logger.info("Loading VIEW")
         self.game = game
         self.manager = game.app.context.ui
-        self.game_score: RandomMapsTogetherScore
+        self.game_score: ChessScore
         self.id = "it_thexivn_RandomMapsTogether_scoreboard"
-        self._player_loops = {}
-        self.subscribe("ui_hide_scoreboard", self.hide_scoreboard_for_player)
+        self.subscribe("ui_hide_board", self.hide)
+        for x in range(8):
+            for y in range(8):
+                self.subscribe(f"ui_display_piece_moves_{x}_{y}", self.display_piece_moves)
+                self.subscribe(f"ui_move_piece_{x}_{y}", self.move_piece)
 
     async def get_context_data(self):
         data = await super().get_context_data()
-        data["game"] = self.game
-        data["total_goal_medals"] = self.game_score.total_goal_medals
-        data["total_skip_medals"] = self.game_score.total_skip_medals
-        data["goal_medal_url"] = MedalURLs[self.game_score.goal_medal].value # type: ignore[misc]
-        data["skip_medal_url"] = MedalURLs[self.game_score.skip_medal].value # type: ignore[misc]
-        data["medal_urls"] = MedalURLs
-
-        data["players"] = await RandomMapsTogetherPlayerScore.get_top_20_players(self.game_score.id)
-        if self.game.app.map_handler.active_map and \
-            self.game.app.map_handler.active_map.uid != self.game.app.map_handler.hub_map:
-            data["time_left"] = format_time(
-                int((self.game.game_state.time_left - self.game.game_state.round_timer.current_round) * 1000),
-                hide_milliseconds=True
-            )
-            data["total_played_time"] = str(self.game.game_state.round_timer)
-        else:
-            data["time_left"] = format_time(0, hide_milliseconds=True)
-            data["total_played_time"] = self.game_score.total_time
-
-        data["nb_players"] = len(data["players"])
-        data["scroll_max"] = max(0, data["nb_players"] * 10 - 100)
-
+        data["pieces"] = self.game.game_state.pieces_in_play
+        data["white_moves"] = self.game.game_state.white_current_moves
+        data["black_moves"] = self.game.game_state.black_current_moves
         return data
 
-    async def display(self, player_logins=None, **_kwargs):
-        if player_logins:
-            for player_login in player_logins:
-                if self._player_loops.get(player_login):
-                    continue
-                if self.game.game_is_in_progress:
-                    self._player_loops[player_login] = asyncio.create_task(
-                        self.display_and_update_until_hide(player_login)
-                    )
-                else:
-                    await super().display([player_login])
+    async def display(self, player=None, *_args):
+        if player:
+            await super().display([player.login])
         else:
-            await super().display()
+            super().display()
 
-    async def hide(self, player_logins=None):
-        if player_logins:
-            for player_login in player_logins:
-                if self._player_loops.get(player_login):
-                    self._player_loops[player_login].cancel()
-                    del self._player_loops[player_login]
-                await super().hide([player_login])
+    async def hide(self, player=None, *_args):
+        if player:
+            await super().hide([player.login])
         else:
-            await super().hide()
+            super().display()
 
-    async def display_and_update_until_hide(self, player_login):
-        await super().display([player_login])
-        while player_login in self._is_player_shown:
-            await asyncio.sleep(1)
-            await super().display([player_login])
+    async def display_piece_moves(self, player, button_id, _values):
+        x, y = button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_")
+        piece = self.game.game_state.get_piece_by_coordinate(int(x), int(y))
+        if player.flow.team_id == 0 and self.game.game_state.turn == Team.WHITE:
+            if self.game.game_state.white_current_piece == piece:
+                self.game.game_state.white_current_piece = None
+                self.game.game_state.white_current_moves = []
+            elif piece.team == Team.WHITE:
+                self.game.game_state.white_current_piece = piece
+                self.game.game_state.white_current_moves = self.game.game_state.get_moves_for_piece(piece)
 
-    async def display_scoreboard_for_player(self, player: Player, *_args, **_kwargs):
-        await self.display([player.login])
+        elif player.flow.team_id == 1 and self.game.game_state.turn == Team.BLACK:
+            if self.game.game_state.black_current_piece == piece:
+                self.game.game_state.black_current_piece = None
+                self.game.game_state.black_current_moves = []
+            elif piece.team == Team.BLACK:
+                self.game.game_state.black_current_piece = piece
+                self.game.game_state.black_current_moves = self.game.game_state.get_moves_for_piece(piece)
+        await self.display(player)
 
-    async def hide_scoreboard_for_player(self, player: Player, *_args, **_kwargs):
-        if self._is_player_shown.get(player.login) or self._is_global_shown:
-            await self.hide([player.login])
+    async def move_piece(self, player, button_id, _values):
+        x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
+        target_piece = self.game.game_state.get_piece_by_coordinate(x, y)
+        if player.flow.team_id == 0:
+            piece = self.game.game_state.white_current_piece
+            self.game.game_state.white_current_moves.clear()
+            self.game.game_state.white_current_piece = None
+            if target_piece and target_piece.team == Team.BLACK:
+                target_piece.captured = True
+            # self.game.game_state.turn = Team.BLACK
+        elif player.flow.team_id == 1:
+            piece = self.game.game_state.black_current_piece
+            self.game.game_state.black_current_moves.clear()
+            self.game.game_state.black_current_piece = None
+            if target_piece and target_piece.team != Team.WHITE:
+                target_piece.captured = True
+            # self.game.game_state.turn = Team.WHITE
+
+        piece.x = x
+        piece.y = y
+
+        await self.display(player)

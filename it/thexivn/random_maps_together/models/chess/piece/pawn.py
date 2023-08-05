@@ -5,7 +5,7 @@ from . import Piece
 
 @dataclass
 class Pawn(Piece):
-    max_steps: 1
+    max_steps: int = 1
 
     def moves(self):
         return [

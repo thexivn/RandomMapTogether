@@ -93,9 +93,6 @@ class RandomMapsTogetherApp(AppConfig):
         await self.chat(f"{self.game.game_mode.value} ended")
         await self.map_handler.load_hub()
 
-        self.mode_settings[S_TIME_LIMIT] = 0
-        await self.mode_manager.update_settings(self.mode_settings)
-
         self.game.game_starting_player = None
         await self.game_selector.display()
 
