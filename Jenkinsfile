@@ -18,6 +18,7 @@ pipeline {
             }
             environment {
                 HOME = "${env.WORKSPACE}"
+                USERNAME = "jenkins" // getpass.getuser() fix
             }
             stages {
                 stage("Install dependencies") {
