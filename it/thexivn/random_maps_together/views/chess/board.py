@@ -26,8 +26,7 @@ class ChessBoardView(TemplateView):
     async def get_context_data(self):
         data = await super().get_context_data()
         data["pieces"] = self.game.game_state.pieces_in_play
-        data["white_moves"] = self.game.game_state.white_current_moves
-        data["black_moves"] = self.game.game_state.black_current_moves
+        data["moves"] = self.game.game_state.get_moves_for_piece(self.game.game_state.current_piece)
         return data
 
     async def display(self, player=None, *_args):
@@ -43,44 +42,42 @@ class ChessBoardView(TemplateView):
             super().display()
 
     async def display_piece_moves(self, player, button_id, _values):
-        x, y = button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_")
-        piece = self.game.game_state.get_piece_by_coordinate(int(x), int(y))
-        if player.flow.team_id == 0 and self.game.game_state.turn == Team.WHITE:
-            if self.game.game_state.white_current_piece == piece:
-                self.game.game_state.white_current_piece = None
-                self.game.game_state.white_current_moves = []
-            elif piece.team == Team.WHITE:
-                self.game.game_state.white_current_piece = piece
-                self.game.game_state.white_current_moves = self.game.game_state.get_moves_for_piece(piece)
+        if not self.game.config.player_configs[player.login].leader:
+            return
 
-        elif player.flow.team_id == 1 and self.game.game_state.turn == Team.BLACK:
-            if self.game.game_state.black_current_piece == piece:
-                self.game.game_state.black_current_piece = None
-                self.game.game_state.black_current_moves = []
-            elif piece.team == Team.BLACK:
-                self.game.game_state.black_current_piece = piece
-                self.game.game_state.black_current_moves = self.game.game_state.get_moves_for_piece(piece)
+        if self.game.game_state.turn != Team(player.flow.team_id):
+            return
+
+        x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_"))
+        piece = self.game.game_state.get_piece_by_coordinate(x, y)
+        if piece.team != Team(player.flow.team_id):
+            return
+
+        if self.game.game_state.current_piece == piece:
+            self.game.game_state.current_piece = None
+        else:
+            self.game.game_state.current_piece = piece
+
         await self.display(player)
 
     async def move_piece(self, player, button_id, _values):
+        if not self.game.config.player_configs[player.login].leader:
+            return
+
+        if self.game.game_state.turn != Team(player.flow.team_id):
+            return
+
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
         target_piece = self.game.game_state.get_piece_by_coordinate(x, y)
-        if player.flow.team_id == 0:
-            piece = self.game.game_state.white_current_piece
-            self.game.game_state.white_current_moves.clear()
-            self.game.game_state.white_current_piece = None
-            if target_piece and target_piece.team == Team.BLACK:
-                target_piece.captured = True
-            # self.game.game_state.turn = Team.BLACK
-        elif player.flow.team_id == 1:
-            piece = self.game.game_state.black_current_piece
-            self.game.game_state.black_current_moves.clear()
-            self.game.game_state.black_current_piece = None
-            if target_piece and target_piece.team != Team.WHITE:
-                target_piece.captured = True
-            # self.game.game_state.turn = Team.WHITE
+        if target_piece and target_piece.team != self.game.game_state.current_piece.team:
+            target_piece.captured = True
+        self.game.game_state.current_piece.x = x
+        self.game.game_state.current_piece.y = y
 
-        piece.x = x
-        piece.y = y
+        # if self.game.game_state.turn == Team.WHITE:
+        #     self.game.game_state.turn == Team.BLACK
+        # elif self.game.game_state.turn == Team.BLACK:
+        #     self.game.game_state.turn == Team.WHITE
 
+        self.game.game_state.current_piece = None
         await self.display(player)

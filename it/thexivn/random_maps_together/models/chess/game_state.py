@@ -53,10 +53,7 @@ def create_default_pieces():
 class GameState:
     pieces: List[Piece] = field(default_factory=create_default_pieces)
     turn: Team = Team.WHITE
-    white_current_moves: List[tuple] = field(default_factory=list)
-    black_current_moves: List[tuple] = field(default_factory=list)
-    white_current_piece: Optional[Piece] = None
-    black_current_piece: Optional[Piece] = None
+    current_piece: Optional[Piece] = None
 
     @property
     def white_pieces(self):
@@ -83,6 +80,8 @@ class GameState:
 
     def get_moves_for_piece(self, piece):
         moves = []
+        if not piece:
+            return moves
         for move in piece.moves():
             for step in range(1, 9):
                 x, y = move(step)

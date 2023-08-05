@@ -6,12 +6,9 @@
     {% endfor %}
 
     {% for piece in pieces %}
-        <quad z-index="100" pos="{{ piece.x * 20 }} {{ -140 + piece.y * 20 }}"  size="20 20" image="http://buddaphest.se/resources/chess/{{ piece.team.value | lower }}_{{ piece.__class__.__name__ | lower }}.png" autoscale="1" keepratio="Fit" action="{{ id }}__ui_display_piece_moves_{{ piece.x }}_{{ piece.y }}"/>
+        <quad z-index="100" pos="{{ piece.x * 20 }} {{ -140 + piece.y * 20 }}"  size="20 20" image="http://buddaphest.se/resources/chess/{{ piece.team.name | lower }}_{{ piece.__class__.__name__ | lower }}.png" autoscale="1" keepratio="Fit" action="{{ id }}__ui_display_piece_moves_{{ piece.x }}_{{ piece.y }}"/>
     {% endfor %}
-    {% for white_move in white_moves %}
-        <quad z-index="150" pos="{{ white_move.0 * 20 }} {{ -140 + white_move.1 * 20 }}"  size="20 20" image="http://buddaphest.se/resources/chess/dot.png" autoscale="1" keepratio="Fit" action="{{ id }}__ui_move_piece_{{ white_move.0 }}_{{ white_move.1 }}"/>
-    {% endfor %}
-    {% for black_move in black_moves %}
-        <quad z-index="150" pos="{{ black_move.0 * 20 }} {{ -140 + black_move.1 * 20 }}"  size="20 20" image="http://buddaphest.se/resources/chess/dot.png" autoscale="1" keepratio="Fit" action="{{ id }}__ui_move_piece_{{ black_move.0 }}_{{ black_move.1 }}"/>
+    {% for move in moves %}
+        <quad z-index="150" pos="{{ move.0 * 20 }} {{ -140 + move.1 * 20 }}"  size="20 20" image="http://buddaphest.se/resources/chess/dot.png" autoscale="1" keepratio="Fit" action="{{ id }}__ui_move_piece_{{ move.0 }}_{{ move.1 }}"/>
     {% endfor %}
 </frame>

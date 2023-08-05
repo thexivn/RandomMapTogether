@@ -5,6 +5,8 @@ from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.maniaplanet.models import Player
 
 from ...configuration import check_player_allowed_to_change_game_settings
+from ...models.enums.team import Team
+
 # pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
@@ -65,7 +67,7 @@ class PlayerConfigView(ManualListView): # pylint: disable=duplicate-code
             {
                 "player_nickname": player_config.player.nickname,
                 "player_login": player_config.player.login,
-                "team": await self.team_id_to_team((await Player.get_by_login(player_config.player.login)).flow.team_id),
+                "team": Team((await Player.get_by_login(player_config.player.login)).flow.team_id).name,
                 "leader": player_config.leader,
             }
             for player_config in sorted(self.app.game.config.player_configs.values(), key=lambda x: x.player.nickname)
@@ -88,9 +90,16 @@ class PlayerConfigView(ManualListView): # pylint: disable=duplicate-code
     @check_player_allowed_to_change_game_settings
     async def action_toggle_leader(self, player, _values, row, **_kwargs):
         self.app.game.config.player_configs[row["player_login"]].leader ^= True
+
         if self.app.game.config.player_configs[row["player_login"]].leader is True:
-            for player_config in [player_config for player_login, player_config in self.app.game.config.player_configs.items() if player_config.team.value == row["team"] and player_config.player.login != row["player_login"]]:
-                player_config.leader = False
+            for player_login, player_config in self.app.game.config.player_configs.items():
+                player_object = await Player.get_by_login(player_login)
+                if player_object.login == row["player_login"]:
+                    continue
+
+                if (player_object.flow.team_id == 0 and Team(row["team"]) == Team.WHITE) or (player_object.flow.team_id == 1 and Team(row["team"]) == Team.BLACK):
+                    player_config.leader = False
+
         await self.refresh(player=player)
 
     async def team_id_to_team(self, team_id: int):

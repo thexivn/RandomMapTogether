@@ -1,5 +1,5 @@
 from enum import Enum
 
-class Team(Enum):
-    WHITE = "WHITE"
-    BLACK = "BLACK"
+class Team(int, Enum):
+    WHITE = 0
+    BLACK = 1
