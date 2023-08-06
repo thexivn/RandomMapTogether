@@ -12,6 +12,5 @@
     {% if not map_loading %}
         <label pos="70 -2.5" z-index="1" text="$sPlayer Configs" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_display_player_settings" />
         <label pos="70 -10" text="$sBoard" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_display_board" z-index="1"/>
-        <label pos="3 -{{size_y+9}}" z-index="2" text="$s{% if is_paused %}Unpause{% else %}Pause{% endif %}" textsize="2.5" textfont="RajdhaniMono" halign="left" valign="center" style="CardButtonSmallS" scriptevents="1" action="{{ id }}__ui_toggle_pause" />
     {% endif %}
 {% endblock %}

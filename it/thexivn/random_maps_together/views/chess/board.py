@@ -3,6 +3,7 @@ import logging
 from pyplanet.views import TemplateView
 
 from ...models.database.chess.chess_score import ChessScore
+from ...models.database.chess.chess_move import ChessMove
 from ...models.enums.team import Team
 
 logger = logging.getLogger(__name__)
@@ -33,13 +34,13 @@ class ChessBoardView(TemplateView):
         if player:
             await super().display([player.login])
         else:
-            super().display()
+            await super().display()
 
     async def hide(self, player=None, *_args):
         if player:
             await super().hide([player.login])
         else:
-            super().display()
+            await super().hide()
 
     async def display_piece_moves(self, player, button_id, _values):
         if not self.game.config.player_configs[player.login].leader:
@@ -71,6 +72,17 @@ class ChessBoardView(TemplateView):
         target_piece = self.game.game_state.get_piece_by_coordinate(x, y)
         if target_piece and target_piece.team != self.game.game_state.current_piece.team:
             target_piece.captured = True
+            target_piece.db.captured = True
+
+        logger.info(self.game.game_state.current_piece.db)
+        await ChessMove.create(
+            chess_piece=self.game.game_state.current_piece.db.id,
+            from_x=self.game.game_state.current_piece.x,
+            from_y=self.game.game_state.current_piece.y,
+            to_x=x,
+            to_y=y,
+        )
+
         self.game.game_state.current_piece.x = x
         self.game.game_state.current_piece.y = y
 

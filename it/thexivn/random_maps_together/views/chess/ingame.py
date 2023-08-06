@@ -22,7 +22,6 @@ class ChessIngameView(WidgetView):
         self.manager = game.app.context.ui
 
         self.subscribe("ui_stop", self.game.app.stop_game)
-        self.subscribe("ui_toggle_pause", self.game.command_toggle_pause)
         self.subscribe("ui_display_player_settings", self.game.config.display_player_settings)
         self.subscribe("ui_display_board", self.game.views.board_view.display)
 
