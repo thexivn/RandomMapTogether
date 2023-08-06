@@ -10,6 +10,7 @@ from ..chess.piece.knight import Knight
 from ..chess.piece.pawn import Pawn
 from ..chess.piece.queen import Queen
 from ..chess.piece.rook import Rook
+from ..database.chess.chess_move import ChessMove
 
 logger = logging.getLogger(__name__)
 
@@ -75,10 +76,10 @@ class GameState:
     def pieces_in_play(self):
         return [piece for piece in self.pieces if piece.captured is False]
 
-    def get_piece_by_coordinate(self, x, y):
+    async def get_piece_by_coordinate(self, x, y):
         return next((piece for piece in self.pieces_in_play if piece.x == x and piece.y == y), None)
 
-    def get_moves_for_piece(self, piece):
+    async def get_moves_for_piece(self, piece):
         moves = []
         if not piece:
             return moves
@@ -86,11 +87,14 @@ class GameState:
             for step in range(1, 9):
                 x, y = move(step)
                 if isinstance(piece, Pawn):
-                    if move.__name__ in ("move_left_forward", "move_right_forward") and self.get_piece_by_coordinate(x, y) is None:
+                    if move.__name__ in ("move_left_forward", "move_right_forward") and await self.get_piece_by_coordinate(x, y) is None:
                         continue
 
-                    target_piece = self.get_piece_by_coordinate(x, y)
+                    target_piece = await self.get_piece_by_coordinate(x, y)
                     if target_piece and move.__name__ in ("move_forward", "move_forward_forward"):
+                        continue
+
+                    if len(await ChessMove.execute(ChessMove.select(ChessMove).where(ChessMove.chess_piece == piece.db.id))) and  move.__name__ == "move_forward_forward":
                         continue
 
                 if piece.max_steps is not None and step > piece.max_steps:

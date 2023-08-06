@@ -27,7 +27,7 @@ class ChessBoardView(TemplateView):
     async def get_context_data(self):
         data = await super().get_context_data()
         data["pieces"] = self.game.game_state.pieces_in_play
-        data["moves"] = self.game.game_state.get_moves_for_piece(self.game.game_state.current_piece)
+        data["moves"] = await self.game.game_state.get_moves_for_piece(self.game.game_state.current_piece)
         return data
 
     async def display(self, player=None, *_args):
@@ -50,7 +50,7 @@ class ChessBoardView(TemplateView):
             return
 
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_"))
-        piece = self.game.game_state.get_piece_by_coordinate(x, y)
+        piece = await self.game.game_state.get_piece_by_coordinate(x, y)
         if piece.team != Team(player.flow.team_id):
             return
 
@@ -69,12 +69,11 @@ class ChessBoardView(TemplateView):
             return
 
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
-        target_piece = self.game.game_state.get_piece_by_coordinate(x, y)
+        target_piece = await self.game.game_state.get_piece_by_coordinate(x, y)
         if target_piece and target_piece.team != self.game.game_state.current_piece.team:
             target_piece.captured = True
             target_piece.db.captured = True
 
-        logger.info(self.game.game_state.current_piece.db)
         await ChessMove.create(
             chess_piece=self.game.game_state.current_piece.db.id,
             from_x=self.game.game_state.current_piece.x,
