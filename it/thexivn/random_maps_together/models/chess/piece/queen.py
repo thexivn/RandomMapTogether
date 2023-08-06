@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import Tuple
+
 from . import Piece
 
 
@@ -16,26 +18,26 @@ class Queen(Piece):
             self.move_left_down,
         ]
 
-    def move_left(self, x):
+    def move_left(self, x: int) -> Tuple[int, int]:
         return (self.x - x, self.y)
 
-    def move_left_up(self, x):
+    def move_left_up(self, x: int) -> Tuple[int, int]:
         return (self.x - x, self.y + x)
 
-    def move_up(self, x):
+    def move_up(self, x: int) -> Tuple[int, int]:
         return (self.x, self.y + x)
 
-    def move_right_up(self, x):
+    def move_right_up(self, x: int) -> Tuple[int, int]:
         return (self.x + x, self.y + x)
 
-    def move_right(self, x):
+    def move_right(self, x: int) -> Tuple[int, int]:
         return (self.x + x, self.y)
 
-    def move_right_down(self, x):
+    def move_right_down(self, x: int) -> Tuple[int, int]:
         return (self.x + x, self.y - x)
 
-    def move_down(self, x):
+    def move_down(self, x: int) -> Tuple[int, int]:
         return (self.x, self.y - x)
 
-    def move_left_down(self, x):
+    def move_left_down(self, x: int) -> Tuple[int, int]:
         return (self.x - x, self.y - x)

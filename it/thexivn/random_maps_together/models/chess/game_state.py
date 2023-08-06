@@ -90,8 +90,10 @@ class GameState:
                     if move.__name__ in ("move_left_forward", "move_right_forward") and await self.get_piece_by_coordinate(x, y) is None:
                         continue
 
-                    target_piece = await self.get_piece_by_coordinate(x, y)
-                    if target_piece and move.__name__ in ("move_forward", "move_forward_forward"):
+                    if move.__name__ in ("move_forward", "move_forward_forward") and await self.get_piece_by_coordinate(x, y):
+                        continue
+
+                    if move.__name__ == "move_forward_forward" and await self.get_piece_by_coordinate(*piece.move_forward(step)):
                         continue
 
                     if len(await ChessMove.execute(ChessMove.select(ChessMove).where(ChessMove.chess_piece == piece.db.id))) and  move.__name__ == "move_forward_forward":
