@@ -18,6 +18,8 @@ class King(Piece):
             self.move_right_down,
             self.move_down,
             self.move_left_down,
+            self.castle_left,
+            self.castle_right,
         ]
 
     def move_left(self, x: int) -> Tuple[int, int]:
@@ -43,3 +45,9 @@ class King(Piece):
 
     def move_left_down(self, x: int) -> Tuple[int, int]:
         return (self.x - x, self.y - x)
+
+    def castle_left(self, x: int) -> Tuple[int, int]:
+        return (self.x - 2 * x, self.y)
+
+    def castle_right(self, x: int) -> Tuple[int, int]:
+        return (self.x + 2 * x, self.y)

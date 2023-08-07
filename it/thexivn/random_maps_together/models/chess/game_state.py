@@ -114,11 +114,47 @@ class GameState:
                     if move.__name__ in ("move_forward", "move_forward_forward") and await self.get_piece_by_coordinate(x, y):
                         continue
 
-                    if move.__name__ == "move_forward_forward" and await self.get_piece_by_coordinate(*piece.move_forward(step)):
+                    if move.__name__ == "move_forward_forward" and (await self.get_piece_by_coordinate(*piece.move_forward(step)) or len(await ChessMove.execute(ChessMove.select(ChessMove).where(ChessMove.chess_piece == piece.db.id)))):
                         continue
 
-                    if len(await ChessMove.execute(ChessMove.select(ChessMove).where(ChessMove.chess_piece == piece.db.id))) and  move.__name__ == "move_forward_forward":
-                        continue
+                elif isinstance(piece, King) and piece.team == self.turn:
+                    if move.__name__ == "castle_left":
+                        if any([await self.get_piece_by_coordinate(piece.x - n, y) for n in range(1,4)]):
+                            continue
+
+                        rook = await self.get_piece_by_coordinate(piece.x - 4, piece.y)
+                        if not rook:
+                            continue
+
+                        if rook and any([await piece.get_last_move(), await rook.get_last_move()]):
+                            continue
+
+                        if any([
+                            move == (piece.x - n, piece.y)
+                            for n in range(3)
+                            for piece_in_play in (self.black_pieces_in_play if piece.team == Team.WHITE else self.white_pieces_in_play)
+                            for move in await self.get_moves_for_piece(piece_in_play)
+                        ]):
+                            continue
+
+                    elif move.__name__ == "castle_right":
+                        if any([await self.get_piece_by_coordinate(piece.x + n, y) for n in range(1,3)]):
+                            continue
+
+                        rook = await self.get_piece_by_coordinate(piece.x + 3, piece.y)
+                        if not rook:
+                            continue
+
+                        if rook and any([await piece.get_last_move(), await rook.get_last_move()]):
+                            continue
+
+                        if any([
+                            move == (piece.x + n, piece.y)
+                            for n in range(3)
+                            for piece_in_play in (self.black_pieces_in_play if piece.team == Team.WHITE else self.white_pieces_in_play)
+                            for move in await self.get_moves_for_piece(piece_in_play)
+                        ]):
+                            continue
 
                 if piece.max_steps is not None and step > piece.max_steps:
                     break

@@ -5,6 +5,7 @@ from pyplanet.views import TemplateView
 from ...models.database.chess.chess_score import ChessScore
 from ...models.database.chess.chess_move import ChessMove
 from ...models.chess.piece.pawn import Pawn
+from ...models.chess.piece.king import King
 from ...models.enums.team import Team
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,28 @@ class ChessBoardView(TemplateView):
             if target_piece and isinstance(target_piece, Pawn) and target_piece.team != self.game.game_state.current_piece.team:
                 target_piece.captured = True
                 target_piece.db.captured = True
+
+        elif not target_piece and isinstance(self.game.game_state.current_piece, King) and abs(x - self.game.game_state.current_piece.x) == 2:
+            if x - self.game.game_state.current_piece.x == -2:
+                rook = await self.game.game_state.get_piece_by_coordinate(self.game.game_state.current_piece.x - 4, y)
+                await ChessMove.create(
+                    chess_piece=rook.db.id,
+                    from_x=rook.x,
+                    from_y=rook.y,
+                    to_x=rook.x + 3,
+                    to_y=rook.y,
+                )
+                rook.x += 3
+            elif x - self.game.game_state.current_piece.x == 2:
+                rook = await self.game.game_state.get_piece_by_coordinate(self.game.game_state.current_piece.x + 3, y)
+                await ChessMove.create(
+                    chess_piece=rook.db.id,
+                    from_x=rook.x,
+                    from_y=rook.y,
+                    to_x=rook.x - 2,
+                    to_y=rook.y,
+                )
+                rook.x -= 2
 
         await ChessMove.create(
             chess_piece=self.game.game_state.current_piece.db.id,

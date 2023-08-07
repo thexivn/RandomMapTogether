@@ -15,12 +15,13 @@ class Piece:
     captured: bool = False
 
     async def get_last_move(self):
-        moves =  await ChessMove.execute(
-            ChessMove
-            .select(ChessMove)
-            .where(ChessMove.chess_piece == self.db.id)
-            .order_by(ChessMove.id.desc())
-            .limit(1)
+        return next(
+            (move for move in await ChessMove.execute(
+                ChessMove
+                .select(ChessMove)
+                .where(ChessMove.chess_piece == self.db.id)
+                .order_by(ChessMove.id.desc())
+                .limit(1)
+            )),
+            None
         )
-
-        return moves[0] if len(moves) else None
