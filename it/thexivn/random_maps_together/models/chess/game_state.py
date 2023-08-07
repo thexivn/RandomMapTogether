@@ -79,7 +79,7 @@ class GameState:
     async def get_piece_by_coordinate(self, x, y):
         return next((piece for piece in self.pieces_in_play if piece.x == x and piece.y == y), None)
 
-    async def get_moves_for_piece(self, piece):
+    async def get_moves_for_piece(self, piece: Piece):
         moves = []
         if not piece:
             return moves
@@ -88,7 +88,28 @@ class GameState:
                 x, y = move(step)
                 if isinstance(piece, Pawn):
                     if move.__name__ in ("move_left_forward", "move_right_forward") and await self.get_piece_by_coordinate(x, y) is None:
-                        continue
+                        if move.__name__ == "move_left_forward":
+                            en_passant_piece = await self.get_piece_by_coordinate(piece.x-1, piece.y)
+                        elif move.__name__ == "move_right_forward":
+                            en_passant_piece = await self.get_piece_by_coordinate(piece.x+1, piece.y)
+
+                        if isinstance(en_passant_piece, Pawn) and en_passant_piece.team != piece.team:
+                            last_move = await en_passant_piece.get_last_move()
+                            if not last_move:
+                                continue
+
+                            last_move_in_game = next((move for move in await ChessMove.execute(ChessMove.select(ChessMove).order_by(ChessMove.id.desc()).limit(1))), None)
+                            if not last_move_in_game:
+                                continue
+
+                            if last_move_in_game != last_move:
+                                continue
+
+                            if abs(last_move.to_y - last_move.from_y) != 2:
+                                continue
+
+                        else:
+                            continue
 
                     if move.__name__ in ("move_forward", "move_forward_forward") and await self.get_piece_by_coordinate(x, y):
                         continue

@@ -4,6 +4,7 @@ from pyplanet.views import TemplateView
 
 from ...models.database.chess.chess_score import ChessScore
 from ...models.database.chess.chess_move import ChessMove
+from ...models.chess.piece.pawn import Pawn
 from ...models.enums.team import Team
 
 logger = logging.getLogger(__name__)
@@ -43,15 +44,15 @@ class ChessBoardView(TemplateView):
             await super().hide()
 
     async def display_piece_moves(self, player, button_id, _values):
-        if not self.game.config.player_configs[player.login].leader:
-            return
+        # if not self.game.config.player_configs[player.login].leader:
+        #     return
 
-        if self.game.game_state.turn != Team(player.flow.team_id):
-            return
+        # if self.game.game_state.turn != Team(player.flow.team_id):
+        #     return
 
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_"))
         piece = await self.game.game_state.get_piece_by_coordinate(x, y)
-        if piece.team != Team(player.flow.team_id):
+        if piece.team != self.game.game_state.turn:
             return
 
         if self.game.game_state.current_piece == piece:
@@ -62,17 +63,27 @@ class ChessBoardView(TemplateView):
         await self.display(player)
 
     async def move_piece(self, player, button_id, _values):
-        if not self.game.config.player_configs[player.login].leader:
-            return
+        # if not self.game.config.player_configs[player.login].leader:
+        #     return
 
-        if self.game.game_state.turn != Team(player.flow.team_id):
-            return
+        # if self.game.game_state.turn != Team(player.flow.team_id):
+        #     return
 
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
+
         target_piece = await self.game.game_state.get_piece_by_coordinate(x, y)
         if target_piece and target_piece.team != self.game.game_state.current_piece.team:
             target_piece.captured = True
             target_piece.db.captured = True
+        elif not target_piece and isinstance(self.game.game_state.current_piece, Pawn):
+            if self.game.game_state.current_piece.team == Team.WHITE:
+                target_piece = await self.game.game_state.get_piece_by_coordinate(x, y-1)
+            elif self.game.game_state.current_piece.team == Team.BLACK:
+                target_piece = await self.game.game_state.get_piece_by_coordinate(x, y+1)
+
+            if target_piece and isinstance(target_piece, Pawn) and target_piece.team != self.game.game_state.current_piece.team:
+                target_piece.captured = True
+                target_piece.db.captured = True
 
         await ChessMove.create(
             chess_piece=self.game.game_state.current_piece.db.id,
@@ -85,10 +96,10 @@ class ChessBoardView(TemplateView):
         self.game.game_state.current_piece.x = x
         self.game.game_state.current_piece.y = y
 
-        # if self.game.game_state.turn == Team.WHITE:
-        #     self.game.game_state.turn == Team.BLACK
-        # elif self.game.game_state.turn == Team.BLACK:
-        #     self.game.game_state.turn == Team.WHITE
+        if self.game.game_state.turn == Team.WHITE:
+            self.game.game_state.turn = Team.BLACK
+        elif self.game.game_state.turn == Team.BLACK:
+            self.game.game_state.turn = Team.WHITE
 
         self.game.game_state.current_piece = None
         await self.display(player)
