@@ -92,7 +92,8 @@ class ChessGame(Game):
         self.config.update_player_configs()
         try:
             await asyncio.gather(
-                self.views.ingame_view.display()
+                self.views.ingame_view.display(),
+                self.views.board_view.display()
             )
         except Exception as exc:
             raise RuntimeError(f"Failed to start Chess game: {str(exc)}") from exc
@@ -333,7 +334,8 @@ class ChessGame(Game):
             for piece in self.game_state.current_pieces
             for move in await self.game_state.get_moves_for_piece(piece)
         ]
-        pieces_attacking_king = await self.game_state.get_enemy_pieces_attacking_coordinate(self.game_state.current_king.x, self.game_state.current_king.y)
+        pieces_attacking_king = await self.game_state.get_pieces_attacking_current_king()
+
         if not available_moves_for_new_team and pieces_attacking_king:
             self.game_state.state = ChessState.CHECKMATE
             self.game_is_in_progress = False

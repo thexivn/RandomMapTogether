@@ -74,6 +74,9 @@ class GameState:
     def pieces_in_play(self):
         return tuple(piece for piece in self.pieces if piece.captured is False)
 
+    async def get_pieces_attacking_current_king(self):
+        return await self.get_enemy_pieces_attacking_coordinate(self.current_king.x, self.current_king.y)
+
     async def get_enemy_pieces_attacking_coordinate(self, x: int, y: int):
         return [
             piece for piece in self.enemy_pieces
@@ -84,13 +87,11 @@ class GameState:
         return next((piece for piece in self.pieces_in_play if piece.x == x and piece.y == y), None)
 
     async def get_moves_for_piece(self, piece: Piece):
-        moves, check_pieces = [], []
+        moves = []
         if not piece:
             return moves
 
         last_move_in_game = next((move for move in await ChessMove.execute(ChessMove.select(ChessMove).order_by(ChessMove.id.desc()).limit(1))), None)
-        if piece.team == self.turn:
-            check_pieces = await self.get_enemy_pieces_attacking_coordinate(self.current_king.x, self.current_king.y)
 
         for move in piece.moves():
             for step in range(1, 9):
@@ -180,8 +181,9 @@ class GameState:
 
                 # Simulate move so that the king does not get attacked
                 if piece.team == self.turn:
+                    pieces_attacking_king = await self.get_pieces_attacking_current_king()
                     # If two pieces are checking the king, the king must move
-                    if len(check_pieces) > 1 and not isinstance(piece, King):
+                    if len(pieces_attacking_king) > 1 and not isinstance(piece, King):
                         continue
 
                     old_x, old_y = piece.x, piece.y
@@ -190,7 +192,7 @@ class GameState:
                         target_piece.captured = True
                     piece.x, piece.y = x, y
 
-                    pieces_attacking_king = await self.get_enemy_pieces_attacking_coordinate(self.current_king.x, self.current_king.y)
+                    pieces_attacking_king = await self.get_pieces_attacking_current_king()
 
                     if target_piece:
                         target_piece.captured = False
