@@ -6,7 +6,13 @@ from ...models.database.chess.chess_score import ChessScore
 from ...models.database.chess.chess_move import ChessMove
 from ...models.chess.piece.pawn import Pawn
 from ...models.chess.piece.king import King
+from ...models.chess.piece.queen import Queen
+from ...models.chess.piece.rook import Rook
+from ...models.chess.piece.bishop import Bishop
+from ...models.chess.piece.knight import Knight
+from ...models.database.chess.chess_piece import ChessPiece
 from ...models.enums.team import Team
+from ..player_prompt_view import PlayerPromptView
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +79,7 @@ class ChessBoardView(TemplateView):
         #     return
 
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
+        promote_piece_class = None
 
         target_piece = await self.game.game_state.get_piece_by_coordinate(x, y)
         if target_piece and target_piece.team != self.game.game_state.current_piece.team:
@@ -80,13 +87,21 @@ class ChessBoardView(TemplateView):
             target_piece.db.captured = True
         elif not target_piece and isinstance(self.game.game_state.current_piece, Pawn):
             if self.game.game_state.current_piece.team == Team.WHITE:
-                target_piece = await self.game.game_state.get_piece_by_coordinate(x, y-1)
+                en_passant_piece = await self.game.game_state.get_piece_by_coordinate(x, y-1)
             elif self.game.game_state.current_piece.team == Team.BLACK:
-                target_piece = await self.game.game_state.get_piece_by_coordinate(x, y+1)
+                en_passant_piece = await self.game.game_state.get_piece_by_coordinate(x, y+1)
 
-            if target_piece and isinstance(target_piece, Pawn) and target_piece.team != self.game.game_state.current_piece.team:
-                target_piece.captured = True
-                target_piece.db.captured = True
+            if en_passant_piece and isinstance(en_passant_piece, Pawn) and en_passant_piece.team != self.game.game_state.current_piece.team:
+                en_passant_piece.captured = True
+                en_passant_piece.db.captured = True
+            elif (self.game.game_state.current_piece.team == Team.WHITE and y == 7) or (self.game.game_state.current_piece.team == Team.BLACK and y == 0):
+                buttons = [
+                    {"name": "Queen", "value": Queen},
+                    {"name": "Rook", "value": Rook},
+                    {"name": "Bishop", "value": Bishop},
+                    {"name": "Knight", "value": Knight},
+                ]
+                promote_piece_class = await PlayerPromptView.prompt_for_input(player, "Promote pawn", buttons, entry=False)
 
         elif not target_piece and isinstance(self.game.game_state.current_piece, King) and abs(x - self.game.game_state.current_piece.x) == 2:
             if x - self.game.game_state.current_piece.x == -2:
@@ -109,7 +124,6 @@ class ChessBoardView(TemplateView):
                     to_y=rook.y,
                 )
                 rook.x -= 2
-
         await ChessMove.create(
             chess_piece=self.game.game_state.current_piece.db.id,
             from_x=self.game.game_state.current_piece.x,
@@ -120,6 +134,23 @@ class ChessBoardView(TemplateView):
 
         self.game.game_state.current_piece.x = x
         self.game.game_state.current_piece.y = y
+
+        if promote_piece_class:
+            self.game.game_state.current_piece.captured = True
+            new_piece = promote_piece_class(
+                self.game.game_state.current_piece.team,
+                self.game.game_state.current_piece.x,
+                self.game.game_state.current_piece.y,
+            )
+
+            new_piece.db, _ = await ChessPiece.get_or_create(
+                game_score=self.game.score.id,
+                team=self.game.game_state.current_piece.team.name,
+                piece=self.game.game_state.current_piece.__class__.__name__.lower(),
+                x=self.game.game_state.current_piece.x,
+                y=self.game.game_state.current_piece.y,
+            )
+            self.game.game_state.pieces.append(new_piece)
 
         if self.game.game_state.turn == Team.WHITE:
             self.game.game_state.turn = Team.BLACK
