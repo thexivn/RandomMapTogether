@@ -64,23 +64,19 @@ class GameState:
 
     @property
     def current_pieces(self):
-        return [piece for piece in self.pieces_in_play if piece.team == self.turn]
+        return tuple(piece for piece in self.pieces_in_play if piece.team == self.turn)
+
+    @property
+    def enemy_pieces(self):
+        return tuple(piece for piece in self.pieces_in_play if piece.team != self.turn)
 
     @property
     def pieces_in_play(self):
-        return [piece for piece in self.pieces if piece.captured is False]
-
-    @property
-    def white_pieces_in_play(self):
-        return [piece for piece in self.pieces_in_play if piece.team == Team.WHITE and piece.captured is False]
-
-    @property
-    def black_pieces_in_play(self):
-        return [piece for piece in self.pieces_in_play if piece.team == Team.BLACK and piece.captured is False]
+        return tuple(piece for piece in self.pieces if piece.captured is False)
 
     async def get_enemy_pieces_attacking_coordinate(self, x: int, y: int):
         return [
-            piece for piece in (self.black_pieces_in_play if self.turn == Team.WHITE else self.white_pieces_in_play)
+            piece for piece in self.enemy_pieces
             if (x, y) in await self.get_moves_for_piece(piece)
         ]
 

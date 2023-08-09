@@ -21,6 +21,18 @@ from ...configuration.chess import ChessConfiguration
 from ...models.enums.game_modes import GameModes
 from ...models.enums.game_script import GameScript
 
+from ...models.database.chess.chess_move import ChessMove
+from ...models.chess.piece.pawn import Pawn
+from ...models.chess.piece.king import King
+from ...models.chess.piece.queen import Queen
+from ...models.chess.piece.rook import Rook
+from ...models.chess.piece.bishop import Bishop
+from ...models.chess.piece.knight import Knight
+from ...models.database.chess.chess_piece import ChessPiece
+from ...models.enums.team import Team
+from ...models.enums.chess_state import ChessState
+from ...views.player_prompt_view import PlayerPromptView
+
 logger = logging.getLogger(__name__)
 
 class ChessGame(Game):
@@ -209,6 +221,128 @@ class ChessGame(Game):
                     f'congrats to {player.nickname} with {format_time(race_time)}'
                 )
                 await self.app.chat(f'You are now allowed to take the {race_medal.name} and skip the map')
+
+    async def display_piece_moves(self, player, button_id, _values):
+        # if not self.config.player_configs[player.login].leader:
+        #     return
+
+        # if self.game_state.turn != Team(player.flow.team_id):
+        #     return
+
+        x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_"))
+        piece = await self.game_state.get_piece_by_coordinate(x, y)
+        if piece.team != self.game_state.turn:
+            return
+
+        if self.game_state.current_piece == piece:
+            self.game_state.current_piece = None
+        else:
+            self.game_state.current_piece = piece
+
+        await self.views.board_view.display()
+
+    async def move_piece(self, player, button_id, _values):
+        # if not self.config.player_configs[player.login].leader:
+        #     return
+
+        # if self.game_state.turn != Team(player.flow.team_id):
+        #     return
+
+        x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
+        promote_piece_class = None
+
+        target_piece = await self.game_state.get_piece_by_coordinate(x, y)
+        if target_piece and target_piece.team != self.game_state.current_piece.team:
+            target_piece.captured = True
+            target_piece.db.captured = True
+        elif not target_piece and isinstance(self.game_state.current_piece, Pawn):
+            if self.game_state.current_piece.team == Team.WHITE:
+                en_passant_piece = await self.game_state.get_piece_by_coordinate(x, y-1)
+            elif self.game_state.current_piece.team == Team.BLACK:
+                en_passant_piece = await self.game_state.get_piece_by_coordinate(x, y+1)
+
+            if en_passant_piece and isinstance(en_passant_piece, Pawn) and en_passant_piece.team != self.game_state.current_piece.team:
+                en_passant_piece.captured = True
+                en_passant_piece.db.captured = True
+            elif (self.game_state.current_piece.team == Team.WHITE and y == 7) or (self.game_state.current_piece.team == Team.BLACK and y == 0):
+                buttons = [
+                    {"name": "Queen", "value": Queen},
+                    {"name": "Rook", "value": Rook},
+                    {"name": "Bishop", "value": Bishop},
+                    {"name": "Knight", "value": Knight},
+                ]
+                promote_piece_class = await PlayerPromptView.prompt_for_input(player, "Promote pawn", buttons, entry=False)
+
+        elif not target_piece and isinstance(self.game_state.current_piece, King) and abs(x - self.game_state.current_piece.x) == 2:
+            if x - self.game_state.current_piece.x == -2:
+                rook = await self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x - 4, y)
+                await ChessMove.create(
+                    chess_piece=rook.db.id,
+                    from_x=rook.x,
+                    from_y=rook.y,
+                    to_x=rook.x + 3,
+                    to_y=rook.y,
+                )
+                rook.x += 3
+            elif x - self.game_state.current_piece.x == 2:
+                rook = await self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x + 3, y)
+                await ChessMove.create(
+                    chess_piece=rook.db.id,
+                    from_x=rook.x,
+                    from_y=rook.y,
+                    to_x=rook.x - 2,
+                    to_y=rook.y,
+                )
+                rook.x -= 2
+
+        await ChessMove.create(
+            chess_piece=self.game_state.current_piece.db.id,
+            from_x=self.game_state.current_piece.x,
+            from_y=self.game_state.current_piece.y,
+            to_x=x,
+            to_y=y,
+        )
+
+        self.game_state.current_piece.x = x
+        self.game_state.current_piece.y = y
+
+        if promote_piece_class:
+            self.game_state.current_piece.captured = True
+            new_piece = promote_piece_class(
+                self.game_state.current_piece.team,
+                self.game_state.current_piece.x,
+                self.game_state.current_piece.y,
+            )
+
+            new_piece.db, _ = await ChessPiece.get_or_create(
+                game_score=self.score.id,
+                team=self.game_state.current_piece.team.name,
+                piece=self.game_state.current_piece.__class__.__name__.lower(),
+                x=self.game_state.current_piece.x,
+                y=self.game_state.current_piece.y,
+            )
+            self.game_state.pieces.append(new_piece)
+
+        if self.game_state.turn == Team.WHITE:
+            self.game_state.turn = Team.BLACK
+        elif self.game_state.turn == Team.BLACK:
+            self.game_state.turn = Team.WHITE
+
+        available_moves_for_new_team = [
+            move
+            for piece in self.game_state.current_pieces
+            for move in await self.game_state.get_moves_for_piece(piece)
+        ]
+        pieces_attacking_king = await self.game_state.get_enemy_pieces_attacking_coordinate(self.game_state.current_king.x, self.game_state.current_king.y)
+        if not available_moves_for_new_team and pieces_attacking_king:
+            self.game_state.state = ChessState.CHECKMATE
+            self.game_is_in_progress = False
+        elif not available_moves_for_new_team and not pieces_attacking_king:
+            self.game_state.state = ChessState.STALEMATE
+            self.game_is_in_progress = False
+
+        self.game_state.current_piece = None
+        await self.views.board_view.display()
 
     async def respawn_player(self, player: Player):
         # first, force mode 1 (spectator), then force mode 2 (player), then force mode 0 (user selectable)
