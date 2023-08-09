@@ -172,4 +172,4 @@ class ChessBoardView(TemplateView):
             self.game.game_is_in_progress = False
 
         self.game.game_state.current_piece = None
-        await self.display(player)
+        await self.display()
