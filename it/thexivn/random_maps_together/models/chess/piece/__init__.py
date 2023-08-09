@@ -13,15 +13,4 @@ class Piece:
     db: Optional[ChessPiece] = None
     max_steps: Optional[int] = None
     captured: bool = False
-
-    async def get_last_move(self):
-        return next(
-            (move for move in await ChessMove.execute(
-                ChessMove
-                .select(ChessMove)
-                .where(ChessMove.chess_piece == self.db.id)
-                .order_by(ChessMove.id.desc())
-                .limit(1)
-            )),
-            None
-        )
+    last_move: Optional[ChessMove] = None

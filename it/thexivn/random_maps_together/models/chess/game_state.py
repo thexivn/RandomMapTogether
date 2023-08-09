@@ -57,6 +57,7 @@ class GameState:
     turn: Team = Team.WHITE
     current_piece: Optional[Piece] = None
     state: ChessState = ChessState.IN_PROGRESS
+    last_move: Optional[ChessMove] = None
 
     @property
     def current_king(self):
@@ -80,18 +81,31 @@ class GameState:
     async def get_enemy_pieces_attacking_coordinate(self, x: int, y: int):
         return [
             piece for piece in self.enemy_pieces
-            if (x, y) in await self.get_moves_for_piece(piece)
+            for move in await self.get_moves_for_piece(piece)
+            if (x, y) == move
         ]
 
     async def get_piece_by_coordinate(self, x, y):
-        return next((piece for piece in self.pieces_in_play if piece.x == x and piece.y == y), None)
+        return next((piece for piece in self.pieces_in_play if (x, y) == (piece.x, piece.y)), None)
 
     async def get_moves_for_piece(self, piece: Piece):
         moves = []
         if not piece:
-            return moves
+            current_team_can_move = bool([
+                move
+                for piece in self.current_pieces
+                for move in await self.get_moves_for_piece(piece)
+            ])
+            pieces_attacking_king = await self.get_pieces_attacking_current_king()
 
-        last_move_in_game = next((move for move in await ChessMove.execute(ChessMove.select(ChessMove).order_by(ChessMove.id.desc()).limit(1))), None)
+            if not current_team_can_move and pieces_attacking_king:
+                self.game_state.state = ChessState.CHECKMATE
+                self.game_is_in_progress = False
+            elif not current_team_can_move and not pieces_attacking_king:
+                self.game_state.state = ChessState.STALEMATE
+                self.game_is_in_progress = False
+
+            return moves
 
         for move in piece.moves():
             for step in range(1, 9):
@@ -105,9 +119,8 @@ class GameState:
                     continue
 
                 # Check if target has friendly piece
-                if next((p for p in self.pieces_in_play if p.x == x and p.y == y and p.team == piece.team), None):
+                if next((p for p in self.pieces_in_play if (x, y) == (p.x, p.y) and p.team == piece.team), None):
                     break
-
 
                 if isinstance(piece, Pawn):
                     # Check if there is an enemy piece where pawn could attack
@@ -118,17 +131,13 @@ class GameState:
                             en_passant_piece = await self.get_piece_by_coordinate(piece.x+1, piece.y)
 
                         if isinstance(en_passant_piece, Pawn) and en_passant_piece.team != piece.team:
-                            last_move = await en_passant_piece.get_last_move()
-                            if not last_move:
+                            if not en_passant_piece.last_move or not self.last_move:
                                 continue
 
-                            if not last_move_in_game:
+                            if en_passant_piece.last_move != self.last_move:
                                 continue
 
-                            if last_move_in_game != last_move:
-                                continue
-
-                            if abs(last_move.to_y - last_move.from_y) != 2:
+                            if abs(en_passant_piece.last_move.to_y - en_passant_piece.last_move.from_y) != 2:
                                 continue
 
                         else:
@@ -137,7 +146,7 @@ class GameState:
                     if move.__name__ in ("move_forward", "move_forward_forward") and await self.get_piece_by_coordinate(x, y):
                         continue
 
-                    if move.__name__ == "move_forward_forward" and (await self.get_piece_by_coordinate(*piece.move_forward(step)) or await piece.get_last_move()):
+                    if move.__name__ == "move_forward_forward" and (await self.get_piece_by_coordinate(*piece.move_forward(step)) or piece.last_move):
                         continue
 
                 elif isinstance(piece, King) and piece.team == self.turn:
@@ -150,7 +159,7 @@ class GameState:
                         if not rook:
                             continue
 
-                        if rook and any([await piece.get_last_move(), await rook.get_last_move()]):
+                        if rook and any([piece.last_move, rook.last_move]):
                             continue
 
                         # Check if pieces are attacking king or the steps between
@@ -169,7 +178,7 @@ class GameState:
                         if not rook:
                             continue
 
-                        if rook and any([await piece.get_last_move(), await rook.get_last_move()]):
+                        if rook and any([piece.last_move, rook.last_move]):
                             continue
 
                         # Check if pieces are attacking king or the steps between
@@ -203,6 +212,6 @@ class GameState:
 
                 moves.append((x, y))
                 # Check if target contains a piece
-                if next((p for p in self.pieces_in_play if p.x == x and p.y == y), None):
+                if next((p for p in self.pieces_in_play if (x, y) == (p.x, p.y)), None):
                     break
         return moves

@@ -296,7 +296,7 @@ class ChessGame(Game):
                 )
                 rook.x -= 2
 
-        await ChessMove.create(
+        self.game_state.current_piece.last_move = self.game_state.last_move = await ChessMove.create(
             chess_piece=self.game_state.current_piece.db.id,
             from_x=self.game_state.current_piece.x,
             from_y=self.game_state.current_piece.y,
@@ -328,20 +328,6 @@ class ChessGame(Game):
             self.game_state.turn = Team.BLACK
         elif self.game_state.turn == Team.BLACK:
             self.game_state.turn = Team.WHITE
-
-        available_moves_for_new_team = [
-            move
-            for piece in self.game_state.current_pieces
-            for move in await self.game_state.get_moves_for_piece(piece)
-        ]
-        pieces_attacking_king = await self.game_state.get_pieces_attacking_current_king()
-
-        if not available_moves_for_new_team and pieces_attacking_king:
-            self.game_state.state = ChessState.CHECKMATE
-            self.game_is_in_progress = False
-        elif not available_moves_for_new_team and not pieces_attacking_king:
-            self.game_state.state = ChessState.STALEMATE
-            self.game_is_in_progress = False
 
         self.game_state.current_piece = None
         await self.views.board_view.display()
