@@ -89,6 +89,7 @@ class ChessGame(Game):
 
     async def __aexit__(self, *err):
         await self.score.destroy(recursive=True)
+        await self.app.chat(f"Game ended in {self.game_state.state.value}")
         await self.views.ingame_view.hide()
         await self.views.board_view.hide()
         await self.views.settings_view.display()

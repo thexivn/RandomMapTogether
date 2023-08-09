@@ -12,6 +12,7 @@ from ...models.chess.piece.bishop import Bishop
 from ...models.chess.piece.knight import Knight
 from ...models.database.chess.chess_piece import ChessPiece
 from ...models.enums.team import Team
+from ...models.enums.chess_state import ChessState
 from ..player_prompt_view import PlayerPromptView
 
 logger = logging.getLogger(__name__)
@@ -156,6 +157,19 @@ class ChessBoardView(TemplateView):
             self.game.game_state.turn = Team.BLACK
         elif self.game.game_state.turn == Team.BLACK:
             self.game.game_state.turn = Team.WHITE
+
+        available_moves_for_new_team = [
+            move
+            for piece in self.game.game_state.current_pieces
+            for move in await self.game.game_state.get_moves_for_piece(piece)
+        ]
+        pieces_attacking_king = await self.game.game_state.get_enemy_pieces_attacking_coordinate(self.game.game_state.current_king.x, self.game.game_state.current_king.y)
+        if not available_moves_for_new_team and pieces_attacking_king:
+            self.game.game_state.state = ChessState.CHECKMATE
+            self.game.game_is_in_progress = False
+        elif not available_moves_for_new_team and not pieces_attacking_king:
+            self.game.game_state.state = ChessState.STALEMATE
+            self.game.game_is_in_progress = False
 
         self.game.game_state.current_piece = None
         await self.display(player)

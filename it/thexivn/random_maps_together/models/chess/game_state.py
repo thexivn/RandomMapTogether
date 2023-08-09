@@ -3,6 +3,7 @@ from typing import List, Optional
 import logging
 
 from ..enums.team import Team
+from ..enums.chess_state import ChessState
 from ..chess.piece import Piece
 from ..chess.piece.bishop import Bishop
 from ..chess.piece.king import King
@@ -55,30 +56,27 @@ class GameState:
     pieces: List[Piece] = field(default_factory=create_default_pieces)
     turn: Team = Team.WHITE
     current_piece: Optional[Piece] = None
+    state: ChessState = ChessState.IN_PROGRESS
 
     @property
     def current_king(self):
         return next(piece for piece in self.pieces_in_play if piece.team == self.turn and isinstance(piece, King))
 
     @property
-    def white_pieces(self):
-        return [piece for piece in self.pieces if piece.team == Team.WHITE]
-
-    @property
-    def white_pieces_in_play(self):
-        return [piece for piece in self.pieces if piece.team == Team.WHITE and piece.captured is False]
-
-    @property
-    def black_pieces(self):
-        return [piece for piece in self.pieces if piece.team == Team.WHITE]
-
-    @property
-    def black_pieces_in_play(self):
-        return [piece for piece in self.pieces if piece.team == Team.BLACK and piece.captured is False]
+    def current_pieces(self):
+        return [piece for piece in self.pieces_in_play if piece.team == self.turn]
 
     @property
     def pieces_in_play(self):
         return [piece for piece in self.pieces if piece.captured is False]
+
+    @property
+    def white_pieces_in_play(self):
+        return [piece for piece in self.pieces_in_play if piece.team == Team.WHITE and piece.captured is False]
+
+    @property
+    def black_pieces_in_play(self):
+        return [piece for piece in self.pieces_in_play if piece.team == Team.BLACK and piece.captured is False]
 
     async def get_enemy_pieces_attacking_coordinate(self, x: int, y: int):
         return [
