@@ -25,7 +25,7 @@ class ChessBoardView(TemplateView):
     async def get_context_data(self):
         data = await super().get_context_data()
         data["pieces"] = self.game.game_state.pieces_in_play
-        data["moves"] = await self.game.game_state.get_moves_for_piece(self.game.game_state.current_piece)
+        data["moves"] = self.game.game_state.get_moves_for_piece(self.game.game_state.current_piece)
         if not data["moves"]:
             self.game.game_state.current_piece = None
         return data

@@ -231,7 +231,7 @@ class ChessGame(Game):
         #     return
 
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_"))
-        piece = await self.game_state.get_piece_by_coordinate(x, y)
+        piece = self.game_state.get_piece_by_coordinate(x, y)
         if piece.team != self.game_state.turn:
             return
 
@@ -252,15 +252,15 @@ class ChessGame(Game):
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
         promote_piece_class = None
 
-        target_piece = await self.game_state.get_piece_by_coordinate(x, y)
+        target_piece = self.game_state.get_piece_by_coordinate(x, y)
         if target_piece and target_piece.team != self.game_state.current_piece.team:
             target_piece.captured = True
             target_piece.db.captured = True
         elif not target_piece and isinstance(self.game_state.current_piece, Pawn):
             if self.game_state.current_piece.team == Team.WHITE:
-                en_passant_piece = await self.game_state.get_piece_by_coordinate(x, y-1)
+                en_passant_piece = self.game_state.get_piece_by_coordinate(x, y-1)
             elif self.game_state.current_piece.team == Team.BLACK:
-                en_passant_piece = await self.game_state.get_piece_by_coordinate(x, y+1)
+                en_passant_piece = self.game_state.get_piece_by_coordinate(x, y+1)
 
             if en_passant_piece and isinstance(en_passant_piece, Pawn) and en_passant_piece.team != self.game_state.current_piece.team:
                 en_passant_piece.captured = True
@@ -276,7 +276,7 @@ class ChessGame(Game):
 
         elif not target_piece and isinstance(self.game_state.current_piece, King) and abs(x - self.game_state.current_piece.x) == 2:
             if x - self.game_state.current_piece.x == -2:
-                rook = await self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x - 4, y)
+                rook = self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x - 4, y)
                 await ChessMove.create(
                     chess_piece=rook.db.id,
                     from_x=rook.x,
@@ -286,7 +286,7 @@ class ChessGame(Game):
                 )
                 rook.x += 3
             elif x - self.game_state.current_piece.x == 2:
-                rook = await self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x + 3, y)
+                rook = self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x + 3, y)
                 await ChessMove.create(
                     chess_piece=rook.db.id,
                     from_x=rook.x,

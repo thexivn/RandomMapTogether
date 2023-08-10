@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 
 def create_default_pieces():
     return [
+        # King(Team.WHITE, 0, 0),
+        # King(Team.BLACK, 7, 7),
+        # Queen(Team.WHITE, 0, 6),
+        # Queen(Team.WHITE, 6, 0),
         Pawn(Team.WHITE, 0, 1),
         Pawn(Team.WHITE, 1, 1),
         Pawn(Team.WHITE, 2, 1),
@@ -61,54 +65,50 @@ class GameState:
 
     @property
     def current_king(self):
-        return next(piece for piece in self.pieces_in_play if piece.team == self.turn and isinstance(piece, King))
+        return next(piece for piece in self.current_pieces if isinstance(piece, King))
 
     @property
     def current_pieces(self):
-        return tuple(piece for piece in self.pieces_in_play if piece.team == self.turn)
+        return (piece for piece in self.pieces_in_play if piece.team == self.turn)
 
     @property
     def enemy_pieces(self):
-        return tuple(piece for piece in self.pieces_in_play if piece.team != self.turn)
+        return (piece for piece in self.pieces_in_play if piece.team != self.turn)
 
     @property
     def pieces_in_play(self):
-        return tuple(piece for piece in self.pieces if piece.captured is False)
+        return (piece for piece in self.pieces if piece.captured is False)
 
-    async def get_pieces_attacking_current_king(self):
-        return await self.get_enemy_pieces_attacking_coordinate(self.current_king.x, self.current_king.y)
+    def get_pieces_attacking_current_king(self):
+        return self.get_enemy_pieces_attacking_coordinate(self.current_king.x, self.current_king.y)
 
-    async def get_enemy_pieces_attacking_coordinate(self, x: int, y: int):
-        return [
+    def get_enemy_pieces_attacking_coordinate(self, x: int, y: int):
+        return (
             piece for piece in self.enemy_pieces
-            for move in await self.get_moves_for_piece(piece)
-            if (x, y) == move
-        ]
+            if (x, y) in self.get_moves_for_piece(piece)
+        )
 
-    async def get_piece_by_coordinate(self, x, y):
+    def get_piece_by_coordinate(self, x, y):
         return next((piece for piece in self.pieces_in_play if (x, y) == (piece.x, piece.y)), None)
 
-    async def get_moves_for_piece(self, piece: Piece):
-        moves = []
+    def get_moves_for_piece(self, piece: Piece):
         if not piece:
-            current_team_can_move = bool([
+            current_team_can_move = any((
                 move
                 for piece in self.current_pieces
-                for move in await self.get_moves_for_piece(piece)
-            ])
-            pieces_attacking_king = await self.get_pieces_attacking_current_king()
+                for move in self.get_moves_for_piece(piece)
+            ))
+            pieces_are_attacking_king = any(self.get_pieces_attacking_current_king())
 
-            if not current_team_can_move and pieces_attacking_king:
-                self.game_state.state = ChessState.CHECKMATE
-                self.game_is_in_progress = False
-            elif not current_team_can_move and not pieces_attacking_king:
-                self.game_state.state = ChessState.STALEMATE
-                self.game_is_in_progress = False
+            if not current_team_can_move and pieces_are_attacking_king:
+                self.state = ChessState.CHECKMATE
+            elif not current_team_can_move and not pieces_are_attacking_king:
+                self.state = ChessState.STALEMATE
 
-            return moves
+            return
 
         for move in piece.moves():
-            for step in range(1, 9):
+            for step in range(1, 8):
                 x, y = move(step)
 
                 # Check if piece has moved max number of steps
@@ -124,11 +124,11 @@ class GameState:
 
                 if isinstance(piece, Pawn):
                     # Check if there is an enemy piece where pawn could attack
-                    if move.__name__ in ("move_left_forward", "move_right_forward") and await self.get_piece_by_coordinate(x, y) is None:
+                    if move.__name__ in ("move_left_forward", "move_right_forward") and self.get_piece_by_coordinate(x, y) is None:
                         if move.__name__ == "move_left_forward":
-                            en_passant_piece = await self.get_piece_by_coordinate(piece.x-1, piece.y)
+                            en_passant_piece = self.get_piece_by_coordinate(piece.x-1, piece.y)
                         elif move.__name__ == "move_right_forward":
-                            en_passant_piece = await self.get_piece_by_coordinate(piece.x+1, piece.y)
+                            en_passant_piece = self.get_piece_by_coordinate(piece.x+1, piece.y)
 
                         if isinstance(en_passant_piece, Pawn) and en_passant_piece.team != piece.team:
                             if not en_passant_piece.last_move or not self.last_move:
@@ -143,75 +143,73 @@ class GameState:
                         else:
                             continue
 
-                    if move.__name__ in ("move_forward", "move_forward_forward") and await self.get_piece_by_coordinate(x, y):
+                    if move.__name__ in ("move_forward", "move_forward_forward") and self.get_piece_by_coordinate(x, y):
                         continue
 
-                    if move.__name__ == "move_forward_forward" and (await self.get_piece_by_coordinate(*piece.move_forward(step)) or piece.last_move):
+                    if move.__name__ == "move_forward_forward" and (self.get_piece_by_coordinate(*piece.move_forward(step)) or piece.last_move):
                         continue
 
                 elif isinstance(piece, King) and piece.team == self.turn:
                     if move.__name__ == "castle_left":
                         # Check if there are pieces in the way
-                        if any([await self.get_piece_by_coordinate(piece.x - n, y) for n in range(1,4)]):
+                        if any((self.get_piece_by_coordinate(piece.x - n, y) for n in range(1,4))):
                             continue
 
-                        rook = await self.get_piece_by_coordinate(piece.x - 4, piece.y)
+                        rook = self.get_piece_by_coordinate(piece.x - 4, piece.y)
                         if not rook:
                             continue
 
-                        if rook and any([piece.last_move, rook.last_move]):
+                        if rook and any((piece.last_move, rook.last_move)):
                             continue
 
                         # Check if pieces are attacking king or the steps between
-                        if any([
-                            await self.get_enemy_pieces_attacking_coordinate(piece.x - n, piece.y)
+                        if any((
+                            self.get_enemy_pieces_attacking_coordinate(piece.x - n, piece.y)
                             for n in range(3)
-                        ]):
+                        )):
                             continue
 
                     elif move.__name__ == "castle_right":
                         # Check if there are pieces in the way
-                        if any([await self.get_piece_by_coordinate(piece.x + n, y) for n in range(1,3)]):
+                        if any((self.get_piece_by_coordinate(piece.x + n, y) for n in range(1,3))):
                             continue
 
-                        rook = await self.get_piece_by_coordinate(piece.x + 3, piece.y)
+                        rook = self.get_piece_by_coordinate(piece.x + 3, piece.y)
                         if not rook:
                             continue
 
-                        if rook and any([piece.last_move, rook.last_move]):
+                        if rook and any((piece.last_move, rook.last_move)):
                             continue
 
                         # Check if pieces are attacking king or the steps between
-                        if any([
-                            await self.get_enemy_pieces_attacking_coordinate(piece.x + n, piece.y)
+                        if any((
+                            self.get_enemy_pieces_attacking_coordinate(piece.x + n, piece.y)
                             for n in range(3)
-                        ]):
+                        )):
                             continue
 
                 # Simulate move so that the king does not get attacked
                 if piece.team == self.turn:
-                    pieces_attacking_king = await self.get_pieces_attacking_current_king()
                     # If two pieces are checking the king, the king must move
-                    if len(pieces_attacking_king) > 1 and not isinstance(piece, King):
+                    if len(list(self.get_pieces_attacking_current_king())) > 1 and not isinstance(piece, King):
                         continue
 
                     old_x, old_y = piece.x, piece.y
-                    target_piece = await self.get_piece_by_coordinate(x, y)
+                    target_piece = self.get_piece_by_coordinate(x, y)
                     if target_piece:
                         target_piece.captured = True
                     piece.x, piece.y = x, y
 
-                    pieces_attacking_king = await self.get_pieces_attacking_current_king()
+                    pieces_attacking_king = self.get_pieces_attacking_current_king()
 
                     if target_piece:
                         target_piece.captured = False
                     piece.x, piece.y = old_x, old_y
 
-                    if pieces_attacking_king:
+                    if any(pieces_attacking_king):
                         continue
 
-                moves.append((x, y))
+                yield((x, y))
                 # Check if target contains a piece
                 if next((p for p in self.pieces_in_play if (x, y) == (p.x, p.y)), None):
                     break
-        return moves
