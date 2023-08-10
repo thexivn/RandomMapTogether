@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import Optional
 
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -21,3 +22,16 @@ class Game:
 
     async def player_disconnect(self, player: Player, reason: str, source, *args, **kwargs):
         pass
+
+    async def load_map_and_display_ingame_view(self):
+        try:
+            await asyncio.gather(
+                self.app.map_handler.load_with_retry(),
+                self.views.ingame_view.display()
+            )
+        except Exception as exc:
+            await asyncio.gather(
+                self.views.ingame_view.hide(),
+                self.app.game.views.settings_view.display()
+            )
+            raise RuntimeError(f"Error occurred when loading next map: {str(exc)}") from exc
