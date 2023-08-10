@@ -162,7 +162,7 @@ class GameState:
 
                         # Check if pieces are attacking king or the steps between
                         if any((
-                            self.get_enemy_pieces_attacking_coordinate(piece.x - n, piece.y)
+                            any(self.get_enemy_pieces_attacking_coordinate(piece.x - n, piece.y))
                             for n in range(3)
                         )):
                             continue
@@ -181,7 +181,7 @@ class GameState:
 
                         # Check if pieces are attacking king or the steps between
                         if any((
-                            self.get_enemy_pieces_attacking_coordinate(piece.x + n, piece.y)
+                            any(self.get_enemy_pieces_attacking_coordinate(piece.x + n, piece.y))
                             for n in range(3)
                         )):
                             continue
