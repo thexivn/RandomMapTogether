@@ -56,7 +56,6 @@ class RandomMapsTogetherApp(AppConfig):
 
         mania_callback.player.player_connect.register(self.player_connect)
         mania_callback.player.player_disconnect.register(self.player_disconnect)
-        mania_callback.map.map_begin.register(self.map_handler.map_begin_event)
 
         logger.info("application initialized correctly")
 
@@ -68,7 +67,6 @@ class RandomMapsTogetherApp(AppConfig):
 
         mania_callback.player.player_connect.unregister(self.game.player_connect)
         mania_callback.player.player_disconnect.unregister(self.game.player_disconnect)
-        mania_callback.map.map_begin.unregister(self.map_handler.map_begin_event)
 
         await self.game_selector.destroy()
 

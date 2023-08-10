@@ -21,20 +21,12 @@ class MapHandler:
         self.app = app
         self._map_manager = map_manager
         self._storage = storage
-        self._active_map: Map = self._map_manager.current_map
         self.pre_patch_ice = False
         self.map_is_loading = False
 
     @property
     def active_map(self):
-        if self._active_map:
-            return self._active_map
-
-        self._active_map = self._map_manager.current_map
-        return self._active_map
-
-    async def map_begin_event(self, current_map: Map, *_args, **_kwargs):
-        self._active_map = current_map
+        return self._map_manager.current_map
 
     async def load_with_retry(self, max_retry=3) -> None:
         self.map_is_loading = True

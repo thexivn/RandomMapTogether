@@ -34,8 +34,7 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
         data["medal_urls"] = MedalURLs
 
         data["players"] = await RandomMapsTogetherPlayerScore.get_top_20_players(self.game_score.id)
-        if self.game.app.map_handler.active_map and \
-            self.game.app.map_handler.active_map.uid != self.game.app.map_handler.hub_map:
+        if self.game.app.map_handler.active_map.uid != self.game.app.map_handler.hub_map:
             data["time_left"] = format_time(
                 int((self.game.game_state.time_left - self.game.game_state.round_timer.current_round) * 1000),
                 hide_milliseconds=True

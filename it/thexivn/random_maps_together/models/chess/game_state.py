@@ -17,10 +17,6 @@ logger = logging.getLogger(__name__)
 
 def create_default_pieces():
     return [
-        # King(Team.WHITE, 0, 0),
-        # King(Team.BLACK, 7, 7),
-        # Queen(Team.WHITE, 0, 6),
-        # Queen(Team.WHITE, 6, 0),
         Pawn(Team.WHITE, 0, 1),
         Pawn(Team.WHITE, 1, 1),
         Pawn(Team.WHITE, 2, 1),
@@ -59,7 +55,9 @@ def create_default_pieces():
 class GameState:
     pieces: List[Piece] = field(default_factory=create_default_pieces)
     turn: Team = Team.WHITE
+    current_map_completed: bool = True
     current_piece: Optional[Piece] = None
+    target_piece: Optional[Piece] = None
     state: ChessState = ChessState.IN_PROGRESS
     last_move: Optional[ChessMove] = None
 
@@ -200,13 +198,13 @@ class GameState:
                         target_piece.captured = True
                     piece.x, piece.y = x, y
 
-                    pieces_attacking_king = self.get_pieces_attacking_current_king()
+                    pieces_attacking_king = any(self.get_pieces_attacking_current_king())
 
                     if target_piece:
                         target_piece.captured = False
                     piece.x, piece.y = old_x, old_y
 
-                    if any(pieces_attacking_king):
+                    if pieces_attacking_king:
                         continue
 
                 yield((x, y))

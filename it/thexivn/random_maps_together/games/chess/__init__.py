@@ -4,12 +4,12 @@ import logging
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
-from pyplanet.utils.times import format_time
 
 
 from .. import Game
 from ...map_generator import MapGenerator
 from ...models.chess.game_state import GameState
+from ...models.chess.map_score import MapScore
 from ...models.database.chess.chess_score import ChessScore
 from ...models.database.chess.chess_piece import ChessPiece
 from ...models.game_views.chess import ChessViews
@@ -65,9 +65,9 @@ class ChessGame(Game):
         mania_callback.player.player_disconnect.unregister(self.player_disconnect)
 
     async def __aenter__(self):
-        tm_callbacks.finish.register(self.on_map_finish)
         mania_callback.map.map_begin.register(self.map_begin_event)
-        mania_callback.flow.round_end.register(self.map_end_event)
+        tm_callbacks.scores.register(self.on_race_end)
+
 
         await self.app.instance.gbx.multicall(
             self.app.instance.gbx.prepare('SetCallVoteRatios', [-1])
@@ -107,16 +107,13 @@ class ChessGame(Game):
         await self.views.board_view.hide()
         await self.views.settings_view.display()
 
-        tm_callbacks.finish.unregister(self.on_map_finish)
         mania_callback.map.map_begin.unregister(self.map_begin_event)
-        mania_callback.flow.round_end.unregister(self.map_end_event)
+        tm_callbacks.scores.unregister(self.on_race_end)
 
         logger.info("Back to HUB completed")
 
     async def map_begin_event(self, *_args, **_kwargs):
         logger.info("[map_begin_event] STARTED")
-        if self.app.map_handler.pre_patch_ice:
-            await self.app.chat("$o$FB0 This track was created before the ICE physics change $z")
         self.game_state.current_map_completed = False
         asyncio.gather(
             self.app.map_handler.pre_load_next_map(),
@@ -125,110 +122,32 @@ class ChessGame(Game):
         )
         logger.info("[map_begin_event] ENDED")
 
-    async def map_end_event(self, *_args, **_kwargs):
-        logger.info("MAP end")
-        self.game_state.skip_medal_player = None
-        self.game_state.skip_medal = None
-        if not self.game_state.current_map_completed or self.game_state.time_left == 0:
-            logger.info("%s finished successfully", self.game_mode.value)
-            await self.app.chat(
-                "Challenge completed"
-                f" {self.config.goal_medal.name}: {self.score.total_goal_medals}"
-                f" {self.config.skip_medal.name}: {self.score.total_skip_medals}"
-            )
-            self.game_is_in_progress = False
-        else:
-            self.app.mode_settings[S_TIME_LIMIT] = round(self.game_state.time_left)
-            logger.info("Continue with %d time left", self.game_state.time_left)
-            await self.app.mode_manager.update_settings(self.app.mode_settings)
+    async def on_race_end(self, players, teams, winner_team, use_teams, winner_player, section):
+        if section == "EndRound" and self.game_state.current_map_completed is False:
+            self.game_state.current_map_completed = True
+            team_scores = [MapScore.from_json(json) for json in teams]
+            current_team = next(team_score for team_score in team_scores if team_score.team == self.game_state.current_piece.team)
+            target_team = next(team_score for team_score in team_scores if team_score.team == self.game_state.target_piece.team)
 
-    async def on_map_finish(self, player: Player, race_time: int, lap_time: int, cps, lap_cps, race_cps, flow, # pylint: disable=too-many-locals,unused-argument
-                           is_end_race: bool, is_end_lap, raw, *_args, **_kwargs): # pylint: disable=too-many-locals,unused-argument
-        logger.info("[on_map_finish] %s has finished the map with time: %sms", player.nickname, race_time)
-        async with asyncio.Lock(): # lock to avoid multiple AT before next map is loaded
-            if self.game_state.current_map_completed:
-                return logger.info('[on_map_finish] Map was already completed')
+            if current_team.map_points >= target_team.map_points:
+                self.game_state.target_piece.captured = True
+                self.game_state.target_piece.db.captured = True
+                await self.game_state.target_piece.db.save()
+            else:
+                self.game_state.current_piece.captured = True
+                self.game_state.current_piece.db.captured = True
+                await self.game_state.current_piece.db.save()
 
-            if not is_end_race:
-                return
-
-            if self.game_state.is_paused:
-                return await self.app.chat("Time doesn't count because game is paused", player)
-
-            logger.info("[on_map_finish] Final time check for %s", self.config.goal_medal.name)
-            race_medal = self.app.map_handler.get_medal_by_time(race_time)
-            if not race_medal:
-                return
-
-            if race_medal >= (self.config.player_configs[player.login].goal_medal or self.config.goal_medal):
-                if not (
-                    self.config.player_configs[player.login].enabled
-                    if self.config.player_configs[player.login].enabled is not None else self.config.enabled
-                ):
-                    return await self.app.chat(
-                        f"{player.nickname} got {race_medal.name}, congratulations! Too bad it doesn't count.."
-                    )
-
-                logger.info("[on_map_finish %s acquired", self.config.goal_medal.name)
-                self.game_state.round_timer.stop_timer()
-                await self.config.update_time_left(goal_medal=True)
-
-                self.score.total_goal_medals += 1
-                self.score.medal_sum += race_medal.value
-                self.score.save()
-
-                player_score, _ = await RandomMapsTogetherPlayerScore.get_or_create(
-                    game_score=self.score.id,
-                    player=player.id,
-                    defaults={
-                        "goal_medal": getattr(self.config.player_configs[player.login].goal_medal, "name", None),
-                        "skip_medal": getattr(self.config.player_configs[player.login].skip_medal, "name", None),
-                    }
-                )
-                await player_score.increase_medal_count(race_medal)
-                player_score.total_goal_medals += 1
-                await player_score.save()
-
-                self.game_state.current_map_completed = True
-                await self.hide_timer()
-                await self.app.chat(
-                    f'{player.nickname} claimed {race_medal.name} with {format_time(race_time)}, congratulations!'
-                )
-                await asyncio.gather(
-                    self.app.map_handler.load_with_retry(),
-                    self.views.ingame_view.display()
-                )
-                await self.views.board_view.display()
-                await self.views.ingame_view.hide()
-            elif race_medal >= \
-                (self.config.player_configs[player.login].skip_medal or self.config.skip_medal) \
-                and not self.game_state.skip_medal:
-
-                if not (
-                    self.config.player_configs[player.login].enabled
-                    if self.config.player_configs[player.login].enabled is not None else self.config.enabled
-                ):
-                    return await self.app.chat(
-                        f"{player.nickname} got {race_medal.name}, "
-                        "congratulations! Too bad it doesn't count.."
-                    )
-
-                logger.info('[on_map_finish] %s acquired', race_medal.name)
-                self.game_state.skip_medal_player = player
-                self.game_state.skip_medal = race_medal
-                await self.views.ingame_view.display()
-                await self.app.chat(
-                    f'First {race_medal.name} acquired, '
-                    f'congrats to {player.nickname} with {format_time(race_time)}'
-                )
-                await self.app.chat(f'You are now allowed to take the {race_medal.name} and skip the map')
+            self.game_state.current_piece = None
+            self.game_state.target_piece = None
+            await self.views.board_view.display()
 
     async def display_piece_moves(self, player, button_id, _values):
-        # if not self.config.player_configs[player.login].leader:
-        #     return
+        if not self.config.player_configs[player.login].leader:
+            return
 
-        # if self.game_state.turn != Team(player.flow.team_id):
-        #     return
+        if self.game_state.turn != Team(player.flow.team_id):
+            return
 
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_"))
         piece = self.game_state.get_piece_by_coordinate(x, y)
@@ -243,19 +162,18 @@ class ChessGame(Game):
         await self.views.board_view.display()
 
     async def move_piece(self, player, button_id, _values):
-        # if not self.config.player_configs[player.login].leader:
-        #     return
+        if not self.config.player_configs[player.login].leader:
+            return
 
-        # if self.game_state.turn != Team(player.flow.team_id):
-        #     return
+        if self.game_state.turn != Team(player.flow.team_id):
+            return
 
         x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
         promote_piece_class = None
 
         target_piece = self.game_state.get_piece_by_coordinate(x, y)
         if target_piece and target_piece.team != self.game_state.current_piece.team:
-            target_piece.captured = True
-            target_piece.db.captured = True
+            self.game_state.target_piece = target_piece
         elif not target_piece and isinstance(self.game_state.current_piece, Pawn):
             if self.game_state.current_piece.team == Team.WHITE:
                 en_passant_piece = self.game_state.get_piece_by_coordinate(x, y-1)
@@ -263,8 +181,7 @@ class ChessGame(Game):
                 en_passant_piece = self.game_state.get_piece_by_coordinate(x, y+1)
 
             if en_passant_piece and isinstance(en_passant_piece, Pawn) and en_passant_piece.team != self.game_state.current_piece.team:
-                en_passant_piece.captured = True
-                en_passant_piece.db.captured = True
+                self.game_state.target_piece = en_passant_piece
             elif (self.game_state.current_piece.team == Team.WHITE and y == 7) or (self.game_state.current_piece.team == Team.BLACK and y == 0):
                 buttons = [
                     {"name": "Queen", "value": Queen},
@@ -329,7 +246,10 @@ class ChessGame(Game):
         elif self.game_state.turn == Team.BLACK:
             self.game_state.turn = Team.WHITE
 
-        self.game_state.current_piece = None
+        if self.game_state.target_piece:
+            await self.load_map_and_display_ingame_view()
+        else:
+            self.game_state.current_piece = None
         await self.views.board_view.display()
 
     async def respawn_player(self, player: Player):
