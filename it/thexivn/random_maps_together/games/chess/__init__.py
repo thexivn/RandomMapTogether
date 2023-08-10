@@ -22,6 +22,7 @@ from ...models.enums.game_modes import GameModes
 from ...models.enums.game_script import GameScript
 
 from ...models.database.chess.chess_move import ChessMove
+from ...models.enums.chess_state import ChessState
 from ...models.chess.piece.pawn import Pawn
 from ...models.chess.piece.king import King
 from ...models.chess.piece.queen import Queen
@@ -133,14 +134,20 @@ class ChessGame(Game):
                 self.game_state.target_piece.captured = True
                 self.game_state.target_piece.db.captured = True
                 await self.game_state.target_piece.db.save()
+                if isinstance(self.game_state.target_piece, King):
+                    self.game_state.state = ChessState.KING_IS_DEAD
             else:
                 self.game_state.current_piece.captured = True
                 self.game_state.current_piece.db.captured = True
                 await self.game_state.current_piece.db.save()
+                if isinstance(self.game_state.current_piece, King):
+                    self.game_state.state = ChessState.KING_IS_DEAD
 
             self.game_state.current_piece = None
             self.game_state.target_piece = None
             await self.views.board_view.display()
+            if self.game_state.state != ChessState.IN_PROGRESS:
+                self.game_is_in_progress = False
 
     async def display_piece_moves(self, player, button_id, _values):
         if not self.config.player_configs[player.login].leader:
