@@ -51,7 +51,7 @@ class RMTGame(Game):
         tm_callbacks.finish.register(self.on_map_finish)
         mania_callback.map.map_begin.register(self.map_begin_event)
         mania_callback.flow.round_end.register(self.map_end_event)
-        mania_callback.flow.round_start__end.register(self.round_start)
+        tm_callbacks.start_line.register(self.round_start)
 
         await self.app.instance.gbx.multicall(
             self.app.instance.gbx.prepare('SetCallVoteRatios', [-1])
@@ -80,7 +80,6 @@ class RMTGame(Game):
         return self
 
     async def __aexit__(self, *err):
-        self.game_state.round_timer.stop_timer()
         if self.game_mode == GameModes.RANDOM_MAP_SURVIVAL:
             self.config.game_time_seconds += \
                 self.config.skip_penalty_seconds * self.game_state.penalty_skips # type: ignore[attr-defined]
@@ -100,7 +99,7 @@ class RMTGame(Game):
         tm_callbacks.finish.unregister(self.on_map_finish)
         mania_callback.map.map_begin.unregister(self.map_begin_event)
         mania_callback.flow.round_end.unregister(self.map_end_event)
-        mania_callback.flow.round_start__end.unregister(self.round_start)
+        tm_callbacks.start_line.unregister(self.round_start)
 
         logger.info("Back to HUB completed")
 
@@ -132,6 +131,7 @@ class RMTGame(Game):
         self.game_state.skip_medal = None
         if not self.game_state.current_map_completed or self.game_state.time_left == 0:
             logger.info("%s finished successfully", self.game_mode.value)
+            self.game_state.round_timer.stop_timer()
             await self.app.chat(
                 "Challenge completed"
                 f" {self.config.goal_medal.name}: {self.score.total_goal_medals}"

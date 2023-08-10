@@ -73,3 +73,4 @@ class GameSelectorView(WidgetView):
 
         while GameScript(await self.app.mode_manager.get_current_script(refresh=True)) != game_script:
             time.sleep(1)
+        self.app.mode_settings = await self.app.instance.mode_manager.get_settings()
