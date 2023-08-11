@@ -2,8 +2,10 @@
     <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
     <quad pos="149 0" z-index="999" size="10 10" style="Icons128x32_1" substyle="Close" scriptevents="1" action="{{ id }}__ui_hide_board"/>
     {% for x in range(8) %}
-        {% for y in range(8) %}
-            {% if (x % 2 == 0 and y % 2 == 0) or (x % 2 == 1 and y % 2 == 1) %}
+    {% for y in range(8) %}
+            {% if king_in_check and (x, y) == (current_king.x, current_king.y) %}
+                <quad pos="{{ x * 20 }} {{ -140 + y * 20 }}" size="20 20" bgcolor="FF0000FF"/>
+            {% elif (x % 2 == 0 and y % 2 == 0) or (x % 2 == 1 and y % 2 == 1) %}
                 <quad pos="{{ x * 20 }} {{ -140 + y * 20 }}" size="20 20" bgcolor="00AA00AA"/>
             {% else %}
                 <quad pos="{{ x * 20 }} {{ -140 + y * 20 }}" size="20 20" bgcolor="FFFFFFAA"/>
