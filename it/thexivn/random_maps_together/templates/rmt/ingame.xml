@@ -3,9 +3,9 @@
 {% block content %}
     <frame pos="0 0" size="{{size_x}} {{size_y}}">
         <quad pos="0 0" size="{{size_x}} {{size_y}}" z-index="0" bgcolor="10101070"/>
-            <quad pos="10 -0.5" size="{{size_y - 1}} {{size_y - 1 }}" z-index="1" image="{{ goal_medal_url }}" autoscale="1" keepratio="Fit"/>
+            <quad pos="10 -0.5" size="{{size_y - 1}} {{size_y - 1 }}" z-index="1" style="MedalsBig" substyle="{{ goal_medal_substyle }}"/>
             <label pos="25 -2.2" z-index="1" text="$s{{ total_goal_medals }}" textsize="3.5" textfont="RajdhaniMono" halign="center" />
-            <quad pos="40 -0.5" size="{{size_y - 1}} {{size_y - 1}}" z-index="1" image="{{ skip_medal_url }}" autoscale="1" keepratio="Fit"/>
+            <quad pos="40 -0.5" size="{{size_y - 1}} {{size_y - 1}}" z-index="1" style="MedalsBig" substyle="{{ skip_medal_substyle }}"/>
             <label pos="55 -2.2" z-index="1" text="$s{{ total_skip_medals }}" textsize="3.5" textfont="RajdhaniMono" halign="center" />
     </frame>
     <frame pos="0 -{{size_y}}" size="{{size_x}} 6">

@@ -5,7 +5,7 @@ from pyplanet.views import TemplateView
 from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.utils.times import format_time
 
-from ...models.enums.medal_urls import MedalURLs
+from ...models.enums.medal_urls import MedalSubstyle
 from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
 from ...models.database.rmt.random_maps_together_score import RandomMapsTogetherScore
 
@@ -29,9 +29,9 @@ class RandomMapsTogetherScoreBoardView(TemplateView):
         data["game"] = self.game
         data["total_goal_medals"] = self.game_score.total_goal_medals
         data["total_skip_medals"] = self.game_score.total_skip_medals
-        data["goal_medal_url"] = MedalURLs[self.game_score.goal_medal].value # type: ignore[misc]
-        data["skip_medal_url"] = MedalURLs[self.game_score.skip_medal].value # type: ignore[misc]
-        data["medal_urls"] = MedalURLs
+        data["goal_medal_substyle"] = MedalSubstyle[self.game_score.goal_medal].value # type: ignore[misc]
+        data["skip_medal_substyle"] = MedalSubstyle[self.game_score.skip_medal].value # type: ignore[misc]
+        data["medal_substyle"] = MedalSubstyle
 
         data["players"] = await RandomMapsTogetherPlayerScore.get_top_20_players(self.game_score.id)
         if self.game.app.map_handler.active_map.uid != self.game.app.map_handler.hub_map:

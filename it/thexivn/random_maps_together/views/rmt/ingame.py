@@ -1,7 +1,7 @@
 import logging
 from pyplanet.views.generics.widget import WidgetView
 
-from ...models.enums.medal_urls import MedalURLs
+from ...models.enums.medal_urls import MedalSubstyle
 # pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
@@ -58,8 +58,8 @@ class RandomMapsTogetherIngameView(WidgetView):
         data["total_skip_medals"] = self.game.score.total_skip_medals
 
         data["is_paused"] = self.game.game_state.is_paused
-        data["goal_medal_url"] = MedalURLs[self.game.config.goal_medal.name].value
-        data["skip_medal_url"] = MedalURLs[self.game.config.skip_medal.name].value
+        data["goal_medal_substyle"] = MedalSubstyle[self.game.config.goal_medal.name].value
+        data["skip_medal_substyle"] = MedalSubstyle[self.game.config.skip_medal.name].value
         data["game_started"] = self.game.game_is_in_progress
         data["skip_medal"] = self.game.game_state.skip_medal
         data["skip_pre_patch_ice_visible"] = self.game.app.map_handler.pre_patch_ice
