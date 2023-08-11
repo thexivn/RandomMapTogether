@@ -145,9 +145,12 @@ class ChessGame(Game):
 
             self.game_state.current_piece = None
             self.game_state.target_piece = None
-            await self.views.board_view.display()
+
             if self.game_state.state != ChessState.IN_PROGRESS:
                 self.game_is_in_progress = False
+            else:
+                await self.views.board_view.display()
+
 
     async def display_piece_moves(self, player, button_id, _values):
         if not self.config.player_configs[player.login].leader:
@@ -257,7 +260,11 @@ class ChessGame(Game):
             await self.load_map_and_display_ingame_view()
         else:
             self.game_state.current_piece = None
+
         await self.views.board_view.display()
+
+        if self.game_state.state != ChessState.IN_PROGRESS:
+            self.game_is_in_progress = False
 
     async def respawn_player(self, player: Player):
         # first, force mode 1 (spectator), then force mode 2 (player), then force mode 0 (user selectable)

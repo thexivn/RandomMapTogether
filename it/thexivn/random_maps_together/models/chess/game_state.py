@@ -17,14 +17,7 @@ logger = logging.getLogger(__name__)
 
 def create_default_pieces():
     return [
-        Pawn(Team.WHITE, 0, 1),
-        Pawn(Team.WHITE, 1, 1),
-        Pawn(Team.WHITE, 2, 1),
-        Pawn(Team.WHITE, 3, 1),
-        Pawn(Team.WHITE, 4, 1),
-        Pawn(Team.WHITE, 5, 1),
-        Pawn(Team.WHITE, 6, 1),
-        Pawn(Team.WHITE, 7, 1),
+        *(Pawn(Team.WHITE, n, 1) for n in range(8)),
         Rook(Team.WHITE, 0, 0),
         Knight(Team.WHITE, 1, 0),
         Bishop(Team.WHITE, 2, 0),
@@ -33,14 +26,7 @@ def create_default_pieces():
         Bishop(Team.WHITE, 5, 0),
         Knight(Team.WHITE, 6, 0),
         Rook(Team.WHITE, 7, 0),
-        Pawn(Team.BLACK, 0, 6),
-        Pawn(Team.BLACK, 1, 6),
-        Pawn(Team.BLACK, 2, 6),
-        Pawn(Team.BLACK, 3, 6),
-        Pawn(Team.BLACK, 4, 6),
-        Pawn(Team.BLACK, 5, 6),
-        Pawn(Team.BLACK, 6, 6),
-        Pawn(Team.BLACK, 7, 6),
+        *(Pawn(Team.BLACK, n, 6) for n in range(8)),
         Rook(Team.BLACK, 0, 7),
         Knight(Team.BLACK, 1, 7),
         Bishop(Team.BLACK, 2, 7),
@@ -92,17 +78,15 @@ class GameState:
     def get_moves_for_piece(self, piece: Piece):
         if not piece:
             current_team_can_move = any((
-                move
+                any(self.get_moves_for_piece(piece))
                 for piece in self.current_pieces
-                for move in self.get_moves_for_piece(piece)
             ))
-            pieces_are_attacking_king = any(self.get_pieces_attacking_current_king())
 
+            pieces_are_attacking_king = any(self.get_pieces_attacking_current_king())
             if not current_team_can_move and pieces_are_attacking_king:
                 self.state = ChessState.CHECKMATE
             elif not current_team_can_move and not pieces_are_attacking_king:
                 self.state = ChessState.STALEMATE
-
             return
 
         for move in piece.moves():
