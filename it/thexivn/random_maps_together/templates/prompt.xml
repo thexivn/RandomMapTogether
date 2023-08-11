@@ -14,7 +14,9 @@
       {% for button in buttons %}
         <label pos={% if buttons | length % 2 == 0 %}"{{ (buttons | length -1) / 2 * -30 + 30 * loop.index0 }} {{ -25 if entry else -10 }}"{% else %}"{{ (buttons | length - 1) / 2 * -30 + 30 * loop.index0 }} {{ -25 if entry else -10 }}"{% endif %} style="CardButtonSmallS" valign="center" halign="center" text="{{ button.name }}" translate="1" action="{{ id }}__button_{{ loop.index0 }}" />
       {% endfor %}
+      {% if ok_button %}
       <label pos="0 -40" style="CardButtonMedium" valign="center" halign="center" text="OK" translate="1" action="{{ id }}__button_ok" />
+      {% endif %}
     {% endblock %}
   </frame>
 </frame>

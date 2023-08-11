@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class PlayerPromptView(AlertView):
     template_name = 'random_maps_together/prompt.xml'
 
-    def __init__(self, message, buttons=None, manager=None, default='', validator=None, entry=True):
+    def __init__(self, message, buttons=None, manager=None, default='', validator=None, entry=True, ok_button=True):
         super().__init__(message, "md", buttons, manager)
         self.data["buttons"] = buttons or []
         self.disable_alt_menu = True
@@ -17,9 +17,11 @@ class PlayerPromptView(AlertView):
 
         self.default = default
         self.validator = validator or self.validate_input
+        self.ok_button = ok_button
 
         self.data['default'] = self.default
         self.data["entry"] = self.entry
+        self.data["ok_button"] = self.ok_button
 
     async def wait_for_input(self):  # pragma: no cover
         """
@@ -65,9 +67,9 @@ class PlayerPromptView(AlertView):
     @classmethod
     async def prompt_for_input(
         cls, player: Player, message: str,
-        buttons=None, entry=True, validator=None, default=None
+        buttons=None, entry=True, validator=None, default=None, ok_button=True
     ):
-        prompt_view = cls(message, buttons, entry=entry, validator=validator, default=default)
+        prompt_view = cls(message, buttons, entry=entry, validator=validator, default=default, ok_button=ok_button)
         await prompt_view.display([player])
         player_input = await prompt_view.wait_for_input()
         await prompt_view.destroy()
