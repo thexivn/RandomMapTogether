@@ -163,16 +163,12 @@ class ChessGame(Game):
 
 
     async def display_piece_moves(self, player, button_id, *_args, **_kwargs):
-        if not self.config.player_configs[player.login].leader:
-            return
-
-        if self.game_state.turn != Team(player.flow.team_id):
-            return
-
-        if self.game_state.current_map_completed is False:
-            return
-
-        if self.game_state.target_piece:
+        if any([
+            not self.config.player_configs[player.login].leader,
+            self.game_state.turn != Team(player.flow.team_id),
+            self.game_state.current_map_completed is False,
+            self.game_state.target_piece,
+        ]):
             return
 
         x, y = map(
@@ -191,16 +187,12 @@ class ChessGame(Game):
         await self.views.board_view.display()
 
     async def move_piece(self, player, button_id, *_args, **_kwargs):
-        if not self.config.player_configs[player.login].leader:
-            return
-
-        if self.game_state.turn != Team(player.flow.team_id):
-            return
-
-        if self.game_state.current_map_completed is False:
-            return
-
-        if self.game_state.target_piece:
+        if any([
+            not self.config.player_configs[player.login].leader,
+            self.game_state.turn != Team(player.flow.team_id),
+            self.game_state.current_map_completed is False,
+            self.game_state.target_piece,
+        ]):
             return
 
         x, y = map(
@@ -212,10 +204,8 @@ class ChessGame(Game):
         assert self.game_state.current_piece is not None
         assert self.game_state.current_piece.db is not None
 
-        target_piece = self.game_state.get_piece_by_coordinate(x, y)
-        if target_piece and target_piece.team != self.game_state.current_piece.team:
-            self.game_state.target_piece = target_piece
-        elif not target_piece and isinstance(self.game_state.current_piece, Pawn):
+        self.game_state.target_piece = self.game_state.get_piece_by_coordinate(x, y)
+        if not self.game_state.target_piece and isinstance(self.game_state.current_piece, Pawn):
             if self.game_state.current_piece.team == Team.WHITE:
                 en_passant_piece = self.game_state.get_piece_by_coordinate(x, y-1)
             elif self.game_state.current_piece.team == Team.BLACK:
@@ -235,11 +225,11 @@ class ChessGame(Game):
                     player, "Promote pawn", buttons, entry=False, ok_button=False
                 )
 
-        elif not target_piece and isinstance(self.game_state.current_piece, King) \
+        elif not self.game_state.target_piece and isinstance(self.game_state.current_piece, King) \
             and abs(x - self.game_state.current_piece.x) == 2:
             if x - self.game_state.current_piece.x == -2:
                 rook = self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x - 4, y)
-                await ChessMove.create(
+                rook.last_move = await ChessMove.create(
                     chess_piece=rook.db.id,
                     from_x=rook.x,
                     from_y=rook.y,
@@ -249,7 +239,7 @@ class ChessGame(Game):
                 rook.x += 3
             elif x - self.game_state.current_piece.x == 2:
                 rook = self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x + 3, y)
-                await ChessMove.create(
+                rook.last_move = await ChessMove.create(
                     chess_piece=rook.db.id,
                     from_x=rook.x,
                     from_y=rook.y,
@@ -272,20 +262,22 @@ class ChessGame(Game):
         if promote_piece_class:
             self.game_state.current_piece.captured = True
             self.game_state.current_piece.db.captured = True
-            new_piece = promote_piece_class(
-                self.game_state.current_piece.team,
-                self.game_state.current_piece.x,
-                self.game_state.current_piece.y,
-            )
+            await self.game_state.current_piece.db.save()
 
-            new_piece.db, _ = await ChessPiece.get_or_create(
-                game_score=self.score.id,
-                team=self.game_state.current_piece.team.name,
-                piece=self.game_state.current_piece.__class__.__name__.lower(),
-                x=self.game_state.current_piece.x,
-                y=self.game_state.current_piece.y,
+            self.game_state.pieces.append(
+                promote_piece_class(
+                    self.game_state.current_piece.team,
+                    self.game_state.current_piece.x,
+                    self.game_state.current_piece.y,
+                    await ChessPiece.create(
+                        game_score=self.score.id,
+                        team=self.game_state.current_piece.team.name,
+                        piece=self.game_state.current_piece.__class__.__name__.lower(),
+                        x=self.game_state.current_piece.x,
+                        y=self.game_state.current_piece.y,
+                    )
+                )
             )
-            self.game_state.pieces.append(new_piece)
 
         if self.game_state.turn == Team.WHITE:
             self.game_state.turn = Team.BLACK

@@ -1,5 +1,6 @@
 import logging
 from typing import List, Dict
+from peewee import DoesNotExist
 from pyplanet.views.generics.list import ManualListView
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.maniaplanet.models import Player
@@ -128,7 +129,7 @@ class PlayerConfigView(ManualListView): # pylint: disable=duplicate-code
                 )
                 player_score.goal_medal = medal.name if medal else None
                 await player_score.save()
-            except Exception:
+            except DoesNotExist:
                 pass
 
 
@@ -154,7 +155,7 @@ class PlayerConfigView(ManualListView): # pylint: disable=duplicate-code
                 )
                 player_score.skip_medal = medal.name if medal else None
                 await player_score.save()
-            except Exception:
+            except DoesNotExist:
                 pass
 
         await self.refresh(player=player)

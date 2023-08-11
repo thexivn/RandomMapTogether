@@ -33,13 +33,13 @@ class ChessBoardView(TemplateView):
             self.game.game_state.current_piece = None
         return data
 
-    async def display(self, player=None, *_args):
+    async def display(self, player=None, _button_id="", _values=None): # pylint: disable=arguments-renamed
         if player:
             await super().display([player.login])
         else:
             await super().display()
 
-    async def hide(self, player=None, *_args):
+    async def hide(self, player=None, _button_id="", _values=None): # pylint: disable=arguments-renamed
         if player:
             await super().hide([player.login])
         else:
