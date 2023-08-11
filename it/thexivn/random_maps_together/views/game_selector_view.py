@@ -45,8 +45,8 @@ class GameSelectorView(WidgetView):
             {"name": game_mode.value, "value": game_mode}
             for game_mode in GameModes
         ]
-        new_game_mode = await PlayerPromptView.prompt_for_input(player, "Choose Game Mode", buttons, entry=False)
-        if new_game_mode == self.app.game.game_mode:
+        new_game_mode = await PlayerPromptView.prompt_for_input(player, "Choose Game Mode", buttons, entry=False, )
+        if not new_game_mode or (new_game_mode == self.app.game.game_mode):
             return
 
         for field in fields(self.app.game.views.__class__):
