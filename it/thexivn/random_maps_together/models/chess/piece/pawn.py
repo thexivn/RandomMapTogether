@@ -20,23 +20,35 @@ class Pawn(Piece):
     def move_left_forward(self, x: int) -> Tuple[int, int]:
         if self.team == Team.BLACK:
             return (self.x - x, self.y - x)
-        elif self.team == Team.WHITE:
+
+        if self.team == Team.WHITE:
             return (self.x - x, self.y + x)
+
+        raise RuntimeError(f"Invalid team: {self.team}")
 
     def move_forward(self, x: int) -> Tuple[int, int]:
         if self.team == Team.BLACK:
             return (self.x, self.y - x)
-        elif self.team == Team.WHITE:
+
+        if self.team == Team.WHITE:
             return (self.x, self.y + x)
+
+        raise RuntimeError(f"Invalid team: {self.team}")
 
     def move_forward_forward(self, x: int) -> Tuple[int, int]:
         if self.team == Team.BLACK:
             return (self.x, self.y - x * 2)
-        elif self.team == Team.WHITE:
+
+        if self.team == Team.WHITE:
             return (self.x, self.y + x * 2)
+
+        raise RuntimeError(f"Invalid team: {self.team}")
 
     def move_right_forward(self, x: int) -> Tuple[int, int]:
         if self.team == Team.BLACK:
             return (self.x + x, self.y - x)
-        elif self.team == Team.WHITE:
+
+        if self.team == Team.WHITE:
             return (self.x + x, self.y + x)
+
+        raise RuntimeError(f"Invalid team: {self.team}")

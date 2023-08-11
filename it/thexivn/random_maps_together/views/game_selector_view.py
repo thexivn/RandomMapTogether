@@ -75,7 +75,7 @@ class GameSelectorView(WidgetView):
     async def change_game_script(self, game_script: GameScript):
         if GameScript(await self.app.mode_manager.get_current_script(refresh=True)) != game_script:
             await self.app.mode_manager.set_next_script(game_script.value)
-            await self.app.map_handler.restart_map(),
+            await self.app.map_handler.restart_map()
 
         while GameScript(await self.app.mode_manager.get_current_script(refresh=True)) != game_script:
             time.sleep(1)

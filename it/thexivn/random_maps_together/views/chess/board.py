@@ -31,15 +31,3 @@ class ChessBoardView(TemplateView):
         if not data["moves"]:
             self.game.game_state.current_piece = None
         return data
-
-    async def display(self, player=None, *_args):
-        if player:
-            await super().display([player.login])
-        else:
-            await super().display()
-
-    async def hide(self, player=None, *_args):
-        if player:
-            await super().hide([player.login])
-        else:
-            await super().hide()

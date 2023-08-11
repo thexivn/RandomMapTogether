@@ -25,7 +25,7 @@ class MapHandler:
         self.map_is_loading = False
 
     @property
-    def active_map(self):
+    def active_map(self) -> Map:
         return self._map_manager.current_map
 
     async def load_with_retry(self, max_retry=3) -> None:

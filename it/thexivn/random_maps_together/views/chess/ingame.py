@@ -1,8 +1,6 @@
 import logging
 from pyplanet.views.generics.widget import WidgetView
 
-from ...models.enums.medal_urls import MedalURLs
-# pylint: disable=duplicate-code
 logger = logging.getLogger(__name__)
 
 class ChessIngameView(WidgetView):

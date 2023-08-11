@@ -5,33 +5,29 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 
-
 from .. import Game
+from ...configuration.chess import ChessConfiguration
+from ...constants import S_FORCE_LAPS_NB
 from ...map_generator import MapGenerator
 from ...models.chess.game_state import GameState
 from ...models.chess.map_score import MapScore
-from ...models.database.chess.chess_score import ChessScore
-from ...models.database.chess.chess_piece import ChessPiece
-from ...models.game_views.chess import ChessViews
-from ...views.chess.board import ChessBoardView
-from ...views.chess.settings import ChessSettingsView
-from ...views.chess.ingame import ChessIngameView
-from ...constants import S_FORCE_LAPS_NB, S_TIME_LIMIT
-from ...configuration.chess import ChessConfiguration
-from ...models.enums.game_modes import GameModes
-from ...models.enums.game_script import GameScript
-
-from ...models.database.chess.chess_move import ChessMove
-from ...models.enums.chess_state import ChessState
-from ...models.chess.piece.pawn import Pawn
+from ...models.chess.piece.bishop import Bishop
 from ...models.chess.piece.king import King
+from ...models.chess.piece.knight import Knight
+from ...models.chess.piece.pawn import Pawn
 from ...models.chess.piece.queen import Queen
 from ...models.chess.piece.rook import Rook
-from ...models.chess.piece.bishop import Bishop
-from ...models.chess.piece.knight import Knight
+from ...models.database.chess.chess_move import ChessMove
 from ...models.database.chess.chess_piece import ChessPiece
-from ...models.enums.team import Team
+from ...models.database.chess.chess_score import ChessScore
 from ...models.enums.chess_state import ChessState
+from ...models.enums.game_modes import GameModes
+from ...models.enums.game_script import GameScript
+from ...models.enums.team import Team
+from ...models.game_views.chess import ChessViews
+from ...views.chess.board import ChessBoardView
+from ...views.chess.ingame import ChessIngameView
+from ...views.chess.settings import ChessSettingsView
 from ...views.player_prompt_view import PlayerPromptView
 
 logger = logging.getLogger(__name__)
@@ -123,12 +119,26 @@ class ChessGame(Game):
         )
         logger.info("[map_begin_event] ENDED")
 
-    async def on_race_end(self, players, teams, winner_team, use_teams, winner_player, section):
+    async def on_race_end(self, _players, teams, _winner_team, _use_teams, _winner_player, section):
         if section == "EndRound" and self.game_state.current_map_completed is False:
             self.game_state.current_map_completed = True
             team_scores = [MapScore.from_json(json) for json in teams]
-            current_team = next(team_score for team_score in team_scores if team_score.team == self.game_state.current_piece.team)
-            target_team = next(team_score for team_score in team_scores if team_score.team == self.game_state.target_piece.team)
+
+            assert self.game_state.current_piece is not None
+            assert self.game_state.current_piece.db is not None
+            assert self.game_state.target_piece is not None
+            assert self.game_state.target_piece.db is not None
+
+            current_team = next(
+                team_score
+                for team_score in team_scores
+                if team_score.team == self.game_state.current_piece.team
+            )
+            target_team = next(
+                team_score
+                for team_score in team_scores
+                if team_score.team == self.game_state.target_piece.team
+            )
 
             if current_team.map_points >= target_team.map_points:
                 self.game_state.target_piece.captured = True
@@ -159,7 +169,10 @@ class ChessGame(Game):
         if self.game_state.turn != Team(player.flow.team_id):
             return
 
-        x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_"))
+        x, y = map(
+            int,
+            button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_display_piece_moves_")[1].split("_")
+        )
         piece = self.game_state.get_piece_by_coordinate(x, y)
         if piece.team != self.game_state.turn:
             return
@@ -178,8 +191,14 @@ class ChessGame(Game):
         if self.game_state.turn != Team(player.flow.team_id):
             return
 
-        x, y = map(int, button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_"))
+        x, y = map(
+            int,
+            button_id.split("it_thexivn_RandomMapsTogether_scoreboard__ui_move_piece_")[1].split("_")
+        )
         promote_piece_class = None
+
+        assert self.game_state.current_piece is not None
+        assert self.game_state.current_piece.db is not None
 
         target_piece = self.game_state.get_piece_by_coordinate(x, y)
         if target_piece and target_piece.team != self.game_state.current_piece.team:
@@ -190,18 +209,22 @@ class ChessGame(Game):
             elif self.game_state.current_piece.team == Team.BLACK:
                 en_passant_piece = self.game_state.get_piece_by_coordinate(x, y+1)
 
-            if en_passant_piece and isinstance(en_passant_piece, Pawn) and en_passant_piece.team != self.game_state.current_piece.team:
+            if isinstance(en_passant_piece, Pawn) and en_passant_piece.team != self.game_state.current_piece.team:
                 self.game_state.target_piece = en_passant_piece
-            elif (self.game_state.current_piece.team == Team.WHITE and y == 7) or (self.game_state.current_piece.team == Team.BLACK and y == 0):
+            elif (self.game_state.current_piece.team == Team.WHITE and y == 7) \
+                or (self.game_state.current_piece.team == Team.BLACK and y == 0):
                 buttons = [
                     {"name": "Queen", "value": Queen},
                     {"name": "Rook", "value": Rook},
                     {"name": "Bishop", "value": Bishop},
                     {"name": "Knight", "value": Knight},
                 ]
-                promote_piece_class = await PlayerPromptView.prompt_for_input(player, "Promote pawn", buttons, entry=False)
+                promote_piece_class = await PlayerPromptView.prompt_for_input(
+                    player, "Promote pawn", buttons, entry=False, ok_button=False
+                )
 
-        elif not target_piece and isinstance(self.game_state.current_piece, King) and abs(x - self.game_state.current_piece.x) == 2:
+        elif not target_piece and isinstance(self.game_state.current_piece, King) \
+            and abs(x - self.game_state.current_piece.x) == 2:
             if x - self.game_state.current_piece.x == -2:
                 rook = self.game_state.get_piece_by_coordinate(self.game_state.current_piece.x - 4, y)
                 await ChessMove.create(
@@ -236,6 +259,7 @@ class ChessGame(Game):
 
         if promote_piece_class:
             self.game_state.current_piece.captured = True
+            self.game_state.current_piece.db.captured = True
             new_piece = promote_piece_class(
                 self.game_state.current_piece.team,
                 self.game_state.current_piece.x,
@@ -272,6 +296,7 @@ class ChessGame(Game):
         await self.app.instance.gbx('ForceSpectator', player.login, 2)
         await self.app.instance.gbx('ForceSpectator', player.login, 0)
 
+    # pylint: disable=duplicate-code
     async def player_connect(self, player: Player, is_spectator: bool, *_args, **_kwargs):
         if not is_spectator:
             self.config.update_player_configs()

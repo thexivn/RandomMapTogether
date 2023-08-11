@@ -97,7 +97,8 @@ class PlayerConfigView(ManualListView): # pylint: disable=duplicate-code
                 if player_object.login == row["player_login"]:
                     continue
 
-                if (player_object.flow.team_id == 0 and Team[row["team"]] == Team.WHITE) or (player_object.flow.team_id == 1 and Team[row["team"]] == Team.BLACK):
+                if (player_object.flow.team_id == 0 and Team[row["team"]] == Team.WHITE) \
+                     or (player_object.flow.team_id == 1 and Team[row["team"]] == Team.BLACK):
                     player_config.leader = False
 
         await self.refresh(player=player)

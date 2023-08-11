@@ -8,6 +8,7 @@ from . import Piece
 class King(Piece):
     max_steps: int = 1
 
+    # pylint: disable=duplicate-code
     def moves(self):
         return [
             self.move_left,

@@ -40,6 +40,7 @@ def check_player_allowed_to_change_game_settings(f):
 @dataclass
 class Configuration:
     app: "RandomMapsTogetherApp"
+    map_generator: MapGenerator
 
     def can_skip_map(self):
         pass

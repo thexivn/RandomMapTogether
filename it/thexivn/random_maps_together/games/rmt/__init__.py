@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 class RMTGame(Game):
     game_script = GameScript.TIME_ATTACK
+    game_mode: GameModes
 
     def __init__(self, app):
         super().__init__(app)
@@ -323,6 +324,7 @@ class RMTGame(Game):
         self.app.tm_ui_manager.properties.set_visibility(BIG_MESSAGE, visible)
         await self.app.tm_ui_manager.properties.send_properties()
 
+    # pylint: disable=duplicate-code
     async def player_connect(self, player: Player, is_spectator: bool, *_args, **_kwargs):
         if not is_spectator:
             self.config.update_player_configs()

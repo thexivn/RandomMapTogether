@@ -14,3 +14,6 @@ class Piece:
     max_steps: Optional[int] = None
     captured: bool = False
     last_move: Optional[ChessMove] = None
+
+    def moves(self):
+        raise NotImplementedError("No moves implemented for piece")

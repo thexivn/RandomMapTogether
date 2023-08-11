@@ -6,6 +6,7 @@ from . import Piece
 
 @dataclass
 class Queen(Piece):
+    # pylint: disable=duplicate-code
     def moves(self):
         return [
             self.move_left,

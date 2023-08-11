@@ -1,8 +1,7 @@
 import logging
 
 from pyplanet.views.generics.widget import WidgetView
-from ...configuration.rmt.rmc_configuration import RandomMapChallengeConfiguration
-# pylint: disable=duplicate-code
+
 logger = logging.getLogger(__name__)
 
 class ChessSettingsView(WidgetView):
