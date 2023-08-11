@@ -119,7 +119,7 @@ class ChessGame(Game):
         )
         logger.info("[map_begin_event] ENDED")
 
-    async def on_race_end(self, _players, teams, _winner_team, _use_teams, _winner_player, section):
+    async def on_race_end(self, teams, section, *_args, **_kwargs):
         if section == "EndRound" and self.game_state.current_map_completed is False:
             self.game_state.current_map_completed = True
             team_scores = [MapScore.from_json(json) for json in teams]
@@ -162,11 +162,17 @@ class ChessGame(Game):
                 await self.views.board_view.display()
 
 
-    async def display_piece_moves(self, player, button_id, _values):
+    async def display_piece_moves(self, player, button_id, *_args, **_kwargs):
         if not self.config.player_configs[player.login].leader:
             return
 
         if self.game_state.turn != Team(player.flow.team_id):
+            return
+
+        if self.game_state.current_map_completed is False:
+            return
+
+        if self.game_state.target_piece:
             return
 
         x, y = map(
@@ -184,11 +190,17 @@ class ChessGame(Game):
 
         await self.views.board_view.display()
 
-    async def move_piece(self, player, button_id, _values):
+    async def move_piece(self, player, button_id, *_args, **_kwargs):
         if not self.config.player_configs[player.login].leader:
             return
 
         if self.game_state.turn != Team(player.flow.team_id):
+            return
+
+        if self.game_state.current_map_completed is False:
+            return
+
+        if self.game_state.target_piece:
             return
 
         x, y = map(

@@ -131,7 +131,10 @@ class GameState:
             elif move.__name__ == "move_right_forward":
                 en_passant_piece = self.get_piece_by_coordinate(piece.x+1, piece.y)
 
-            if isinstance(en_passant_piece, Pawn) and en_passant_piece.team == piece.team:
+            if not isinstance(en_passant_piece, Pawn):
+                return False
+
+            if en_passant_piece.team == piece.team:
                 return False
 
             if not en_passant_piece.last_move or not self.last_move:
