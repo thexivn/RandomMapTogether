@@ -21,7 +21,7 @@ class RoundTimer:
         if not self.start_round:
             raise RuntimeError("No timer running")
 
-        self.last_round = int(time.time() - self.start_round)
+        self.last_round = int(time.time() - self.start_round - 1)
         self.total_time += self.last_round
         self.start_round = 0
 

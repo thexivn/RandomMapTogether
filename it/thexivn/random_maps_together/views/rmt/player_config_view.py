@@ -2,8 +2,10 @@ import logging
 from typing import List, Dict
 from pyplanet.views.generics.list import ManualListView
 from pyplanet.apps.config import AppConfig
+from pyplanet.apps.core.maniaplanet.models import Player
 
 from ...models.enums.medals import Medals
+from ...models.database.rmt.random_maps_together_player_score import RandomMapsTogetherPlayerScore
 from ..player_prompt_view import PlayerPromptView
 from ...configuration import check_player_allowed_to_change_game_settings
 # pylint: disable=duplicate-code
@@ -118,6 +120,17 @@ class PlayerConfigView(ManualListView): # pylint: disable=duplicate-code
             buttons=buttons, entry=False
         )
         self.app.game.config.player_configs[row["player_login"]].goal_medal = medal
+        if self.app.game.game_is_in_progress:
+            try:
+                player_score = await RandomMapsTogetherPlayerScore.get(
+                    game_score=self.app.game.score.id,
+                    player=(await Player.get_by_login(row["player_login"])).id,
+                )
+                player_score.goal_medal = medal.name if medal else None
+                await player_score.save()
+            except Exception:
+                pass
+
 
         await self.refresh(player=player)
 
@@ -133,5 +146,15 @@ class PlayerConfigView(ManualListView): # pylint: disable=duplicate-code
             buttons=buttons, entry=False
         )
         self.app.game.config.player_configs[row["player_login"]].skip_medal = medal
+        if self.app.game.game_is_in_progress:
+            try:
+                player_score = await RandomMapsTogetherPlayerScore.get(
+                    game_score=self.app.game.score.id,
+                    player=(await Player.get_by_login(row["player_login"])).id,
+                )
+                player_score.skip_medal = medal.name if medal else None
+                await player_score.save()
+            except Exception:
+                pass
 
         await self.refresh(player=player)

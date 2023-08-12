@@ -31,6 +31,7 @@ class RandomMapsTogetherSettingsView(WidgetView):
     z_index = 5
     size_x = 66
     size_y = 9
+    data = {}
 
     def __init__(self, app, config):
         super().__init__()
@@ -54,9 +55,6 @@ class RandomMapsTogetherSettingsView(WidgetView):
         self.subscribe("ui_set_map_generator_random", self.config.set_map_generator)
         self.subscribe("ui_set_map_generator_totd", self.config.set_map_generator)
         self.subscribe("ui_set_map_generator_map_pack", self.config.set_map_generator)
-
-        if isinstance(self.config, RandomMapChallengeConfiguration):
-            self.subscribe("ui_toggle_infinite_skips", self.config.toggle_infinite_skips)
 
         self.subscribe("ui_toggle_enabled_players", self.config.toggle_enabled_players)
 
