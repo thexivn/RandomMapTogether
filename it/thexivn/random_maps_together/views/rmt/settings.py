@@ -1,8 +1,7 @@
 import logging
 
-from pyplanet.views.generics.widget import WidgetView
-from ...configuration.rmt.rmc_configuration import RandomMapChallengeConfiguration
-# pylint: disable=duplicate-code
+from ..settings import SettingsView
+
 logger = logging.getLogger(__name__)
 
 cb_y_off = 3
@@ -25,23 +24,10 @@ def in_game_btn_pos(size_x, n_btns):
         return ret
     return btn_pos
 
-class RandomMapsTogetherSettingsView(WidgetView):
-    widget_x = -100
-    widget_y = 73.5
-    z_index = 5
-    size_x = 66
-    size_y = 9
-    data = {}
+class RandomMapsTogetherSettingsView(SettingsView):
 
     def __init__(self, app, config):
-        super().__init__()
-        logger.info("Loading VIEW")
-        self.id = "it_thexivn_RandomMapsTogether_settings"
-        self.app = app
-        self.manager = app.context.ui
-        self.config = config
-        self.subscribe("ui_start", self.app.start_game)
-
+        super().__init__(app, config)
         self.subscribe("ui_set_game_time_seconds", self.config.set_game_time_seconds)
 
         self.subscribe("ui_set_goal_medal_author", self.config.set_goal_medal)
@@ -52,14 +38,7 @@ class RandomMapsTogetherSettingsView(WidgetView):
         self.subscribe("ui_set_skip_medal_silver", self.config.set_skip_medal)
         self.subscribe("ui_set_skip_medal_bronze", self.config.set_skip_medal)
 
-        self.subscribe("ui_set_map_generator_random", self.config.set_map_generator)
-        self.subscribe("ui_set_map_generator_totd", self.config.set_map_generator)
-        self.subscribe("ui_set_map_generator_map_pack", self.config.set_map_generator)
-
         self.subscribe("ui_toggle_enabled_players", self.config.toggle_enabled_players)
-
-        self.subscribe("ui_display_player_settings", self.config.display_player_settings)
-        self.subscribe("ui_display_leaderboard", self.config.display_leaderboard)
 
     async def get_context_data(self):
         logger.info("Context Data")
