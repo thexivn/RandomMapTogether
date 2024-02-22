@@ -1,0 +1,13 @@
+{% extends 'core.views/uikit/v1/widget.xml' %}
+
+{% block content %}
+	<label id="map_name" pos="0 0" z-index="3" size="60 4" text="" valign="center2" textfont="GameFontExtraBold" textsize="1.5" halign="right" textemboss="1" />
+	<label id="map_author" pos="0 -3" z-index="3" size="60 4" text="" valign="center2" textfont="GameFontExtraBold" textsize="1" halign="right" textemboss="1"/>
+	<label id="map_authortime" pos="0 -6" z-index="3" size="60 4" textprefix="$fffAT: $2c0" text="" valign="center2" textfont="GameFontExtraBold" textsize="1" halign="right" textemboss="1"/>
+    <label id="map_goldtime" pos="0 -9" z-index="3" size="60 4" textprefix="$fffGOLD: $cb0" text=""  valign="center2" textfont="GameFontExtraBold" textsize="1" halign="right" textemboss="1"/>
+{% endblock %}
+
+{% block maniascript %}
+  <script><!--{% include 'core.views/uikit/v1/scripts/toggle_ui.Script.txt' %} --></script>
+  <script><!--{% include 'random_maps_together/mapinfo.Script.txt' %}--></script>
+{% endblock %}

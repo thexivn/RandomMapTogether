@@ -1,29 +1,87 @@
-<frame pos="-80 80" size="160 160" z-idex="3">
-    <quad pos="0 0" size="160 160"  bgcolor="101010EE"/>
-    <frame pos="20 -5" size="120 50" z-idex="4">
-        <label pos="60 -5" size="60 10" text="RMT SCORE" textsize="10"
-               halign="center" valign="center" style="ManiaPlanetLogos" />
+<framemodel id="player">
+  <label id="rank" pos="2 2.5" z-index="1" size="10 5" text="1" textfont="GameFontSemiBold" halign="center"
+         valign="center2" textsize="2"/>
+  <quad id="flag" size="6 5" pos="12 2.6" z-index="1" valign="center" halign="center"
+        image="file://ZoneFlags/Path/World" keepratio="Fit"/>
+  <label id="nick" pos="18 2.5" z-index="1" size="65 5" textprefix="" text="" textfont="GameFontSemiBold"
+         halign="left" valign="center2" maxline="1" textsize="2.5"/>
+  <label id="score" pos="110 2.5" z-index="1" size="25 5" text="" halign="center" valign="center2"
+         textfont="GameFontSemiBold" textsize="2.5"/>
+  <quad id="bg" class="hover" z-index="0" pos="7.5 2.5" size="130 5"
+        image="file://Media/Painter/Stencils/15-Stripes/_Stripe0Grad/Brush.tga" modulatecolor="108AEE" halign="left"
+        valign="center" scriptevents="1"/>
+  <quad id="rankbg" size="10 5" pos="2 2.5" z-index="0" bgcolor="108AEE" valign="center" halign="center"/>
+</framemodel>
 
-        <quad pos="5 -15"   size="20 20" image="https://imgur.com/s9qP3Pr.png" autoscale="1" keepratio="Fit"/>
-        <label pos="40 -25" size="30 20"  text="{{AT}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
-        <quad pos="70 -15"  size="20 20" image="https://i.imgur.com/0z7NmIr.png" autoscale="1" keepratio="Fit"/>
-        <label pos="100 -25" size="30 20" text="{{GOLD}}" textsize="8" textfont="RajdhaniMono" valign="center" halign="right" />
-        {% if time_left %}
-            <label pos="5 -38" text="TIME LEFT: {{time_left}}" textsize="5" textfont="RajdhaniMono" />
-        {% endif %}
-    </frame>
+<frame pos="0 60">
+	<frame pos="-73 6" z-index="2">
+		<label pos="0 1" z-index="4" size="67 9" text="RANDOM MAPS" textsize="5" textfont="GameFontSemiBold" halign="center" valign="top"/>
+		<label pos="0 -5" z-index="2" size="73 7" text="T O G E T H E R" textsize="5" textfont="GameFontBlack" halign="center" valign="top" textcolor="000"/>
+		<quad pos="0 -5" z-index="1" size="50 6.5" bgcolor="FFF" halign="center" valign="top"/>
+	</frame>
+<label hidden="1" pos="0 6" z-index="5" size="20 5" text="TIME LEFT" halign="center" valign="top"/>
+<label hidden="1" pos="1 2" z-index="5" text="{{time_left}}" textsize="5" textfont="GameFontExtraBold"  size="71.4 6.22" halign="center" valign="top"/>
 
-    <frame pos="20 -50" size="120 100" z-idex="4">
-    {% for player_score in players %}
-        <frame pos="0 {{ (-10 * loop.index0)}}" size="120 10">
-            <quad pos="0 0" size="120 10" bgcolor="eeeeeeFF"/>
-            <quad pos="1 -0.5" size="99 9" bgcolor="513877FF"/>
-            <quad pos="100 -0.5" size="19 9" bgcolor="333333FF"/>
-            <label pos="55 -4.5" size="55 9" text="{{player_score.player.nickname}}" textsize="3.5" textfont="RajdhaniMono"
-                               halign="center" valign="center" />
-            <label pos="110 -4.5" size="10 9" text="{{player_score.player_AT}}" textsize="3.5" textfont="RajdhaniMono"
-                               halign="left" valign="center" />
-        </frame>
-    {% endfor %}
-    </frame>
+<frame pos="30 8" z-index="5">
+	<quad pos="21 -3" z-index="1" size="10.4 25.8" style="UICommon64_1" substyle="BgFrame1" rot="90" modulatecolor="19C500FF" halign="left" valign="center"/>
+	<quad pos="0 0"  size="16 16" autoscale="1" keepratio="Fit" style="MedalsBig" substyle="MedalNadeoPerspective" z-index="3"/>
+	<label pos="23 -3.5" size="20 10"  text="{{AT}}" textsize="8" textfont="GameFontBlack"  halign="center" z-index="2"/>
 </frame>
+
+<frame pos="64 8" z-index="5">
+	<quad pos="21 -3" z-index="1" size="10.4 25.8" style="UICommon64_1" substyle="BgFrame1" rot="90" modulatecolor="C5B500FF" halign="left" valign="center"/>
+	<quad pos="0 0"  size="16 16" autoscale="1" keepratio="Fit" style="MedalsBig" substyle="MedalGoldPerspective" z-index="3"/>
+	<label pos="23 -3.5" size="20 10"  text="{{GOLD}}" textsize="8" textfont="GameFontBlack"  halign="center" z-index="2"/>
+</frame>
+
+	<quad pos="0 0" z-index="0" size="200 16" bgcolor="123" opacity="1" halign="center" valign="center"/>
+	<quad pos="-0 -6.82" z-index="-1" size="200 112" bgcolor="345" opacity="1" halign="center" valign="top"/>
+</frame>
+
+<frame pos="40 25" z-index="4">
+       {% for player_score in players %}
+	<frame pos="0 -{{ 6 * loop.index0 }}">
+		<quad pos="0 0" z-index="0" size="48 5" bgcolor="123" halign="left" valign="center"/>
+		<label pos="0 0" z-index="1" size="48 5" text="{{player_score.player.nickname}}" textsize="2.5" textfont="GameFontSemiBold"
+                               halign="left" valign="center2" />
+		<quad pos="50 0" z-index="0" size="12 5" bgcolor="FFF" halign="center" valign="center"/>
+		<label pos="50 0" z-index="1" size="12 5" text="{{player_score.player_AT}}" textsize="2.5" textfont="GameFontExtraBold"
+                               halign="center" valign="center2"  textcolor="000"/>
+	</frame>
+        {% endfor %}
+</frame>
+
+<frame id="scroll" z-index="6" pos="-98 50" valign="top" halign="left" size="135 110" scroll="1" scrollmax="0 600">
+	  <frame id="playercards" z-index="6">
+	    {% for i in range(0,150) %}
+	    <frameinstance id="player_{{i}}" data-index="{{i}}" modelid="player" pos="4 -{{ loop.index * 5.5}} }}"/>
+	    {% endfor %}
+	  </frame>
+    <quad z-index="-2" bgcolor="0000" size="135 2100" scriptevents="1" pos="0 0"/>
+</frame>
+
+
+<frame pos="50 45" id="details" z-index="10">
+  <quad id="flag" pos="0 0" z-index="1" size="15 15" keepratio="Fit" valign="center" halign="center" image="file://Media/Flags/FIN.dds"/>
+  <label id="path" pos="9 3" z-index="1" size="39.5 8" text="" textfont="GameFontRegular" halign="left"
+         valign="center2" maxline="1" textsize="3"/>
+  <label id="name" pos="9 -2" z-index="1" size="39.2 8" text="" textfont="GameFontBlack" halign="left"
+         valign="center2"
+         maxline="1" textsize="3"/>
+  <entry id="login" name="login" pos="900 -28" z-index="0" size="50 5" default="" halign="center" valign="center2"
+         textsize="1.75"/>
+  <entry id="userid" name="userid" pos="900 -32" z-index="0" size="50 5" default="" halign="center" valign="center2"
+         textsize="1.75"/>
+  <frame id="actions" pos="0 -11">
+    <label pos="32.8 0" size="22 6" text="🔎 Spectate" halign="center" valign="center2" textfont="GameFontRegular"
+           scriptevents="1" focusareacolor1="108AEE" focusareacolor2="0059A2" textsize="1.75" z-index="2"
+           id="p_spectate"/>
+    <label pos="8 0" size="22 6" text=" Profile" halign="center" valign="center2" textfont="GameFontRegular"
+           scriptevents="1" focusareacolor1="108AEE" focusareacolor2="0059A2" textsize="1.75" z-index="2"
+           id="p_profile"/>
+  </frame>
+</frame>
+
+<script>
+<!-- {% include "random_maps_together/scoretable.Script.txt" %} -->
+</script>

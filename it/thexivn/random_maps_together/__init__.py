@@ -5,13 +5,13 @@ from pyplanet.apps.core.maniaplanet.models import Player
 from pyplanet.contrib.command import Command
 from pyplanet.contrib.setting import Setting
 
-from it.thexivn.random_maps_together.Data.Configurations import Configurations
-from it.thexivn.random_maps_together.Data.Constants import *
-from it.thexivn.random_maps_together.RMTGame import RMTGame
-from it.thexivn.random_maps_together.MapHandler import MapHandler
+from apps.it.thexivn.random_maps_together.Data.Configurations import Configurations
+from apps.it.thexivn.random_maps_together.Data.Constants import *
+from apps.it.thexivn.random_maps_together.RMTGame import RMTGame
+from apps.it.thexivn.random_maps_together.MapHandler import MapHandler
 from pyplanet.apps.core.trackmania import callbacks as tm_callbacks
 
-from it.thexivn.random_maps_together.views import RandomMapsTogetherView
+from apps.it.thexivn.random_maps_together.views import RandomMapsTogetherView, MapInfoWidget, PlayerUpdaterView
 from pyplanet.apps.core.maniaplanet import callbacks as mania_callback
 
 logger = logging.getLogger(__name__)
@@ -25,11 +25,11 @@ class RandomMapsTogetherApp(AppConfig):
         super().__init__(*args, **kwargs)
         self.app_settings: Configurations = Configurations()
         self.map_handler = MapHandler(self.instance.map_manager, self.instance.storage, self.app_settings)
-        self.instance.chat()
         self.widget = RandomMapsTogetherView(self)
+        self.mapwidget = MapInfoWidget(self)
         self.rmt_game = RMTGame(self.map_handler, self.instance.chat_manager, self.instance.mode_manager,
-                                self.widget, self.app_settings, self.instance.ui_manager)
-
+                                self.widget, self.app_settings, self.instance.ui_manager, self.context.ui)
+        self.player_updater = PlayerUpdaterView(self)
         logger.info("application loaded correctly")
 
     async def on_init(self):
@@ -41,14 +41,19 @@ class RandomMapsTogetherApp(AppConfig):
         mania_callback.flow.round_end.register(self.rmt_game.map_end_event)
         mania_callback.flow.match_end__end.register(self.rmt_game.hide_custom_scoreboard)
         mania_callback.flow.round_start__end.register(self.rmt_game.set_time_left)
-
+        await self.mapwidget.display()
+        await self.player_updater.display()
         await self.instance.command_manager.register(
-            Command(command="start_rmt", target=self.rmt_game.command_start_rmt, description="load the game"),
-            Command(command="stop_rmt", target=self.rmt_game.command_stop_rmt, description="return to lobby"),
-            Command(command="skip_gold", target=self.rmt_game.command_skip_gold,
-                    description="skip current map is GOLD time is reached"),
-            Command(command="skip", target=self.rmt_game.command_free_skip,
-                    description="skip current map once per game"),
+            Command(command="start_rmt", target=self.rmt_game.command_start_rmt, description="load the game",
+                    admin=True),
+            Command(command="stop_rmt", target=self.rmt_game.command_stop_rmt, description="return to lobby",
+                    admin=True),
+            Command(command="take_gold", target=self.rmt_game.command_skip_gold,
+                    description="Skip current map is GOLD time is reached", admin=True),
+            Command(command="free_skip", target=self.rmt_game.command_free_skip,
+                    description="Free skip current map", admin=True),
+            Command(command="poll", target=self.rmt_game.command_poll,
+                    description="Run poll for tag", admin=True),
         )
 
         await self.settings()
@@ -76,25 +81,38 @@ class RandomMapsTogetherApp(AppConfig):
                                 'permission level to start the RMT', default=2,
                                 change_target=self.app_settings.set_min_level_to_start)
 
-        inf_skips: Setting = Setting('it.thexivn.RMT.infinite_free_skips', 'infinite_free_skips', Setting.CAT_BEHAVIOUR, bool,
-                                'if enabled allows to free skips always', default=False,
-                                change_target=self.app_settings.set_infinite_free_skips)
+        inf_skips: Setting = Setting('it.thexivn.RMT.infinite_free_skips', 'infinite_free_skips', Setting.CAT_BEHAVIOUR,
+                                     bool,
+                                     'if enabled allows to free skips always', default=False,
+                                     change_target=self.app_settings.set_infinite_free_skips)
+
+        tags: Setting = Setting('it.thexivn.RMT.tags', 'tags', Setting.CAT_BEHAVIOUR,
+                                str,
+                                'comma separated list of tags', default=" ",
+                                change_target=self.app_settings.set_tags)
 
         await self.context.setting.register(
             game_time,
             at_time,
             gold_time,
             perm,
-            inf_skips
+            inf_skips,
+            tags
         )
         self.app_settings.set_game_time(3600, await game_time.get_value())
         self.app_settings.set_at_time(AT, await at_time.get_value())
         self.app_settings.set_gold_time(GOLD, await gold_time.get_value())
         self.app_settings.set_min_level_to_start(2, await perm.get_value())
         self.app_settings.set_infinite_free_skips(False, await inf_skips.get_value())
+        self.app_settings.set_tags(" ", await tags.get_value())
 
     async def on_start(self):
         await super().on_start()
+        self.instance.ui_manager.properties.set_visibility("Race_Record", False)
+        self.instance.ui_manager.properties.set_attribute('Race_DisplayMessage', 'position', [-155., 68.])
+        self.instance.ui_manager.properties.set_visibility('Race_Checkpoint', True)
+        self.instance.ui_manager.properties.set_visibility('Race_ScoresTable', False)
+        await self.instance.ui_manager.properties.send_properties()
 
     async def on_stop(self):
         await super().on_stop()
@@ -112,8 +130,16 @@ class RandomMapsTogetherApp(AppConfig):
         await super().on_destroy()
 
     async def player_connect(self, player: Player, is_spectator: bool, source, *args, **kwargs):
-        if not is_spectator:
-            await self.widget.display(player)
+        await self.widget.display(player)
+        await self.player_updater.display()
+        await self.mapwidget.display(player)
+        await self.rmt_game.scoreboard_ui.display(player_logins=player.login)
+        await self.instance.chat("Welcome to Random Maps Together!", player)
+        await self.instance.chat(
+            "Get as many $0afAuthorTimes $fffas possible within the given time (usually 1h) together - new map change on AT."
+            "We have one $0affree skip $fffand can start a vote to skip after at least one gets a $0afGOLD time$fff. GL HF!", player)
 
     async def ref(self, player: Player, *args, **kwargs):
+        await self.player_updater.display()
         await self.widget.display(player)
+        await self.mapwidget.display(player)

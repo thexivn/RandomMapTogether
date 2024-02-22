@@ -1,0 +1,10 @@
+<script><![CDATA[
+main() {
+  declare Text py_PlayerNames for This;
+  declare Integer py_ScoreUpdate for This;
+  declare Text[] py_PlayerAmounts for This;
+  py_ScoreUpdate = Now;
+  py_PlayerNames = """{{ playerjson|safe }}""";
+  py_PlayerAmounts = ["{{num_players}}", "{{max_players}}", "{{num_spectators}}", "{{max_spectators}}"];
+}
+]]></script>
