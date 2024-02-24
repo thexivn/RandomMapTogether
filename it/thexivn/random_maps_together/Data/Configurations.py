@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from it.thexivn.random_maps_together.Data.Constants import SILVER, BRONZE
+from apps.it.thexivn.random_maps_together.Data.Constants import SILVER, BRONZE
 
 
 @dataclass
@@ -9,8 +9,10 @@ class Configurations:
     AT_time = SILVER
     GOLD_time = BRONZE
     min_level_to_start = 1
+    infinite_free_skips = False
+    tags = ""
 
-    def set_game_time(self, old_value: str, seconds: str):
+    def set_game_time(self, old_value, seconds):
         if int(seconds) < 300:
             self.game_time_seconds = 300
         else:
@@ -22,7 +24,7 @@ class Configurations:
     def set_gold_time(self, old_value: str, value: str):
         self.GOLD_time = value
 
-    def set_min_level_to_start(self, old_value: str, value: str):
+    def set_min_level_to_start(self, old_value, value):
         level = int(value)
         if level < 0:
             level = 0
@@ -30,3 +32,9 @@ class Configurations:
             level = 3
 
         self.min_level_to_start = level
+
+    def set_infinite_free_skips(self, old_value: bool, value: bool):
+        self.infinite_free_skips = value
+
+    def set_tags(self, old_value: str, value: str):
+        self.tags = value

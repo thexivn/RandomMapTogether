@@ -9,7 +9,7 @@ PKG = 'random_maps_together'
 ######
 setup(
     name=PKG,
-    version='0.0.2',
+    version='0.0.4',
     description='Simple pyplanet application to add RMC mode online',
     long_description='',
     keywords='maniaplanet, pyplanet, RMC, trackmania',
@@ -18,7 +18,9 @@ setup(
     extras_require={},
     include_package_data=True,
     long_description_content_type='text/markdown',
-
+    package_data={
+        'templates': ['*.xml', '*.Script.Txt']
+    },
     author='thexivn',
     author_email='thexivn@proton.me',
     url='https://github.com/thexivn/RandomMapTogether',

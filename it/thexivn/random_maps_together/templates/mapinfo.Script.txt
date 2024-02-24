@@ -1,0 +1,24 @@
+// #RequireContext CSmMlScriptIngame
+
+Void RenderMap() {
+    (Page.GetFirstChild("map_name") as CMlLabel).Value = Map.MapName;
+    (Page.GetFirstChild("map_author") as CMlLabel).Value = Map.AuthorNickName;
+    (Page.GetFirstChild("map_authortime") as CMlLabel).Value = TextLib::TimeToText(Map.MapInfo.TMObjective_AuthorTime, True, True);
+    (Page.GetFirstChild("map_goldtime") as CMlLabel).Value = TextLib::TimeToText(Map.MapInfo.TMObjective_GoldTime, True, True);
+}
+
+***OnInit***
+***
+    declare Text PrevDateText = "";
+    wait(Map != Null);
+    RenderMap();
+***
+
+***Loop***
+***
+    if (System.CurrentLocalDateText != PrevDateText) {
+        PrevDateText = System.CurrentLocalDateText;
+        RenderMap();
+    }
+***
+

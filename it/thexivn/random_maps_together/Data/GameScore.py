@@ -29,11 +29,11 @@ class GameScore:
     def inc_gold(self):
         self.total_gold += 1
 
-    def get_top_10(self) -> List[PlayerScoreInfo]:
+    def get_top(self, amount=10) -> List[PlayerScoreInfo]:
         if self.player_finishes and len(self.player_finishes) >= 1:
             finishes_scores = [key_val[1] for key_val in self.player_finishes.items()]
             finishes_scores.sort(key=lambda player_score: -player_score.player_AT)
-            return finishes_scores[:min(len(self.player_finishes), 10)]
+            return finishes_scores[:min(len(self.player_finishes), amount)]
 
         return []
 

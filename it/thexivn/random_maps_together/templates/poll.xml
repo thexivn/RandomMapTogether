@@ -1,0 +1,96 @@
+<framemodel id="tagitem">
+    <label pos="-11 4" z-index="5" size="25 4" text="Tagname" halign="left" valign="center" textsize="2"
+           textfont="GameFontSemiBold" textcolor="000"/>
+    <label pos="-14 3.5" z-index="6" size="4 4" text="0" halign="center" valign="center2" textsize="1" textcolor="fff"
+           textfont="GameFontExtraBold"/>
+    <quad class="select" pos="0 3.5" z-index="0" size="34 5" halign="center" style="UICommon64_1" substyle="BgFrame2"
+          colorize="fff" valign="center" scriptevents="1"/>
+    <label id="tick" opacity="0" pos="15 5" z-index="10" size="32 18" text="✔" halign="center" valign="center"
+           textfont="GameFontBlack" textcolor="20FF00FF" textsize="5" focusareacolor1="0000" focusareacolor2="0000"
+           textemboss="1"/>
+    <quad pos="-16 3.5" z-index="5" size="4 4" halign="left" style="UICommon64_1" substyle="BgFrame2" colorize="678"
+          valign="center"/>
+</framemodel>
+<frame>
+<quad id="bg" pos="0 70" z-index="-10" size="220 140" halign="center" style="UICommon64_1" substyle="BgFrame1"
+      colorize="456" scriptevents="1"/>
+<label pos="0 59" z-index="0" size="84 8" text="Vote For Tag" textfont="GameFontExtraBold" valign="center2"
+       halign="center" textsize="7"/>
+<label pos="0 52" z-index="0" size="200 8" text="You can't change vote once you have picked"
+       textfont="GameFontExtraBold" valign="center2" halign="center" textsize="3"/>
+
+<frame id="tags" pos="-90 30">
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+    <frameinstance modelid="tagitem"/>
+</frame>
+
+<frame pos="-20 47">
+    <label pos="-4 0" valign="center" halign="center" text="🕑" textsize="1" scale="1.6"/>
+    <label id="timeinfo" pos="40 0" valign="center" halign="left" text="1:20min" textsize="1" scale="1.2"/>
+    <frame pos="0 1" scale="0.6">
+        <frame pos="-5.75 0" size="70 5" z-index="4">
+            <quad id="timebar" pos="6.26 0.171" z-index="5" size="50 101" bgcolor="fff" opacity="1" rot="20"
+                  valign="center" halign="left"/>
+        </frame>
+        <frame pos="-5.75 0" size="70 5">
+            <quad pos="6.26 0.171" z-index="0" size="60 101" bgcolor="444" opacity="1" rot="20" valign="center"
+                  halign="left"/>
+        </frame>
+    </frame>
+</frame>
+</frame>
+<entry pos="900 900" id="tag" name="tag" default=""/>
+<script><!-- {% include 'random_maps_together/poll.Script.txt' %} --></script>

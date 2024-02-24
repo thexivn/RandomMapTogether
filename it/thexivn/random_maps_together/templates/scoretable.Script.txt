@@ -1,0 +1,296 @@
+// #RequireContext CSmMlScriptIngame
+#Include "TextLib" as TL
+#Include "MathLib" as ML
+
+#Struct K_Details {
+    CMlQuad Flag;
+    CMlLabel Path;
+    CMlLabel Name;
+    CMlEntry UserId;
+    CMlEntry Login;
+}
+
+#Struct K_Player {
+    Text Login;
+    Text Nick;
+}
+
+
+declare Integer G_LastStamp;
+declare K_Details G_Details;
+declare Integer G_DetailsIndex;
+declare K_Player[] G_PlayerNames;
+declare Boolean G_OldPageStatus;
+declare Integer G_LastUpdate;
+
+Void RenderDetails() {
+    if (G_DetailsIndex > Scores.count) {
+        G_DetailsIndex = 0;
+    }
+    if (G_DetailsIndex < 0) {
+        G_DetailsIndex = 0;
+    }
+    declare CMlFrame frame <=> (Page.GetFirstChild("actions") as CMlFrame);
+    frame.Hide();
+    if (!Scores.existskey(G_DetailsIndex)) {
+        return;
+    }
+    frame.Show();
+
+    declare CSmScore Score <=> Scores[G_DetailsIndex];
+    declare CUser User <=> Score.User;
+    G_Details.Flag.ImageUrl = User.CountryFlagUrl;
+    G_Details.UserId.Value =  User.WebServicesUserId;
+    G_Details.Login.Value =  User.Login;
+    G_Details.Name.Value = "$fff" ^  User.ClubTag ^" $z$fff" ^ User.Name;
+    declare Text[] path = TL::Split("|", User.ZonePath);
+    if (path.count >= 2) {
+        G_Details.Path.Value = path[1] ^ "|" ^ path[2];
+    } else {
+        G_Details.Path.Value = "";
+    }
+}
+
+CSmPlayer GetPlayer(CUser User) {
+    foreach (Player in Players) {
+        if (Player.User == User) return Player;
+    }
+    return Null;
+}
+
+Text GetPlayerNick(CUser User) {
+    foreach(Player in G_PlayerNames) {
+        if (User.Login == Player.Login) {
+            return Player.Nick;
+        }
+    }
+    return User.Name;
+}
+
+Vec3 GetRankColor(Integer Rank) {
+  switch(Rank) {
+    case 1: return TL::ToColor("db0");
+    case 2: return TL::ToColor("aab");
+    case 3: return TL::ToColor("963");
+  }
+  return TL::ToColor("003");
+}
+
+Text GetServerInfo() {
+    declare Text Out = "";
+    declare Text[] py_PlayerAmounts for This = [];
+    if (py_PlayerAmounts.count == 4) {
+      Out ^=" " ^ py_PlayerAmounts[0] ^ "/" ^ py_PlayerAmounts[1];
+      Out ^="    " ^ py_PlayerAmounts[2] ^ "/" ^ py_PlayerAmounts[3];
+    }
+    return Out;
+}
+
+Void Render() {
+    declare CMlFrame PlayerCards = (Page.GetFirstChild("playercards") as CMlFrame);
+
+    declare Real max = 5.5 * (Scores.count-20);
+    if (max < 0) max = 0.;
+    PlayerCards.ScrollMax = <0., max>;
+
+    foreach(i => Elem in PlayerCards.Controls) {
+        declare CMlFrame frame <=> (Elem as CMlFrame);
+        if (frame == Null) continue;
+        frame.Hide();
+        if (Scores.existskey(i)) {
+            frame.Show();
+            declare CSmScore Score <=> Scores[i];
+            declare CMlLabel Rank = frame.GetFirstChild("rank") as CMlLabel;
+            declare CMlLabel Nick = frame.GetFirstChild("nick") as CMlLabel;
+            declare CMlLabel Time = frame.GetFirstChild("score") as CMlLabel;
+            declare CMlQuad Flag = frame.GetFirstChild("flag") as CMlQuad;
+            (frame.GetFirstChild("bg") as CMlQuad).ModulateColor = TL::ToColor("003"); //GetRankColor(i+1);
+            (frame.GetFirstChild("rankbg") as CMlQuad).BgColor = TL::ToColor("003"); //GetRankColor(i+1);
+
+            declare Text icon = "";
+            declare CSmPlayer player <=> GetPlayer(Score.User);
+            declare Text color = "$fff";
+            declare Text nick = GetPlayerNick(Score.User);
+            if (player != Null) {
+                if (player.RequestsSpectate) icon = "";
+            } else {
+                color = "$777";
+                nick = Score.User.Name;
+            }
+            declare clubTag = "";
+            if (Score.User.ClubTag != "") {
+              clubTag = color ^ "[" ^ Score.User.ClubTag ^ "$z" ^ color ^ "] ";
+            }
+            declare Text name = clubTag ^ color ^ nick ^ " $z" ^ color ^ icon;
+            Rank.Value = color^(i+1);
+            if (player == Null) {
+                Flag.Style = "UICommon64_2";
+                Flag.Substyle = "UserDelete_light";
+                Flag.ImageUrl = "";
+                Flag.ModulateColor = TL::ToColor("777");
+            } else {
+                Flag.ImageUrl = Score.User.CountryFlagUrl;
+                Flag.Style = "";
+                Flag.Substyle = "";
+                Flag.ModulateColor = TL::ToColor("fff");
+            }
+            Nick.Value = name;
+            declare Integer time = 0;
+            if (Score.BestRaceTimes.count > 0) {
+                time = Score.BestRaceTimes[Score.BestRaceTimes.count-1];
+            }
+            if (time <= 0) {
+              Time.Value = color ^ "--:--.---";
+            } else {
+              Time.Value = color ^ TL::TimeToText(time,True,True);
+            }
+        }
+    }
+}
+
+Void ScrollToUser() {
+    declare Integer index = 0;
+    foreach(i => Score in Scores) {
+        if (LocalUser == Score.User) {
+            index = i;
+        }
+    }
+    declare CMlFrame PlayerCards = (Page.GetFirstChild("playercards") as CMlFrame);
+    declare Real max = 5.5 * (index-20);
+    if (max < 0) max = 0.;
+    PlayerCards.ScrollOffset = <0. , max>;
+}
+
+***OnInit***
+***
+G_OldPageStatus = False;
+G_LastStamp = Now;
+G_LastUpdate = 0;
+declare CMlFrame Frame <=> (Page.GetFirstChild("details") as CMlFrame);
+G_Details.Flag = (Frame.GetFirstChild("flag") as CMlQuad);
+G_Details.Path = (Frame.GetFirstChild("path") as CMlLabel);
+G_Details.Name = (Frame.GetFirstChild("name") as CMlLabel);
+G_Details.UserId = (Frame.GetFirstChild("userid") as CMlEntry);
+G_Details.Login = (Frame.GetFirstChild("login") as CMlEntry);
+ClientUI.OverlayChatLineCount = 6;
+ClientUI.OverlayChatOffset = <0.0, 0.0>;
+Render();
+RenderDetails();
+***
+
+***OnMouseOver***
+***
+if (Event.Control.HasClass("hover")) {
+(Event.Control as CMlQuad).ModulateColor = TL::ToColor("3af");
+}
+***
+
+***OnMouseOut***
+***
+if (Event.Control.HasClass("hover")) {
+  declare Integer Rank = TL::ToInteger(Event.Control.Parent.DataAttributeGet("index"))+1;
+  (Event.Control as CMlQuad).ModulateColor = TL::ToColor("003");
+}
+***
+
+
+***OnMouseClick***
+***
+if (Event.Control == Null) continue;
+
+if (Event.Control.HasClass("hover")) {
+    G_DetailsIndex = TL::ToInteger(Event.Control.Parent.DataAttributeGet("index"));
+    if (IsSpectator) {
+        if (Scores.existskey(G_DetailsIndex)) {
+            SetSpectateTarget(Scores[G_DetailsIndex].User.Login);
+        }
+    }
+    RenderDetails();
+}
+
+if (Event.ControlId == "scroll-top") {
+    declare CMlFrame PlayerCards = (Page.GetFirstChild("scroll") as CMlFrame);
+    PlayerCards.ScrollOffset = <0. , 0.>;
+}
+
+if (Event.ControlId == "scroll-bottom") {
+    declare CMlFrame PlayerCards = (Page.GetFirstChild("scroll") as CMlFrame);
+    declare Real max = 5.5 * (Scores.count-20);
+    if (max < 0) max = 0.;
+    PlayerCards.ScrollOffset = <0. , max>;
+}
+
+if (Event.ControlId == "p_spectate") {
+    if (!IsSpectator) RequestSpectatorClient(True);
+
+    if (Scores.existskey(G_DetailsIndex)) {
+        SetSpectateTarget(Scores[G_DetailsIndex].User.Login);
+    }
+}
+
+if (Event.ControlId == "p_profile") {
+    if (Scores.existskey(G_DetailsIndex)) {
+        declare Text TMGame_ScoresTable_OpenProfileUserId for ClientUI = "";
+        TMGame_ScoresTable_OpenProfileUserId = G_Details.UserId.Value;
+    }
+}
+***
+
+***Loop***
+***
+
+if (G_LastUpdate != py_ScoreUpdate) {
+  G_LastUpdate = py_ScoreUpdate;
+  G_PlayerNames.fromjson(py_PlayerNames);
+  Render();
+}
+
+if (Now - G_LastStamp > 1000) {
+    G_LastStamp = Now;
+    Render();
+}
+***
+
+Void do_nothing() { }
+
+main() {
+    declare Text py_PlayerNames for This;
+    declare Integer py_ScoreUpdate for This = 0;
+
+    +++OnInit+++
+
+    while(True) {
+        yield;
+
+        if (PageIsVisible != G_OldPageStatus) {
+            G_OldPageStatus = PageIsVisible;
+            ScrollToUser();
+        }
+
+        if (!PageIsVisible) {
+            continue;
+        }
+
+        foreach (Event in PendingEvents) {
+            switch (Event.Type) {
+                case CMlScriptEvent::Type::EntrySubmit: {
+                    +++EntrySubmit+++
+                }
+                case CMlScriptEvent::Type::KeyPress: {
+                    +++OnKeyPress+++
+                }
+                case CMlScriptEvent::Type::MouseClick: {
+                    +++OnMouseClick+++
+                }
+                case CMlScriptEvent::Type::MouseOut: {
+                    +++OnMouseOut+++
+                }
+                case CMlScriptEvent::Type::MouseOver: {
+                    +++OnMouseOver+++
+                }
+            }
+        }
+
+        +++Loop+++
+    }
+}

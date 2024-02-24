@@ -1,0 +1,10 @@
+<script><![CDATA[
+main() {
+  declare Integer poll_updater for This;
+  declare Text poll_data for This;
+
+	poll_updater = Now;
+	poll_data = """{{polljson|safe}}""";
+
+}
+]]></script>

@@ -1,0 +1,156 @@
+#Include "MathLib" as ML
+#Include "TextLib" as TL
+#Include "TimeLib" as TiL
+#Struct Tag {
+	Integer ID;
+	Integer Vote;
+	Text Name;
+	Text Color;
+}
+
+#Struct K_Vote {
+	Integer Limit;
+	Tag[] Votes;
+}
+
+#Const Json """[
+    {"ID": 0, "Name": "ALL RANDOM", "Color": ""},
+    {"ID": 1, "Name": "Race", "Color": ""}, {"ID": 2, "Name": "FullSpeed", "Color": ""},
+    {"ID": 3, "Name": "Tech", "Color": ""}, {"ID": 4, "Name": "RPG", "Color": ""},
+    {"ID": 5, "Name": "LOL", "Color": ""}, {"ID": 6, "Name": "Press Forward", "Color": ""},
+    {"ID": 7, "Name": "SpeedTech", "Color": ""}, {"ID": 8, "Name": "MultiLap", "Color": ""},
+    {"ID": 9, "Name": "Offroad", "Color": "705100"}, {"ID": 10, "Name": "Trial", "Color": ""},
+    {"ID": 11, "Name": "ZrT", "Color": "1a6300"}, {"ID": 12, "Name": "SpeedFun", "Color": ""},
+    {"ID": 13, "Name": "Competitive", "Color": ""}, {"ID": 14, "Name": "Ice", "Color": "05767d"},
+    {"ID": 15, "Name": "Dirt", "Color": "5e2d09"}, {"ID": 16, "Name": "Stunt", "Color": ""},
+    {"ID": 17, "Name": "Reactor", "Color": "d04500"}, {"ID": 18, "Name": "Platform", "Color": ""},
+    {"ID": 19, "Name": "Slow Motion", "Color": "004388"}, {"ID": 20, "Name": "Bumper", "Color": "aa0000"},
+    {"ID": 21, "Name": "Fragile", "Color": "993366"}, {"ID": 22, "Name": "Scenery", "Color": ""},
+    {"ID": 23, "Name": "Kacky", "Color": ""}, {"ID": 24, "Name": "Endurance", "Color": ""},
+    {"ID": 25, "Name": "Mini", "Color": ""}, {"ID": 26, "Name": "Remake", "Color": ""},
+    {"ID": 27, "Name": "Mixed", "Color": ""}, {"ID": 28, "Name": "Nascar", "Color": ""},
+    {"ID": 29, "Name": "SpeedDrift", "Color": ""}, {"ID": 30, "Name": "Minigame", "Color": "7e0e69"},
+    {"ID": 31, "Name": "Obstacle", "Color": ""}, {"ID": 32, "Name": "Transitional", "Color": ""},
+    {"ID": 33, "Name": "Grass", "Color": "06a805"}, {"ID": 34, "Name": "Backwards", "Color": "83aa00"},
+    {"ID": 35, "Name": "Freewheel", "Color": "f2384e"}, {"ID": 36, "Name": "Signature", "Color": "f1c438"},
+    {"ID": 37, "Name": "Royal", "Color": "ff0010"}, {"ID": 38, "Name": "Water", "Color": "69dbff"},
+    {"ID": 39, "Name": "Plastic", "Color": "fffc00"}, {"ID": 40, "Name": "Arena", "Color": ""},
+    {"ID": 41, "Name": "Freestyle", "Color": ""}, {"ID": 42, "Name": "Educational", "Color": ""},
+    {"ID": 43, "Name": "Sausage", "Color": ""}, {"ID": 44, "Name": "Bobsleigh", "Color": ""},
+    {"ID": 45, "Name": "Pathfinding", "Color": ""}, {"ID": 46, "Name": "FlagRush", "Color": "7a0000"},
+    {"ID": 47, "Name": "Puzzle", "Color": "459873"}, {"ID": 48, "Name": "Freeblocking", "Color": "ffffff"},
+    {"ID": 49, "Name": "Altered Nadeo", "Color": "3a3a3a"}, {"ID": 50, "Name": "SnowCar", "Color": "d3d3d3"},
+    {"ID": 51, "Name": "Wood", "Color": "814b00"}, {"ID": 52, "Name": "Underwater", "Color": "03afff"},
+    {"ID": 53, "Name": "Turtle", "Color": "6bb74e"}
+]
+"""
+
+#Const TagsDisabled [6,8,10,23,24,30,31,37,40,45,46,47]
+declare Tag[] G_Tags;
+declare K_Vote G_Vote;
+
+Void SetSelected(Text tag) {
+	declare CMlFrame firstframe = Page.GetFirstChild("tags") as CMlFrame;
+	declare CMlEntry entry = Page.GetFirstChild("tag") as CMlEntry;
+	entry.Value = tag;
+	TriggerPageAction("rmt_poll__vote");
+
+	foreach (elem in firstframe.Controls) {
+			declare CMlFrame frame <=> elem as CMlFrame;
+			declare CMlLabel tick =	frame.GetFirstChild("tick") as CMlLabel;
+			tick.Opacity = 0.;
+			if (frame.DataAttributeGet("tag") == tag) {
+				tick.Opacity = 1.;
+				tick.RelativeScale = 1.5;
+				AnimMgr.Flush(tick);
+				AnimMgr.Add(tick, """<elem scale="1." />""", Now, 2000,  CAnimManager::EAnimManagerEasing::ElasticOut2);
+			}
+	}
+}
+
+Void renderTagList(Tag[] Tags) {
+	declare frame_tags = Page.GetFirstChild("tags") as CMlFrame;
+	declare row = -1;
+	declare col = 0;
+	declare idx = 0;
+	foreach(idd => elem in frame_tags.Controls) {
+		declare CMlFrame frame <=> elem as CMlFrame;
+			frame.Hide();
+			if (TagsDisabled.exists(idd)) continue;
+			if (!Tags.existskey(idd)) continue;
+			if (idx % 6 == 0) {
+				row +=1;
+				col = 0;
+			}
+			frame.DataAttributeSet("tag", ""^(idd));
+			frame.Show();
+			frame.RelativePosition_V3 = <35. * col, -row*8.>;
+			(frame.Controls[0] as CMlLabel).Value = Tags[idd].Name;
+			idx +=1;
+			col +=1;
+	}
+}
+
+Void updateVotes() {
+    declare frame_tags = Page.GetFirstChild("tags") as CMlFrame;
+    foreach(idd => elem in frame_tags.Controls) {
+        declare CMlFrame frame <=> elem as CMlFrame;
+        if (G_Vote.Votes.existskey(idd)) {
+           (frame.Controls[1] as CMlLabel).Value = ""^G_Vote.Votes[idd].Vote;
+        }
+    }
+}
+
+main() {
+	declare CMlQuad SelectedItem;
+	declare Text PreviousItem = "";
+	declare Integer PrevStamp = -1;
+    declare Integer poll_updater for This;
+    declare Text poll_data for This;
+
+	G_Tags.fromjson(Json);
+	renderTagList(G_Tags);
+
+	while(True) {
+		yield;
+        if (PrevStamp != poll_updater) {
+            PrevStamp = poll_updater;
+            G_Vote.fromjson(poll_data);
+            updateVotes();
+
+    	    declare CMlQuad quad = Page.GetFirstChild("timebar") as CMlQuad;
+		    declare CMlLabel info = Page.GetFirstChild("timeinfo") as CMlLabel;
+	  		declare Integer Limit = G_Vote.Limit;
+            declare Real size = 60 - (Limit/(60*1.)*60.);
+            size = ML::Clamp(size, 0., 60.);
+            quad.Size.X = size;
+            info.Value = TL::TimeToText(Limit*1000) ^"min";
+          }
+
+
+	foreach (Event in PendingEvents) {
+			if (Event.Type == CMlScriptEvent::Type::MouseOver) {
+
+				if (Event.Control.HasClass("select")) {
+							SelectedItem = (Event.Control as CMlQuad);
+							SelectedItem.Colorize = <0., 1., 0.>;
+				}
+			}
+			if (Event.Type == CMlScriptEvent::Type::MouseOut) {
+				if (Event.Control.HasClass("select")) {
+							SelectedItem = (Event.Control as CMlQuad);
+							SelectedItem.Colorize = <1. , 1., 1.>;
+					}
+			}
+			if (Event.Type == CMlScriptEvent::Type::MouseClick) {
+				if (Event.Control.HasClass("select") && SelectedItem != Null) {
+						declare Text out = SelectedItem.Parent.DataAttributeGet("tag");
+						if (PreviousItem == "") {
+							PreviousItem = out;
+							SetSelected(out);
+						}
+				}
+			}
+		}
+	}
+}
